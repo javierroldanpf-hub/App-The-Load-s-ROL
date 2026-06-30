@@ -12,15 +12,13 @@ export default function AuthGate({ onLogin }) {
   if (mode === "landing") {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 1.5rem" }}>
-        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <img src="/logo.png" alt="The Load's Rol" style={{ width: 200, height: 200, objectFit: "contain", marginBottom: 8 }} />
-          <p style={{ color: COLORS.text, marginTop: 4, fontSize: 14 }}>
-            Control diario del estado del equipo
-          </p>
-        </div>
-        <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+          <img src="/logo.png" alt="The Load's Rol" style={{ width: "100%", objectFit: "contain", marginBottom: 4 }} />
           <button onClick={() => setMode("login")} style={primaryBtn(false)}>Iniciar sesión</button>
           <button onClick={() => setMode("register-role")} style={ghostBtn}>Crear cuenta</button>
+          <p style={{ color: COLORS.text, fontSize: 14, fontWeight: 700, margin: "4px 0 0", textAlign: "center" }}>
+            Control diario del estado del equipo
+          </p>
         </div>
       </div>
     );
