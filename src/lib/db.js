@@ -119,7 +119,7 @@ export async function deleteTeam(teamId) {
   for (const table of ["wellness", "rpe_entries", "physical_entries", "player_profiles", "sessions", "mesocycles", "player_alerts"]) {
     await sb.from(table).delete().eq("team_id", teamId);
   }
-  await sb.from("teams").delete().eq("id", teamId);
+  await sb.from("teams").delete().eq("team_id", teamId);
 }
 
 export async function getTeam(teamId) {
