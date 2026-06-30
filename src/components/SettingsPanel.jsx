@@ -472,7 +472,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                 if (!confirmed) return;
                 const confirmed2 = window.confirm(`Última confirmación: ¿eliminar "${team.name}" y todos sus datos?`);
                 if (!confirmed2) return;
-                await deleteTeam(team.id);
+                await deleteTeam(team.teamId);
                 if (onTeamDeleted) onTeamDeleted();
               }}
               style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: `1px solid ${COLORS.coral}`, background: "transparent", color: COLORS.coral, fontWeight: 700, fontSize: 13, cursor: "pointer" }}
