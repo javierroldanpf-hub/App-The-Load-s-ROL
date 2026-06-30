@@ -493,10 +493,15 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                       disabled={deleting}
                       onClick={async () => {
                         setDeleting(true);
-                        await deleteTeam(team.teamId);
-                        setDeleting(false);
-                        setShowDeleteConfirm(false);
-                        if (onTeamDeleted) onTeamDeleted();
+                        try {
+                          await deleteTeam(team.teamId);
+                          setShowDeleteConfirm(false);
+                          if (onTeamDeleted) onTeamDeleted();
+                        } catch (e) {
+                          alert("Error al eliminar: " + e.message);
+                        } finally {
+                          setDeleting(false);
+                        }
                       }}
                       style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: COLORS.coral, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
                     >

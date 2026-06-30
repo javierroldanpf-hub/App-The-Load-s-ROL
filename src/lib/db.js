@@ -117,9 +117,11 @@ export async function deletePlayerData(username, teamId) {
 export async function deleteTeam(teamId) {
   const sb = getSupabase();
   for (const table of ["wellness", "rpe_entries", "physical_entries", "player_profiles", "sessions", "mesocycles", "player_alerts"]) {
-    await sb.from(table).delete().eq("team_id", teamId);
+    const { error } = await sb.from(table).delete().eq("team_id", teamId);
+    if (error) throw new Error(`Error borrando ${table}: ${error.message}`);
   }
-  await sb.from("teams").delete().eq("team_id", teamId);
+  const { error } = await sb.from("teams").delete().eq("team_id", teamId);
+  if (error) throw new Error(`Error borrando equipo: ${error.message}`);
 }
 
 export async function getTeam(teamId) {
