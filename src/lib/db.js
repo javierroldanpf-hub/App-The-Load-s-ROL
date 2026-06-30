@@ -114,6 +114,14 @@ export async function deletePlayerData(username, teamId) {
   await sb.from("player_profiles").delete().eq("team_id", teamId).eq("username", username);
 }
 
+export async function deleteTeam(teamId) {
+  const sb = getSupabase();
+  for (const table of ["wellness", "rpe_entries", "physical_entries", "player_profiles", "sessions", "mesocycles", "player_alerts"]) {
+    await sb.from(table).delete().eq("team_id", teamId);
+  }
+  await sb.from("teams").delete().eq("id", teamId);
+}
+
 export async function getTeam(teamId) {
   try {
     const sb = getSupabase();

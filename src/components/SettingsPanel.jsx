@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/constants";
-import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings } from "@/lib/db";
+import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam } from "@/lib/db";
 import Avatar from "./Avatar";
 
 const inp = { padding: "9px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
@@ -29,7 +29,7 @@ function fmtDate(d) {
   return `${day}/${m}/${y}`;
 }
 
-export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sessions = [], rpe = [], coachTeamIds = [], coachUsername = "" }) {
+export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sessions = [], rpe = [], coachTeamIds = [], coachUsername = "", onTeamDeleted }) {
   const roster = teamWithPhotos?.roster || [];
   const [saving, setSaving] = useState(false);
   const [coachTeams, setCoachTeams] = useState([]);
@@ -456,6 +456,32 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       </Accordion>
 
       {saving && <div style={{ fontSize: 12, color: COLORS.lime, textAlign: "center", marginTop: 8 }}>Guardando...</div>}
+
+      {/* ── ZONA DE PELIGRO ── */}
+      {(() => {
+        const kindLabel = team.kind === "individual" ? "atleta individual" : isTrainingGroup ? "grupo" : "equipo";
+        return (
+          <div style={{ marginTop: 32, borderTop: `1px solid ${COLORS.coral}`, paddingTop: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.coral, marginBottom: 6 }}>Zona de peligro</div>
+            <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7, marginBottom: 12 }}>
+              Eliminar el {kindLabel} borrará permanentemente todos los datos: jugadores, sesiones, wellness, RPE y mesociclos. Esta acción no se puede deshacer.
+            </div>
+            <button
+              onClick={async () => {
+                const confirmed = window.confirm(`¿Seguro que quieres eliminar el ${kindLabel} "${team.name}"?\n\nSe borrarán TODOS los datos permanentemente. Esta acción no se puede deshacer.`);
+                if (!confirmed) return;
+                const confirmed2 = window.confirm(`Última confirmación: ¿eliminar "${team.name}" y todos sus datos?`);
+                if (!confirmed2) return;
+                await deleteTeam(team.id);
+                if (onTeamDeleted) onTeamDeleted();
+              }}
+              style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: `1px solid ${COLORS.coral}`, background: "transparent", color: COLORS.coral, fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+            >
+              🗑️ Eliminar {kindLabel}
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }
