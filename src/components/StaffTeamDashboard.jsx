@@ -140,7 +140,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
     <div style={{ minHeight: "100vh", padding: "1.5rem 1.25rem 4rem", maxWidth: 640, margin: "0 auto" }}>
       <TopBar
         onBack={onBack}
-        title={team.name}
+        title={null}
         rightSlot={
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setShowExport(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round"><path d="M320 48H80a32 32 0 0 0-32 32v352a32 32 0 0 0 32 32h352a32 32 0 0 0 32-32V192z"/><path d="M320 48v144h144"/><line x1="176" y1="320" x2="400" y2="320"/><polyline points="336,256 400,320 336,384"/></svg> Exportar</button>

@@ -3,7 +3,7 @@ import { COLORS } from "@/lib/constants";
 
 export default function TopBar({ title, onBack, rightSlot }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: "max(env(safe-area-inset-top), 50px)", marginBottom: 8 }}>
       {onBack && (
         <button onClick={onBack} style={{
           background: "none", border: "none", color: COLORS.text,

@@ -5,6 +5,7 @@ html, body {
   color: #eef1f4;
   font-family: 'Inter', -apple-system, sans-serif;
   min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 input[type="range"] {

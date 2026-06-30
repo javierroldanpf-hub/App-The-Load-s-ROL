@@ -1,0 +1,9 @@
+{
+  "appId": "com.theloadsrol.app",
+  "appName": "The Load's Rol",
+  "webDir": "out",
+  "ios": {
+    "allowsLinkPreview": false,
+    "backgroundColor": "#14171c"
+  }
+}
