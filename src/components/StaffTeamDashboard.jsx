@@ -150,7 +150,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       />
 
       {readOnly && (
-        <div style={{ background: COLORS.amberDark, border: `1px solid ${COLORS.amber}`, borderRadius: 10, padding: "8px 14px", marginBottom: 14, marginTop: 44, display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ background: COLORS.amberDark, border: `1px solid ${COLORS.amber}`, borderRadius: 10, padding: "8px 14px", marginBottom: 14, marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 14 }}>👁️</span>
           <span style={{ fontSize: 12, color: COLORS.amber, fontWeight: 600 }}>Modo solo lectura — no puedes editar ni enviar cambios</span>
         </div>
