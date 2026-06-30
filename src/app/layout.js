@@ -18,7 +18,7 @@ export default function RootLayout({ children }) {
       <body>
         <script dangerouslySetInnerHTML={{ __html: `
           if (window.Capacitor) {
-            document.body.style.paddingTop = 'env(safe-area-inset-top)';
+            document.body.style.paddingTop = '55px';
           }
         `}} />
         {children}

@@ -111,7 +111,7 @@ export default function PlayerDashboard({ user, onLogout }) {
         />
       )}
       {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} />}
-      {tab === "mydata" && <PlayerMyData user={user} team={team} onProfileUpdate={setProfile} />}
+      {tab === "mydata" && <PlayerMyData user={user} team={team} onProfileUpdate={(p) => { setProfile(p); refreshData(); }} />}
       {tab === "settings" && <ReminderSettings username={user.username} />}
     </div>
   );
