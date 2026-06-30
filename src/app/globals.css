@@ -8,6 +8,12 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+@supports (padding-top: env(safe-area-inset-top)) {
+  .ios-app {
+    padding-top: env(safe-area-inset-top) !important;
+  }
+}
+
 input[type="range"] {
   -webkit-appearance: none;
   height: 6px;
