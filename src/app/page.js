@@ -28,8 +28,7 @@ export default function Home() {
     setActiveTeamId(teamId);
     try {
       localStorage.setItem("tlr_session", JSON.stringify({ user: u, teamId }));
-      console.log("Sesión guardada:", u.username);
-    } catch(e) { console.error("Error guardando sesión:", e); }
+    } catch(e) {}
   };
   const handleLogout = () => {
     setUser(null); setActiveTeamId(null);
