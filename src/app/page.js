@@ -26,7 +26,10 @@ export default function Home() {
     setUser(u);
     const teamId = u.role === "player" || u.role === "staff_viewer" ? (u.team_id || u.teamId) : null;
     setActiveTeamId(teamId);
-    localStorage.setItem("tlr_session", JSON.stringify({ user: u, teamId }));
+    try {
+      localStorage.setItem("tlr_session", JSON.stringify({ user: u, teamId }));
+      console.log("Sesión guardada:", u.username);
+    } catch(e) { console.error("Error guardando sesión:", e); }
   };
   const handleLogout = () => {
     setUser(null); setActiveTeamId(null);
