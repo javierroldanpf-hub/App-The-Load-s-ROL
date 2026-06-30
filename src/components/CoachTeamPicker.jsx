@@ -81,7 +81,7 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
   return (
     <div style={{ minHeight: "100vh", padding: "2rem 1.25rem 3rem", maxWidth: 480, margin: "0 auto" }}>
       <TopBar title="Tus equipos" rightSlot={
-        <button onClick={onLogout} style={{ background: "none", border: "none", color: COLORS.text, fontSize: 13, cursor: "pointer" }}>Salir</button>
+        <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill={COLORS.lime}><path d="M320 64H80C62 64 48 78 48 96v320c0 18 14 32 32 32h240c18 0 32-14 32-32v-80h-48v64H96V112h208v64h48V96c0-18-14-32-32-32z"/><path d="M456 234l-92-92-34 34 50 50H192v48h188l-50 50 34 34 92-92c9-9 9-24 0-32z"/></svg> Salir</button>
       } />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, margin: "18px 0 22px" }}>
         <Avatar name={user.display_name || user.displayName} photoUrl={user.photo_url || user.photoUrl} size={64} />
