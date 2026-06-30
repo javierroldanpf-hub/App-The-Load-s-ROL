@@ -571,7 +571,71 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             <button onClick={() => setWeekMonday(addDays(weekMonday, 7))} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}>→</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 6 }}>
-            {days.map((date) => <DayCell key={date} date={date} />)}
+            {days.map((date) => {
+              const session = sessionByDate[date];
+              const isToday = date === today;
+              const intensity = session && !session.isRest ? INTENSITY_LEVELS[session.intensity] : null;
+              const MENSTRUAL_PHASES_CAL = [{ emoji: "🌕" }, { emoji: "🔴" }, { emoji: "🌱" }, { emoji: "💙" }];
+              const mesoColors = mesocycles.filter((m) => m.color && date >= m.startDate && date <= m.endDate).map((m) => m.color);
+              const weekTypeColor = (() => {
+                const WEEK_TYPE_COLORS = { carga: "#ff9f40", sobrecarga: "#ff5a5f", descarga: "#60a5fa" };
+                for (const m of mesocycles) {
+                  if (date < m.startDate || date > m.endDate) continue;
+                  const week = (m.weeks || []).find((w) => date >= w.weekStart && date <= w.weekEnd);
+                  if (week?.type) return WEEK_TYPE_COLORS[week.type] || null;
+                }
+                return null;
+              })();
+              const menstrualPhase = (() => {
+                for (const m of mesocycles) {
+                  if (!m.isMenstrual || date < m.startDate || date > m.endDate) continue;
+                  const weekIdx = (m.weeks || []).findIndex((w) => date >= w.weekStart && date <= w.weekEnd);
+                  if (weekIdx >= 0) return MENSTRUAL_PHASES_CAL[weekIdx] || MENSTRUAL_PHASES_CAL[MENSTRUAL_PHASES_CAL.length - 1];
+                }
+                return null;
+              })();
+              const relaxin = mesocycles.some((m) => {
+                if (!m.isMenstrual || date < m.startDate || date > m.endDate) return false;
+                const diff = Math.round((new Date(date + "T00:00:00") - new Date(m.startDate + "T00:00:00")) / 86400000) + 1;
+                return diff === 20 || diff === 21 || diff === 22;
+              });
+              const indSessions = (session?.individualSessions || []).filter(s => s.title);
+              return (
+                <div key={date} style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                  background: COLORS.panel, border: `1px solid ${isToday ? COLORS.lime : COLORS.line}`,
+                  borderRadius: 10, padding: "0.6rem 0.3rem", minWidth: 0, overflow: "hidden",
+                }}>
+                  <div style={{ display: "flex", gap: 2, minHeight: 6, alignItems: "center" }}>
+                    {mesoColors.map((c, i) => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: c, display: "inline-block" }} />)}
+                    {menstrualPhase && <span style={{ fontSize: 8, lineHeight: 1 }}>{menstrualPhase.emoji}</span>}
+                    {relaxin && <span style={{ fontSize: 8, lineHeight: 1 }}>⚡</span>}
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: isToday ? COLORS.lime : COLORS.text }}>{weekdayLabel(date).slice(0, 3)}</div>
+                    <div style={{ fontSize: 9, color: COLORS.text }}>{fmtDateShort(date)}</div>
+                  </div>
+                  {session && (session.sessionType || session.isRest) ? (
+                    <div onClick={() => openEditor(date)} style={{ borderRadius: 6, padding: "5px 3px", textAlign: "center", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised, cursor: "pointer" }}>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.textFaint }}>{session.isRest ? "Descanso" : session.sessionType}</div>
+                      {session.duration > 0 && !session.isRest && <div style={{ fontSize: 9, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7 }}>{session.duration} min</div>}
+                    </div>
+                  ) : !readOnly ? (
+                    <div onClick={() => openEditor(date)} style={{ display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, border: `1px dashed ${COLORS.line}`, width: "100%", height: 36, cursor: "pointer" }}>
+                      <span style={{ fontSize: 16, color: COLORS.text }}>+</span>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 9, color: COLORS.text, padding: "8px 0" }}>—</div>
+                  )}
+                  {indSessions.map((s, i) => (
+                    <div key={i} onClick={() => openEditor(date, "individual")} style={{ borderRadius: 6, padding: "4px 3px", textAlign: "center", width: "100%", background: COLORS.panelRaised, border: `1px solid ${COLORS.blue}`, cursor: "pointer" }}>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 10, fontWeight: 700, color: COLORS.blue, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.title}</div>
+                    </div>
+                  ))}
+                  {weekTypeColor && <div style={{ height: 3, width: "100%", background: weekTypeColor, borderRadius: 2, marginTop: "auto" }} />}
+                </div>
+              );
+            })}
           </div>
         </>
       ) : (
