@@ -358,7 +358,7 @@ export default function PhysicalQuadrantSection({ team, physicalEntries, onTeamU
             }}>{q.name || `C${i + 1}`}</button>
           ))}
         </div>
-        <button onClick={handleAdd} disabled={saving} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>+ Añadir</button>
+        {onTeamUpdate && <button onClick={handleAdd} disabled={saving} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>+ Añadir</button>}
       </div>
 
       {cfg && (
