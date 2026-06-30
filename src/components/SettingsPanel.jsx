@@ -35,6 +35,8 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
   const [coachTeams, setCoachTeams] = useState([]);
 
   const [isTrainingGroup, setIsTrainingGroup] = useState(team.isTrainingGroup || false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [injuredPlayers, setInjuredPlayers] = useState(team.injuredPlayers || []);
   const [defaultMatchDuration, setDefaultMatchDuration] = useState(team.defaultMatchDuration ?? 90);
   const [formDeadlineWellness, setFormDeadlineWellness] = useState(team.formDeadlineWellness || "");
@@ -467,18 +469,43 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
               Eliminar el {kindLabel} borrará permanentemente todos los datos: jugadores, sesiones, wellness, RPE y mesociclos. Esta acción no se puede deshacer.
             </div>
             <button
-              onClick={async () => {
-                const confirmed = window.confirm(`¿Seguro que quieres eliminar el ${kindLabel} "${team.name}"?\n\nSe borrarán TODOS los datos permanentemente. Esta acción no se puede deshacer.`);
-                if (!confirmed) return;
-                const confirmed2 = window.confirm(`Última confirmación: ¿eliminar "${team.name}" y todos sus datos?`);
-                if (!confirmed2) return;
-                await deleteTeam(team.teamId);
-                if (onTeamDeleted) onTeamDeleted();
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
               style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: `1px solid ${COLORS.coral}`, background: "transparent", color: COLORS.coral, fontWeight: 700, fontSize: 13, cursor: "pointer" }}
             >
               🗑️ Eliminar {kindLabel}
             </button>
+
+            {showDeleteConfirm && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", zIndex: 100 }}>
+                <div style={{ background: COLORS.panel, borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.coral, marginBottom: 10 }}>⚠️ Eliminar {kindLabel}</div>
+                  <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 20 }}>
+                    ¿Seguro que quieres eliminar <strong>"{team.name}"</strong>? Se borrarán todos los datos permanentemente. Esta acción no se puede deshacer.
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      disabled={deleting}
+                      onClick={async () => {
+                        setDeleting(true);
+                        await deleteTeam(team.teamId);
+                        setDeleting(false);
+                        setShowDeleteConfirm(false);
+                        if (onTeamDeleted) onTeamDeleted();
+                      }}
+                      style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: COLORS.coral, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+                    >
+                      {deleting ? "Eliminando..." : "Sí, eliminar"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
