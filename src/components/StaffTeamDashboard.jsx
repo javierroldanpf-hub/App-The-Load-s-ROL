@@ -185,27 +185,33 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       </div>
 
       {/* Tabs principales */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 20, background: COLORS.panel, borderRadius: 12, padding: 4, overflowX: "auto", scrollbarWidth: "none" }}>
-        {mainTabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            flexShrink: 0, padding: "8px 10px", borderRadius: 9, border: "none", fontSize: 11, fontWeight: 600,
-            background: tab === t.id ? COLORS.panelRaised : "transparent",
-            color: tab === t.id ? COLORS.text : COLORS.textDim, cursor: "pointer", whiteSpace: "nowrap",
-          }}>{t.label}</button>
-        ))}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 4, background: COLORS.panel, borderRadius: 12, padding: 4, overflowX: "auto", scrollbarWidth: "none" }}>
+          {mainTabs.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              flexShrink: 0, padding: "8px 10px", borderRadius: 9, border: "none", fontSize: 11, fontWeight: 600,
+              background: tab === t.id ? COLORS.panelRaised : "transparent",
+              color: tab === t.id ? COLORS.text : COLORS.textDim, cursor: "pointer", whiteSpace: "nowrap",
+            }}>{t.label}</button>
+          ))}
+        </div>
+        <div style={{ height: 3, background: COLORS.panelRaised, borderRadius: 2, margin: "4px 30% 0" }} />
       </div>
 
       {tab === "resumen" && (
         <>
           {/* Sub-tabs de Resumen */}
-          <div style={{ display: "flex", gap: 4, marginBottom: 20, background: COLORS.panelRaised, borderRadius: 10, padding: 4 }}>
-            {resumenSubTabs.map((t) => (
-              <button key={t.id} onClick={() => setResumenSubTab(t.id)} style={{
-                flex: 1, padding: "7px 6px", borderRadius: 7, border: "none", fontSize: 11, fontWeight: 600,
-                background: resumenSubTab === t.id ? COLORS.panel : "transparent",
-                color: resumenSubTab === t.id ? COLORS.text : COLORS.textDim, cursor: "pointer", whiteSpace: "nowrap",
-              }}>{t.label}</button>
-            ))}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", gap: 4, background: COLORS.panelRaised, borderRadius: 10, padding: 4, overflowX: "auto", scrollbarWidth: "none" }}>
+              {resumenSubTabs.map((t) => (
+                <button key={t.id} onClick={() => setResumenSubTab(t.id)} style={{
+                  flexShrink: 0, padding: "7px 10px", borderRadius: 7, border: "none", fontSize: 11, fontWeight: 600,
+                  background: resumenSubTab === t.id ? COLORS.panel : "transparent",
+                  color: resumenSubTab === t.id ? COLORS.text : COLORS.textDim, cursor: "pointer", whiteSpace: "nowrap",
+                }}>{t.label}</button>
+              ))}
+            </div>
+            <div style={{ height: 3, background: COLORS.panel, borderRadius: 2, margin: "4px 30% 0" }} />
           </div>
 
           {resumenSubTab === "medias" && (
