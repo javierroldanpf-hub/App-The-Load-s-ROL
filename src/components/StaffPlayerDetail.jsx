@@ -392,7 +392,7 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
   const sessionByDate = useMemo(() => {
     const m = {};
     // Solo sesiones con sessionType real (excluye filas solo-individual con sessionType:"")
-    sessions.forEach((s) => { if (s.sessionType) m[s.date] = s; });
+    sessions.forEach((s) => { if (s.sessionType && !s.isRest) m[s.date] = s; });
     return m;
   }, [sessions]);
 
