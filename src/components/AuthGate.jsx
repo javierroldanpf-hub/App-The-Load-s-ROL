@@ -13,13 +13,8 @@ export default function AuthGate({ onLogin }) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 1.5rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.2em", color: COLORS.lime, marginBottom: 8 }}>
-            PANEL DE RENDIMIENTO
-          </div>
-          <h1 style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 36, margin: 0, color: COLORS.text }}>
-            The Load's Rol
-          </h1>
-          <p style={{ color: COLORS.text, marginTop: 8, fontSize: 14 }}>
+          <img src="/logo.png" alt="The Load's Rol" style={{ width: 200, height: 200, objectFit: "contain", marginBottom: 8 }} />
+          <p style={{ color: COLORS.text, marginTop: 4, fontSize: 14 }}>
             Control diario del estado del equipo
           </p>
         </div>
