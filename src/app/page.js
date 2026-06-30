@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { COLORS } from "@/lib/constants";
 import AuthGate from "@/components/AuthGate";
 import PlayerDashboard from "@/components/PlayerDashboard";
@@ -9,13 +9,43 @@ import StaffTeamDashboard from "@/components/StaffTeamDashboard";
 export default function Home() {
   const [user, setUser] = useState(null);
   const [activeTeamId, setActiveTeamId] = useState(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("tlr_session");
+      if (saved) {
+        const { user: u, teamId } = JSON.parse(saved);
+        if (u) { setUser(u); setActiveTeamId(teamId || null); }
+      }
+    } catch {}
+    setReady(true);
+  }, []);
 
   const handleLogin = (u) => {
     setUser(u);
-    if (u.role === "player" || u.role === "staff_viewer") setActiveTeamId(u.team_id || u.teamId);
+    const teamId = u.role === "player" || u.role === "staff_viewer" ? (u.team_id || u.teamId) : null;
+    setActiveTeamId(teamId);
+    localStorage.setItem("tlr_session", JSON.stringify({ user: u, teamId }));
   };
-  const handleLogout = () => { setUser(null); setActiveTeamId(null); };
-  const handleUserUpdate = (u) => setUser(u);
+  const handleLogout = () => {
+    setUser(null); setActiveTeamId(null);
+    localStorage.removeItem("tlr_session");
+  };
+  const handleUserUpdate = (u) => {
+    setUser(u);
+    const saved = localStorage.getItem("tlr_session");
+    const teamId = saved ? JSON.parse(saved).teamId : null;
+    localStorage.setItem("tlr_session", JSON.stringify({ user: u, teamId }));
+  };
+  const handleEnterTeam = (teamId) => {
+    setActiveTeamId(teamId);
+    const saved = localStorage.getItem("tlr_session");
+    const u = saved ? JSON.parse(saved).user : user;
+    localStorage.setItem("tlr_session", JSON.stringify({ user: u, teamId }));
+  };
+
+  if (!ready) return null;
 
   return (
     <div style={{
@@ -27,9 +57,9 @@ export default function Home() {
       ) : user.role === "player" ? (
         <PlayerDashboard user={user} onLogout={handleLogout} />
       ) : user.role === "coach" && !activeTeamId ? (
-        <CoachTeamPicker user={user} onUserUpdate={handleUserUpdate} onEnterTeam={setActiveTeamId} onLogout={handleLogout} />
+        <CoachTeamPicker user={user} onUserUpdate={handleUserUpdate} onEnterTeam={handleEnterTeam} onLogout={handleLogout} />
       ) : user.role === "coach" && activeTeamId ? (
-        <StaffTeamDashboard user={user} teamId={activeTeamId} onBack={() => setActiveTeamId(null)} onLogout={handleLogout} />
+        <StaffTeamDashboard user={user} teamId={activeTeamId} onBack={() => { setActiveTeamId(null); handleEnterTeam(null); }} onLogout={handleLogout} />
       ) : user.role === "staff_viewer" && activeTeamId ? (
         <StaffTeamDashboard user={user} teamId={activeTeamId} onBack={handleLogout} onLogout={handleLogout} readOnly />
       ) : null}
