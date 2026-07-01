@@ -295,7 +295,7 @@ function PhysicalPdfModal({ player, team, entry, bodyWeight, profile, allPhysica
                   )}
                   {freeText && (
                     <div style={{ background: COLORS.panelRaised, borderRadius: 8, padding: "8px 10px" }}>
-                      <div style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, marginBottom: 4, opacity: 0.6, textTransform: "uppercase", letterSpacing: 0.4 }}>Historial lesivo (jugador)</div>
+                      <div style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, marginBottom: 4, opacity: 0.6, textTransform: "uppercase", letterSpacing: 0.4 }}>Historial lesivo</div>
                       <div style={{ fontSize: 12, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{freeText}</div>
                     </div>
                   )}
@@ -792,7 +792,7 @@ function CoachInjuryPanel({ injuries, freeText }) {
       )}
       {hasFreeText && (
         <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "1rem" }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 13, color: COLORS.text, marginBottom: 8 }}>Historial lesivo (jugador)</div>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 13, color: COLORS.text, marginBottom: 8 }}>Historial lesivo</div>
           <div style={{ fontSize: 13, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{freeText}</div>
         </div>
       )}

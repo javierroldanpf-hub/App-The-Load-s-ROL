@@ -28,7 +28,7 @@ const MENSTRUAL_PHASES = [
     contenidos: "Fase Folicular Temprana\nBajada de Progesterona y Subida del Estrógeno\nNo hay predominancia de ninguna vía metabólica\n\nPueden aparecer molestias (calambres, fatiga). Adaptar la carga según el estado individual. El rendimiento puede estar reducido los primeros días. Movilidad suave y trabajo técnico recomendado.",
   },
   {
-    label: "Semana Post Sangrado", short: "Post 1", type: "sobrecarga", emoji: "🌱",
+    label: "Semana Post Sangrado", short: "Post 1", type: "sobrecarga", emoji: "🔥💪",
     fase: "Fase Folicular Tardía",
     metabolismo: "Predominancia del Estrógeno (Síntesis y Almacenamiento de Glucógeno)",
     contenidos: "Fase Folicular Tardía\nPredominancia del Estrógeno (Síntesis y Almacenamiento de Glucógeno)\n\nMejor momento para el rendimiento y la adaptación. Alta tolerancia al esfuerzo, buena recuperación muscular y síntesis de glucógeno óptima. Semana ideal para cargas altas y trabajo de alta intensidad.\n\n⚡ Días 20-22 del ciclo (13-15 días post sangrado): Pico de relaxina — precaución con estiramientos y movilidad extrema.",

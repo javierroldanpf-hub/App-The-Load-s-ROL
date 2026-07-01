@@ -372,7 +372,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
     const MENSTRUAL_PHASES_CAL = [
       { short: "Previa",   emoji: "🌕" },
       { short: "Sangrado", emoji: "🔴" },
-      { short: "Post 1",   emoji: "🌱" },
+      { short: "Post 1",   emoji: "🔥💪" },
       { short: "Post 2",   emoji: "💙" },
     ];
     const mesoColors = mesocycles.filter((m) => m.color && date >= m.startDate && date <= m.endDate).map((m) => m.color);
@@ -482,7 +482,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         const ALL_MENSTRUAL = [
           { emoji: "🌕", label: "Semana Previa al Sangrado",  idx: 0 },
           { emoji: "🔴", label: "Semana de Sangrado",         idx: 1 },
-          { emoji: "🌱", label: "Semana Post Sangrado",       idx: 2 },
+          { emoji: "🔥💪", label: "Semana Post Sangrado",       idx: 2 },
           { emoji: "💙", label: "Semana 2ª Post Sangrado",    idx: 3 },
         ];
         const visibleMenstrualIdxs = new Set(visibleDates.flatMap((d) => {
@@ -575,7 +575,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
               const session = sessionByDate[date];
               const isToday = date === today;
               const intensity = session && !session.isRest ? INTENSITY_LEVELS[session.intensity] : null;
-              const MENSTRUAL_PHASES_CAL = [{ emoji: "🌕" }, { emoji: "🔴" }, { emoji: "🌱" }, { emoji: "💙" }];
+              const MENSTRUAL_PHASES_CAL = [{ emoji: "🌕" }, { emoji: "🔴" }, { emoji: "🔥💪" }, { emoji: "💙" }];
               const mesoColors = mesocycles.filter((m) => m.color && date >= m.startDate && date <= m.endDate).map((m) => m.color);
               const weekTypeColor = (() => {
                 const WEEK_TYPE_COLORS = { carga: "#ff9f40", sobrecarga: "#ff5a5f", descarga: "#60a5fa" };

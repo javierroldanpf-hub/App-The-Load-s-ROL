@@ -41,7 +41,7 @@ const WT_COLOR = { carga: "#ff9f40", sobrecarga: "#ff5a5f", descarga: "#60a5fa" 
 const MENSTRUAL_PHASES_PDF = [
   { short: "Semana Previa al Sangrado",  emoji: "🌕" },
   { short: "Semana de Sangrado",         emoji: "🔴" },
-  { short: "Semana Post Sangrado",       emoji: "🌱" },
+  { short: "Semana Post Sangrado",       emoji: "🔥💪" },
   { short: "Semana 2ª Post Sangrado",    emoji: "💙" },
 ];
 

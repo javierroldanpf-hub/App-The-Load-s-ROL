@@ -390,7 +390,7 @@ const WEEK_TYPE_LABELS = { carga: "Carga", sobrecarga: "Sobrecarga", descarga: "
 const MENSTRUAL_PHASES_FULL = [
   { emoji: "🌕", label: "Semana Previa al Sangrado", fase: "Fase Lútea Tardía", metabolismo: "Predominancia de Progesterona (Metabolismo de Ácidos Grasos)", type: "carga" },
   { emoji: "🔴", label: "Semana de Sangrado", fase: "Fase Folicular Temprana", metabolismo: "Bajada de Progesterona y Subida del Estrógeno (No hay predominancia de ninguna vía metabólica)", type: "carga" },
-  { emoji: "🌱", label: "Semana Post Sangrado", fase: "Fase Folicular Tardía", metabolismo: "Predominancia del Estrógeno (Síntesis y Almacenamiento de Glucógeno)", type: "sobrecarga" },
+  { emoji: "🔥💪", label: "Semana Post Sangrado", fase: "Fase Folicular Tardía", metabolismo: "Predominancia del Estrógeno (Síntesis y Almacenamiento de Glucógeno)", type: "sobrecarga" },
   { emoji: "💙", label: "Semana 2ª Post Sangrado", fase: "Fase Lútea Temprana", metabolismo: "Bajada del Estrógeno y Subida de la Progesterona (Aumento del Metabolismo de Ácidos Grasos)", type: "descarga" },
 ];
 
@@ -417,7 +417,7 @@ function PlayerCalendar({ sessions, team, user }) {
   const MENSTRUAL_PHASES_CAL = [
     { emoji: "🌕", label: "Semana Previa al Sangrado" },
     { emoji: "🔴", label: "Semana de Sangrado" },
-    { emoji: "🌱", label: "Semana Post Sangrado" },
+    { emoji: "🔥💪", label: "Semana Post Sangrado" },
     { emoji: "💙", label: "Semana 2ª Post Sangrado" },
   ];
   const getMesoColors = (date) => mesocycles.filter((m) => m.color && date >= m.startDate && date <= m.endDate).map((m) => m.color);
