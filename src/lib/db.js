@@ -349,6 +349,7 @@ export async function saveSession(session) {
     is_rest: session.isRest || false,
     duration: session.duration || 0,
     description: session.description || null,
+    allow_player_note: session.allowPlayerNote || false,
     individual_sessions: session.individualSessions || [],
     created_at: session.createdAt || Date.now(),
   };
@@ -816,6 +817,7 @@ function dbSessionToApp(r) {
     isRest: r.is_rest || false,
     duration: r.duration || 0,
     description: r.description || "",
+    allowPlayerNote: r.allow_player_note || false,
     individualSessions: r.individual_sessions || [],
     createdAt: r.created_at,
   };

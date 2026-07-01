@@ -66,16 +66,19 @@ export default function RpeForm({ user, session, existing, refreshData }) {
         <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 20, color: COLORS.text }}>{load}</span>
       </div>
 
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>Comentario para el preparador (opcional)</div>
-        <textarea value={comment} onChange={(e) => handleCommentChange(e.target.value)}
-          placeholder="¿Algo que contar sobre cómo fue la sesión?" rows={3}
-          style={{
-            width: "100%", padding: "10px 12px", borderRadius: 10,
-            background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text,
-            fontSize: 14, fontFamily: "'Inter', sans-serif", resize: "vertical", outline: "none",
-          }} />
-      </div>
+      {session.allowPlayerNote && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>Nota del entreno</div>
+          <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8 }}>Tu preparador/a te pide que añadas información sobre la sesión de hoy.</div>
+          <textarea value={comment} onChange={(e) => handleCommentChange(e.target.value)}
+            placeholder="Escribe aquí tus sensaciones, observaciones o lo que tu preparador/a te haya pedido..." rows={4}
+            style={{
+              width: "100%", padding: "10px 12px", borderRadius: 10,
+              background: COLORS.panelRaised, border: `1px solid ${COLORS.lime}`, color: COLORS.text,
+              fontSize: 14, fontFamily: "'Inter', sans-serif", resize: "vertical", outline: "none",
+            }} />
+        </div>
+      )}
 
       <button onClick={handleSubmit} disabled={saving} style={{
         width: "100%", padding: "13px 0", borderRadius: 12, border: "none",

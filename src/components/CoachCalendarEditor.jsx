@@ -54,6 +54,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   const [description, setDescription] = useState(parsed.rivalText);
   const [rivalPhoto, setRivalPhoto] = useState(parsed.rivalPhoto || "");
   const [isRest, setIsRest] = useState(existing ? !!existing.isRest : false);
+  const [allowPlayerNote, setAllowPlayerNote] = useState(existing ? !!existing.allowPlayerNote : false);
   const [extraDates, setExtraDates] = useState([]);
   const isMatch = availableTypes.find((st) => st.id === sessionType)?.isMatch ?? false;
 
@@ -98,7 +99,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
     setSaving(true);
     try {
       const finalDesc = isMatch ? JSON.stringify({ rivalText: description, rivalPhoto }) : JSON.stringify({ blocks });
-      await onSaveGroup({ sessionType, intensity, duration: parseInt(duration) || 0, description: finalDesc, isRest, isMatch }, extraDates);
+      await onSaveGroup({ sessionType, intensity, duration: parseInt(duration) || 0, description: finalDesc, isRest, isMatch, allowPlayerNote }, extraDates);
     } finally { setSaving(false); }
   };
 
@@ -203,6 +204,17 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                   </div>
                 )}
               </>
+            )}
+            {!isRest && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, padding: "12px 14px", background: COLORS.panelRaised, borderRadius: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>Nota del jugador/a</div>
+                  <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>El jugador/a podrá añadir un texto sobre el entreno</div>
+                </div>
+                <button onClick={() => setAllowPlayerNote((v) => !v)} style={{ width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative", background: allowPlayerNote ? COLORS.lime : COLORS.panelRaised, transition: "background 0.2s", flexShrink: 0 }}>
+                  <span style={{ position: "absolute", top: 3, left: allowPlayerNote ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: allowPlayerNote ? "#14171c" : COLORS.textFaint, transition: "left 0.2s" }} />
+                </button>
+              </div>
             )}
             <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
               {existing && (
