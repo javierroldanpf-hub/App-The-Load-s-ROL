@@ -96,7 +96,7 @@ function LoginForm({ onBack, onLogin }) {
   };
 
   if (expelledUser) {
-    return <JoinNewTeamForm user={expelledUser} onLogin={onLogin} />;
+    return <JoinNewTeamForm user={expelledUser} onLogin={onLogin} onBack={() => setExpelledUser(null)} />;
   }
 
   return (
@@ -115,7 +115,7 @@ function LoginForm({ onBack, onLogin }) {
   );
 }
 
-function JoinNewTeamForm({ user, onLogin }) {
+function JoinNewTeamForm({ user, onLogin, onBack }) {
   const [teamCode, setTeamCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -146,8 +146,9 @@ function JoinNewTeamForm({ user, onLogin }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", padding: "2rem 1.25rem", maxWidth: 380, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: "100%", background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: "1.75rem 1.5rem", display: "flex", flexDirection: "column", gap: 14 }}>
+    <div style={{ minHeight: "100vh", padding: "2rem 1.25rem", maxWidth: 380, margin: "0 auto" }}>
+      <TopBar title="Unirse a un equipo" onBack={onBack} />
+      <div style={{ marginTop: 24, background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: "1.75rem 1.5rem", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ fontSize: 28, textAlign: "center" }}>👋</div>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 20, fontWeight: 600, color: COLORS.text, textAlign: "center" }}>
           Ya no perteneces a ningún equipo
