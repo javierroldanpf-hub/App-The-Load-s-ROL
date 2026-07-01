@@ -683,7 +683,7 @@ function Accordion({ title, children, defaultOpen = false, disabled = false }) {
           opacity: disabled ? 0.5 : 1,
         }}
       >
-        <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 15, color: COLORS.text }}>{title}</span>
+        <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 15, color: COLORS.text, textAlign: "left", flex: 1 }}>{title}</span>
         {!disabled && (
           <span style={{ color: COLORS.text, fontSize: 12, transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
         )}
