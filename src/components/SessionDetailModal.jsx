@@ -2,34 +2,37 @@
 import { useState } from "react";
 import { COLORS, INTENSITY_LEVELS } from "@/lib/constants";
 import { weekdayLabel, fmtDateLong, primaryBtn } from "@/lib/utils";
-import { saveRpe } from "@/lib/db";
-import { todayStr } from "@/lib/utils";
+import { saveSession } from "@/lib/db";
 import StatusPill from "./StatusPill";
 
-export default function SessionDetailModal({ date, session, onClose, user, existingRpe, refreshData }) {
+const ATHLETE_NOTE_BLOCK_NAME = "Nota del atleta";
+
+function getBlocks(description) {
+  try {
+    const p = JSON.parse(description || "{}");
+    if (p.blocks) return p.blocks;
+  } catch {}
+  return [];
+}
+
+export default function SessionDetailModal({ date, session, onClose, user, refreshData }) {
   const intensity = session.isRest ? INTENSITY_LEVELS["descanso"] : (INTENSITY_LEVELS[session.intensity] || INTENSITY_LEVELS["amarillo"]);
-  const [note, setNote] = useState(existingRpe?.comment || "");
+
+  const existingBlocks = getBlocks(session.description);
+  const existingNoteBlock = existingBlocks.find((b) => b.name === ATHLETE_NOTE_BLOCK_NAME);
+  const [note, setNote] = useState(existingNoteBlock?.content || "");
   const [savingNote, setSavingNote] = useState(false);
   const [noteSaved, setNoteSaved] = useState(false);
 
   const handleSaveNote = async () => {
-    if (!user) return;
     setSavingNote(true);
     try {
-      await saveRpe({
-        teamId: user.team_id || user.teamId,
-        username: user.username,
-        displayName: user.display_name || user.displayName,
-        date,
-        rpe: existingRpe?.rpe ?? 5,
-        duration: session.duration || 60,
-        sessionType: session.sessionType,
-        plannedIntensity: session.intensity,
-        comment: note.trim(),
-        commentRead: false,
-        id: existingRpe?.id,
-        ts: Date.now(),
-      });
+      const otherBlocks = existingBlocks.filter((b) => b.name !== ATHLETE_NOTE_BLOCK_NAME);
+      const newBlocks = note.trim()
+        ? [...otherBlocks, { name: ATHLETE_NOTE_BLOCK_NAME, duration: "", content: note.trim() }]
+        : otherBlocks;
+      const newDescription = JSON.stringify({ blocks: newBlocks });
+      await saveSession({ ...session, description: newDescription });
       if (refreshData) await refreshData();
       setNoteSaved(true);
       setTimeout(() => setNoteSaved(false), 2000);
@@ -127,7 +130,7 @@ export default function SessionDetailModal({ date, session, onClose, user, exist
           <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 14 }}>Duración total: <strong style={{ color: COLORS.text }}>{session.duration} min</strong></div>
         )}
         {renderContent()}
-        {session.allowPlayerNote && user && (
+        {session.allowPlayerNote && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>Nota del entreno</div>
             <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 8 }}>Tu preparador/a te pide que añadas información sobre esta sesión.</div>

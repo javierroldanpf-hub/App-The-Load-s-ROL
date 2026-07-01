@@ -712,8 +712,6 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
           date={detailDate}
           session={detailSession}
           onClose={() => { setDetailDate(null); setDetailSession(null); }}
-          user={user}
-          existingRpe={rpe.find((e) => e.date === detailDate && e.username === user?.username)}
           refreshData={refreshData}
         />
       )}
