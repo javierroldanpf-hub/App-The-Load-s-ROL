@@ -15,6 +15,7 @@ import LoadControlPanel from "./LoadControlPanel";
 import TeamAveragesPanel, { ColorLegend } from "./TeamAveragesPanel";
 import SessionDetailModal from "./SessionDetailModal";
 import ExportDataModal from "./ExportDataModal";
+import HelpPanel from "./HelpPanel";
 import PrintableReportModal from "./PrintableReportModal";
 import SettingsPanel from "./SettingsPanel";
 
@@ -50,6 +51,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const [resumenSubTab, setResumenSubTab] = useState("medias");
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [showExport, setShowExport] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [displayNames, setDisplayNames] = useState({});
@@ -143,6 +145,14 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         title={null}
         rightSlot={
           <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowHelp(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              <svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="256" cy="256" r="220" />
+                <path d="M190 186c0-36 29-66 66-66s66 30 66 66c0 44-66 66-66 88" />
+                <circle cx="256" cy="370" r="18" fill={COLORS.lime} stroke="none" />
+              </svg>
+              Ayuda
+            </button>
             <button onClick={() => setShowExport(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round"><path d="M320 48H80a32 32 0 0 0-32 32v352a32 32 0 0 0 32 32h352a32 32 0 0 0 32-32V192z"/><path d="M320 48v144h144"/><line x1="176" y1="320" x2="400" y2="320"/><polyline points="336,256 400,320 336,384"/></svg> Exportar</button>
             <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill={COLORS.lime}><path d="M320 64H80C62 64 48 78 48 96v320c0 18 14 32 32 32h240c18 0 32-14 32-32v-80h-48v64H96V112h208v64h48V96c0-18-14-32-32-32z"/><path d="M456 234l-92-92-34 34 50 50H192v48h188l-50 50 34 34 92-92c9-9 9-24 0-32z"/></svg> Salir</button>
           </div>
@@ -318,6 +328,8 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       {tab === "ajustes" && (
         <SettingsPanel team={team} teamWithPhotos={teamWithPhotos} onTeamUpdate={handleTeamUpdate} sessions={sessions} rpe={rpe} coachTeamIds={user?.teamIds || user?.team_ids || []} coachUsername={user?.username || ""} onTeamDeleted={onBack} />
       )}
+
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
 
       {showExport && (
         <ExportDataModal team={team} wellness={wellness} rpe={rpe} sessions={sessions} onClose={() => setShowExport(false)} />
