@@ -106,6 +106,15 @@ export async function transferPlayerData(username, fromTeamId, toTeamId) {
   }
 }
 
+export async function setPlayerTeam(username, teamId) {
+  const sb = getSupabase();
+  const { error } = await sb
+    .from("profiles")
+    .update({ team_id: teamId })
+    .eq("username", normUser(username));
+  if (error) throw new Error(error.message || JSON.stringify(error));
+}
+
 export async function expelPlayer(username) {
   const sb = getSupabase();
   const { error } = await sb
