@@ -575,7 +575,9 @@ function PlayerCalendar({ sessions, team, user }) {
                   <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5, marginBottom: w.contenidos ? 8 : 0 }}>{phase.metabolismo}</div>
                   {(() => {
                     if (!w.contenidos) return null;
-                    const stripped = w.contenidos.split("\n").filter((line) => line.trim() !== phase.fase && line.trim() !== phase.metabolismo).join("\n").replace(/^\n+/, "");
+                    const lines = w.contenidos.split("\n");
+                    const firstBlank = lines.findIndex((l, i) => i > 0 && l.trim() === "");
+                    const stripped = (firstBlank >= 0 ? lines.slice(firstBlank) : lines).join("\n").replace(/^\n+/, "");
                     if (!stripped) return null;
                     return (
                       <div style={{ borderTop: `1px solid ${COLORS.line}`, paddingTop: 8, marginTop: 4 }}>
