@@ -108,7 +108,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const todaySession = sessions.find((s) => s.date === todayStr() && !s.isRest);
 
   const mainTabs = [
-    { id: "resumen", label: "Resumen Carga" },
+    { id: "resumen", label: "Datos de Carga" },
     { id: "calendario", label: "Calendario" },
     ...(!readOnly ? [{ id: "mensajes", label: unreadCount > 0 ? `Avisos (${unreadCount})` : "Avisos" }] : []),
     { id: "fisicos", label: "Datos Físicos" },
