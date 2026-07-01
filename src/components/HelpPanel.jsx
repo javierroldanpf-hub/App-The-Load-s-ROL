@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { COLORS } from "@/lib/constants";
 
-const SECTIONS = [
+const SECTIONS_ALL = [
   {
     title: "Vista general del dashboard",
     content: `Al entrar en un equipo, grupo o atleta individual verás el panel principal con las pestañas superiores. Cada pestaña da acceso a una área diferente de seguimiento. En la barra superior tienes los botones de Ayuda, Exportar y Salir.`,
@@ -58,7 +58,10 @@ function AccordionItem({ title, content, isOpen, onToggle }) {
   );
 }
 
-export default function HelpPanel({ onClose }) {
+const READONLY_EXCLUDED = ["Avisos", "Ajustes"];
+
+export default function HelpPanel({ onClose, readOnly = false }) {
+  const SECTIONS = readOnly ? SECTIONS_ALL.filter((s) => !READONLY_EXCLUDED.includes(s.title)) : SECTIONS_ALL;
   const [openIdx, setOpenIdx] = useState(null);
 
   return (

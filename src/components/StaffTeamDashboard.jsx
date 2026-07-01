@@ -329,7 +329,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         <SettingsPanel team={team} teamWithPhotos={teamWithPhotos} onTeamUpdate={handleTeamUpdate} sessions={sessions} rpe={rpe} coachTeamIds={user?.teamIds || user?.team_ids || []} coachUsername={user?.username || ""} onTeamDeleted={onBack} />
       )}
 
-      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} readOnly={readOnly} />}
 
       {showExport && (
         <ExportDataModal team={team} wellness={wellness} rpe={rpe} sessions={sessions} onClose={() => setShowExport(false)} />
