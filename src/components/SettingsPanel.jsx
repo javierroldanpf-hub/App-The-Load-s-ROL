@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/constants";
-import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, getUser, saveUser } from "@/lib/db";
+import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer } from "@/lib/db";
 import Avatar from "./Avatar";
 
 const inp = { padding: "9px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
@@ -145,8 +145,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       const newRoster = (team.roster || []).filter((u) => (typeof u === "string" ? u : u.username) !== username);
       await save({ roster: newRoster, injuredPlayers: injuredPlayers.filter((u) => u !== username) });
       // Limpiar team_id del jugador para que tenga que unirse a un nuevo equipo
-      const playerUser = await getUser(username);
-      if (playerUser) await saveUser({ ...playerUser, team_id: null, teamId: null });
+      await expelPlayer(username);
     } finally { setSaving(false); }
   };
 
