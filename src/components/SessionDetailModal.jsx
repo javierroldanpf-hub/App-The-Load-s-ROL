@@ -1,10 +1,41 @@
 "use client";
+import { useState } from "react";
 import { COLORS, INTENSITY_LEVELS } from "@/lib/constants";
 import { weekdayLabel, fmtDateLong, primaryBtn } from "@/lib/utils";
+import { saveRpe } from "@/lib/db";
+import { todayStr } from "@/lib/utils";
 import StatusPill from "./StatusPill";
 
-export default function SessionDetailModal({ date, session, onClose }) {
+export default function SessionDetailModal({ date, session, onClose, user, existingRpe, refreshData }) {
   const intensity = session.isRest ? INTENSITY_LEVELS["descanso"] : (INTENSITY_LEVELS[session.intensity] || INTENSITY_LEVELS["amarillo"]);
+  const [note, setNote] = useState(existingRpe?.comment || "");
+  const [savingNote, setSavingNote] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+
+  const handleSaveNote = async () => {
+    if (!user) return;
+    setSavingNote(true);
+    try {
+      await saveRpe({
+        teamId: user.team_id || user.teamId,
+        username: user.username,
+        displayName: user.display_name || user.displayName,
+        date,
+        rpe: existingRpe?.rpe ?? 5,
+        duration: session.duration || 60,
+        sessionType: session.sessionType,
+        plannedIntensity: session.intensity,
+        comment: note.trim(),
+        commentRead: false,
+        id: existingRpe?.id,
+        ts: Date.now(),
+      });
+      if (refreshData) await refreshData();
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2000);
+    } catch (e) { console.error(e); }
+    finally { setSavingNote(false); }
+  };
 
   const renderContent = () => {
     if (!session.description) return null;
@@ -96,6 +127,22 @@ export default function SessionDetailModal({ date, session, onClose }) {
           <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 14 }}>Duración total: <strong style={{ color: COLORS.text }}>{session.duration} min</strong></div>
         )}
         {renderContent()}
+        {session.allowPlayerNote && user && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>Nota del entreno</div>
+            <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 8 }}>Tu preparador/a te pide que añadas información sobre esta sesión.</div>
+            <textarea
+              value={note}
+              onChange={(e) => { setNote(e.target.value); setNoteSaved(false); }}
+              placeholder="Escribe aquí tus sensaciones u observaciones..."
+              rows={4}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: COLORS.panelRaised, border: `1px solid ${COLORS.lime}`, color: COLORS.text, fontSize: 14, fontFamily: "'Inter', sans-serif", resize: "vertical", outline: "none", boxSizing: "border-box" }}
+            />
+            <button onClick={handleSaveNote} disabled={savingNote} style={{ marginTop: 8, width: "100%", padding: "11px 0", borderRadius: 10, border: "none", background: noteSaved ? COLORS.limeDark : COLORS.lime, color: noteSaved ? COLORS.lime : "#14171c", fontWeight: 700, fontSize: 14, cursor: savingNote ? "default" : "pointer" }}>
+              {savingNote ? "Guardando..." : noteSaved ? "✓ Guardado" : "Guardar nota"}
+            </button>
+          </div>
+        )}
         <button onClick={onClose} style={primaryBtn(false)}>Cerrar</button>
       </div>
     </div>

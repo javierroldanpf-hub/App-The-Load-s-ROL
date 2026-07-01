@@ -205,11 +205,11 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                 )}
               </>
             )}
-            {!isRest && (
+            {!isRest && isIndividualAthlete && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, padding: "12px 14px", background: COLORS.panelRaised, borderRadius: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>Nota del jugador/a</div>
-                  <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>El jugador/a podrá añadir un texto sobre el entreno</div>
+                  <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>Nota del atleta</div>
+                  <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>El atleta podrá añadir un texto sobre el entreno en su calendario</div>
                 </div>
                 <button onClick={() => setAllowPlayerNote((v) => !v)} style={{ width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative", background: allowPlayerNote ? COLORS.lime : COLORS.panelRaised, transition: "background 0.2s", flexShrink: 0 }}>
                   <span style={{ position: "absolute", top: 3, left: allowPlayerNote ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: allowPlayerNote ? "#14171c" : COLORS.textFaint, transition: "left 0.2s" }} />

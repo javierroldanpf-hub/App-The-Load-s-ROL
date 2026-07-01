@@ -110,7 +110,7 @@ export default function PlayerDashboard({ user, onLogout }) {
           onDismissAlert={async (id) => { await dismissPlayerAlert(id); refreshAlerts(); }}
         />
       )}
-      {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} />}
+      {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} rpe={rpe} refreshData={refreshData} />}
       {tab === "mydata" && <PlayerMyData user={user} team={team} onProfileUpdate={(p) => { setProfile(p); refreshData(); }} />}
       {tab === "settings" && <ReminderSettings username={user.username} />}
     </div>
@@ -394,7 +394,7 @@ const MENSTRUAL_PHASES_FULL = [
   { emoji: "💙", label: "Semana 2ª Post Sangrado", fase: "Fase Lútea Temprana", metabolismo: "Bajada del Estrógeno y Subida de la Progesterona (Aumento del Metabolismo de Ácidos Grasos)", type: "descarga" },
 ];
 
-function PlayerCalendar({ sessions, team, user }) {
+function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
   const tStr = todayStr;
   const wdLabel = weekdayLabel;
 
@@ -708,7 +708,14 @@ function PlayerCalendar({ sessions, team, user }) {
       )}
 
       {detailDate && detailSession && (
-        <SessionDetailModal date={detailDate} session={detailSession} onClose={() => { setDetailDate(null); setDetailSession(null); }} />
+        <SessionDetailModal
+          date={detailDate}
+          session={detailSession}
+          onClose={() => { setDetailDate(null); setDetailSession(null); }}
+          user={user}
+          existingRpe={rpe.find((e) => e.date === detailDate && e.username === user?.username)}
+          refreshData={refreshData}
+        />
       )}
     </div>
   );
