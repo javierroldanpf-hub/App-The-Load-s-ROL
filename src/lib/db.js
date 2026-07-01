@@ -86,17 +86,9 @@ export async function getTeamsByCoach(coachUsername) {
 
 export async function transferPlayerData(username, fromTeamId, toTeamId) {
   const sb = getSupabase();
-  const tables = [
-    { table: "wellness",         conflict: "team_id,username,date" },
-    { table: "rpe_entries",      conflict: "team_id,username,date" },
-    { table: "physical_entries", conflict: "team_id,username,date" },
-  ];
-  for (const { table, conflict } of tables) {
-    const { data } = await sb.from(table).select("*").eq("team_id", fromTeamId).eq("username", username);
-    if (!data?.length) continue;
-    const updated = data.map((r) => ({ ...r, team_id: toTeamId }));
-    await sb.from(table).upsert(updated, { onConflict: conflict });
-    await sb.from(table).delete().eq("team_id", fromTeamId).eq("username", username);
+  const tables = ["wellness", "rpe_entries", "physical_entries"];
+  for (const table of tables) {
+    await sb.from(table).update({ team_id: toTeamId }).eq("team_id", fromTeamId).eq("username", username);
   }
   // Player profile
   const { data: prof } = await sb.from("player_profiles").select("*").eq("team_id", fromTeamId).eq("username", username).single();
