@@ -335,7 +335,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
               <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 5 }}>Destino</div>
               <select value={transferTarget} onChange={(e) => setTransferTarget(e.target.value)} style={{ ...inp, width: "100%" }}>
                 <option value="">Seleccionar equipo/grupo...</option>
-                {coachTeams.map((t) => <option key={t.teamId} value={t.teamId}>{t.name}</option>)}
+                {coachTeams.filter((t) => t.kind !== "individual").map((t) => <option key={t.teamId} value={t.teamId}>{t.name}</option>)}
               </select>
             </div>
             <button onClick={handleTransfer} disabled={!transferPlayer || !transferTarget || transferring} style={{ padding: "10px 0", borderRadius: 10, border: "none", background: transferPlayer && transferTarget ? COLORS.lime : COLORS.line, color: transferPlayer && transferTarget ? "#14171c" : COLORS.text, fontWeight: 700, fontSize: 13, cursor: transferPlayer && transferTarget ? "pointer" : "default" }}>
