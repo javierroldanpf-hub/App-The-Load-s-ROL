@@ -222,7 +222,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
           <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>{isTrainingGroup ? "Grupo de entreno" : "Equipo"}</div>
           <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2, opacity: 0.7 }}>{isTrainingGroup ? "Sesiones numeradas · Competición · Sin posiciones" : "Sesiones MD · Partidos · Con posiciones"}</div>
         </div>
-        <button onClick={async () => { const next = !isTrainingGroup; setIsTrainingGroup(next); await save({ isTrainingGroup: next }); }}
+        <button onClick={async () => { const next = !isTrainingGroup; setIsTrainingGroup(next); await save({ isTrainingGroup: next, kind: next ? "grupo" : "equipo" }); }}
           style={{ width: 52, height: 28, borderRadius: 14, border: "none", cursor: "pointer", position: "relative", background: isTrainingGroup ? COLORS.lime : COLORS.panelRaised, flexShrink: 0, transition: "background 0.2s" }}>
           <span style={{ position: "absolute", top: 3, left: isTrainingGroup ? 26 : 3, width: 22, height: 22, borderRadius: "50%", background: isTrainingGroup ? "#14171c" : COLORS.textFaint, transition: "left 0.2s" }} />
         </button>

@@ -13,6 +13,7 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState(null);
+  const [editingName, setEditingName] = useState("");
   const [editingPositionsTeamId, setEditingPositionsTeamId] = useState(null);
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamKind, setNewTeamKind] = useState("equipo");
@@ -58,8 +59,15 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
   const handleUpdateKind = async (teamId, kind) => {
     const team = await getTeam(teamId);
     if (!team) return;
-    await saveTeam({ ...team, kind });
-    setEditingTeamId(null);
+    await saveTeam({ ...team, kind, isTrainingGroup: kind === "grupo" });
+    await loadTeams();
+  };
+
+  const handleUpdateName = async (teamId) => {
+    if (!editingName.trim()) return;
+    const team = await getTeam(teamId);
+    if (!team) return;
+    await saveTeam({ ...team, name: editingName.trim() });
     await loadTeams();
   };
 
@@ -113,11 +121,22 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
                   </button>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: COLORS.lime, letterSpacing: "0.05em" }}>{t.code}</div>
-                    <button onClick={() => setEditingTeamId(editingTeamId === t.teamId ? null : t.teamId)} style={{ background: "none", border: "none", color: COLORS.text, fontSize: 11, cursor: "pointer", marginTop: 2 }}>Editar</button>
+                    <button onClick={() => { const next = editingTeamId === t.teamId ? null : t.teamId; setEditingTeamId(next); if (next) setEditingName(t.name); }} style={{ background: "none", border: "none", color: COLORS.text, fontSize: 11, cursor: "pointer", marginTop: 2 }}>Editar</button>
                   </div>
                 </div>
                 {editingTeamId === t.teamId && (
                   <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${COLORS.line}` }}>
+                    {/* Cambiar nombre */}
+                    <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                      <input
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        placeholder={t.name}
+                        style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "8px 12px" }}
+                      />
+                      <button onClick={() => handleUpdateName(t.teamId)} style={{ padding: "8px 14px", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar</button>
+                    </div>
+                    {/* Cambiar tipo */}
                     <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                       {Object.entries(TEAM_KINDS).map(([key, def]) => (
                         <button key={key} onClick={() => handleUpdateKind(t.teamId, key)} style={{
