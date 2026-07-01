@@ -70,6 +70,7 @@ function LoginForm({ onBack, onLogin }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [expelledUser, setExpelledUser] = useState(null);
 
   const handleSubmit = async () => {
     setError("");
@@ -82,12 +83,21 @@ function LoginForm({ onBack, onLogin }) {
         setBusy(false);
         return;
       }
+      if (user.role === "player" && !user.team_id) {
+        setExpelledUser(user);
+        setBusy(false);
+        return;
+      }
       onLogin(user);
     } catch (e) {
       setError(e?.message || "No se pudo conectar. Inténtalo de nuevo.");
       setBusy(false);
     }
   };
+
+  if (expelledUser) {
+    return <JoinNewTeamForm user={expelledUser} onLogin={onLogin} />;
+  }
 
   return (
     <div style={{ minHeight: "100vh", padding: "2rem 1.25rem", maxWidth: 380, margin: "0 auto" }}>
@@ -100,6 +110,66 @@ function LoginForm({ onBack, onLogin }) {
         <button onClick={handleSubmit} disabled={busy} style={primaryBtn(busy)}>
           {busy ? "Comprobando..." : "Entrar"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+function JoinNewTeamForm({ user, onLogin }) {
+  const [teamCode, setTeamCode] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const handleJoin = async () => {
+    setError("");
+    if (!teamCode.trim()) { setError("Introduce el código del nuevo equipo."); return; }
+    setBusy(true);
+    try {
+      const teamId = await getTeamIdByCode(teamCode.trim());
+      if (!teamId) { setError("Ese código no existe. Pídelo a tu nuevo entrenador."); setBusy(false); return; }
+      const team = await getTeam(teamId);
+      if (!team) { setError("No se pudo encontrar el equipo."); setBusy(false); return; }
+      if ((team.kind || "equipo") === "individual" && (team.roster || []).length >= 1) {
+        setError("Este perfil de atleta individual ya tiene un atleta asignado."); setBusy(false); return;
+      }
+      const updatedUser = { ...user, team_id: teamId };
+      await saveUser(updatedUser);
+      const roster = team.roster || [];
+      if (!roster.includes(user.username)) {
+        await saveTeam({ ...team, roster: [...roster, user.username] });
+      }
+      onLogin(updatedUser);
+    } catch (e) {
+      setError("No se pudo unir al equipo. Inténtalo de nuevo.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", padding: "2rem 1.25rem", maxWidth: 380, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: "100%", background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: "1.75rem 1.5rem", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ fontSize: 28, textAlign: "center" }}>👋</div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 20, fontWeight: 600, color: COLORS.text, textAlign: "center" }}>
+          Ya no perteneces a ningún equipo
+        </div>
+        <p style={{ fontSize: 13, color: COLORS.text, textAlign: "center", margin: 0 }}>
+          Has sido dado de baja de tu equipo anterior. Para continuar, introduce el código de tu nuevo equipo.
+        </p>
+        <input
+          placeholder="Código de equipo (ej. LOBOS-7X2K)"
+          value={teamCode}
+          onChange={(e) => setTeamCode(e.target.value.toUpperCase())}
+          onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+          style={{ ...inputStyle, fontFamily: "'Oswald', sans-serif", letterSpacing: "0.05em" }}
+          autoFocus
+        />
+        {error && <div style={{ color: COLORS.coral, fontSize: 13 }}>{error}</div>}
+        <button onClick={handleJoin} disabled={busy} style={primaryBtn(busy)}>
+          {busy ? "Uniéndome..." : "Unirme al equipo"}
+        </button>
+        <p style={{ fontSize: 12, color: COLORS.text, textAlign: "center", margin: 0 }}>
+          Pide el código a tu nuevo entrenador o preparador físico.
+        </p>
       </div>
     </div>
   );
