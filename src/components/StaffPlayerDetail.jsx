@@ -39,7 +39,7 @@ function WeeklyChartPlayer({ days, sessions, dataByDate, mdTypeAvg, colorFn, fal
   });
 
   const w = 340, h = 160;
-  const padL = 26, padR = 6, padT = 18, padB = 44;
+  const padL = 26, padR = 6, padT = 18, padB = 52;
   const plotW = w - padL - padR;
   const plotH = h - padT - padB;
   const safeMax = max > 0 ? max : 1;
@@ -103,9 +103,9 @@ function WeeklyChartPlayer({ days, sessions, dataByDate, mdTypeAvg, colorFn, fal
         {bars.map((b, i) => (
           <g key={`xlabel-${b.date}`}>
             <text x={cx(i)} y={h - padB + 10} fontSize={8} fill={COLORS.text} textAnchor="middle">{weekdayLabel(b.date).slice(0, 3)}</text>
-            {b.mdType && (
-              <text x={cx(i)} y={h - padB + 20} fontSize={6} fill={b.intensityColor} textAnchor="middle" fontWeight="600">{b.mdType.slice(0, 5)}</text>
-            )}
+            {b.mdType && b.mdType.split(" ").map((word, wi) => (
+              <text key={wi} x={cx(i)} y={h - padB + 20 + wi * 8} fontSize={6} fill={b.intensityColor} textAnchor="middle" fontWeight="600">{word}</text>
+            ))}
           </g>
         ))}
       </svg>
