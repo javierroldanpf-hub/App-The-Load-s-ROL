@@ -105,8 +105,8 @@ function RangePicker({ startDate, endDate, onChange }) {
 function WeekEditor({ week, onSave, onClose }) {
   const [name, setName]           = useState(week.name || "");
   const [type, setType]           = useState(week.type || "carga");
-  const [volume, setVolume]       = useState(week.volume ?? 70);
-  const [intensity, setIntensity] = useState(week.intensity ?? 70);
+  const [volume, setVolume]       = useState(String(week.volume ?? 70));
+  const [intensity, setIntensity] = useState(String(week.intensity ?? 70));
   const [contenidos, setContenidos] = useState(week.contenidos || "");
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
@@ -139,13 +139,13 @@ function WeekEditor({ week, onSave, onClose }) {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Volumen (%)</div>
             <input type="number" inputMode="numeric" min={0} max={200} value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
+              onChange={(e) => setVolume(e.target.value)}
               style={{ ...inputStyle, color: COLORS.lime }} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Intensidad (%)</div>
             <input type="number" inputMode="numeric" min={0} max={100} value={intensity}
-              onChange={(e) => setIntensity(Number(e.target.value))}
+              onChange={(e) => setIntensity(e.target.value)}
               style={{ ...inputStyle, color: "#ff9f40" }} />
           </div>
         </div>
@@ -157,7 +157,7 @@ function WeekEditor({ week, onSave, onClose }) {
 
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-          <button onClick={() => onSave({ name, type, volume, intensity, contenidos })} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Guardar</button>
+          <button onClick={() => onSave({ name, type, volume: Number(volume) || 0, intensity: Number(intensity) || 0, contenidos })} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Guardar</button>
         </div>
       </div>
     </div>
