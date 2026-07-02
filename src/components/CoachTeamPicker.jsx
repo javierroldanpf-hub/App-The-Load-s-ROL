@@ -56,6 +56,22 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
     }
   };
 
+  const handleMove = async (teamId, dir) => {
+    const ids = teams.map((t) => t.teamId);
+    const idx = ids.indexOf(teamId);
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= ids.length) return;
+    [ids[idx], ids[newIdx]] = [ids[newIdx], ids[idx]];
+    const updatedUser = { ...user, team_ids: ids, teamIds: ids };
+    await saveUser(updatedUser);
+    onUserUpdate(updatedUser);
+    setTeams((prev) => {
+      const next = [...prev];
+      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+      return next;
+    });
+  };
+
   const handleUpdateKind = async (teamId, kind) => {
     const team = await getTeam(teamId);
     if (!team) return;
@@ -105,7 +121,7 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
         <div style={{ color: COLORS.text, textAlign: "center", fontSize: 14 }}>Cargando equipos...</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
-          {teams.map((t) => {
+          {teams.map((t, idx) => {
             const kindDef = TEAM_KINDS[t.kind || "equipo"];
             return (
               <div key={t.teamId} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "1rem 1.1rem" }}>
@@ -119,6 +135,10 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
                       </div>
                     </div>
                   </button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, marginRight: 8 }}>
+                    <button onClick={() => handleMove(t.teamId, -1)} disabled={idx === 0} style={{ background: "none", border: "none", cursor: idx === 0 ? "default" : "pointer", color: idx === 0 ? COLORS.line : COLORS.lime, fontSize: 14, lineHeight: 1, padding: "2px 4px" }}>▲</button>
+                    <button onClick={() => handleMove(t.teamId, 1)} disabled={idx === teams.length - 1} style={{ background: "none", border: "none", cursor: idx === teams.length - 1 ? "default" : "pointer", color: idx === teams.length - 1 ? COLORS.line : COLORS.lime, fontSize: 14, lineHeight: 1, padding: "2px 4px" }}>▼</button>
+                  </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 14, color: COLORS.lime, letterSpacing: "0.05em" }}>{t.code}</div>
                     <button onClick={() => { const next = editingTeamId === t.teamId ? null : t.teamId; setEditingTeamId(next); if (next) setEditingName(t.name); }} style={{ background: "none", border: "none", color: COLORS.text, fontSize: 11, cursor: "pointer", marginTop: 2 }}>Editar</button>
