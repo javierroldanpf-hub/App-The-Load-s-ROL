@@ -41,3 +41,6 @@ input[type="range"]::-moz-range-thumb {
 }
 button { font-family: 'Inter', sans-serif; }
 input::placeholder { color: #5a6470; }
+
+/* Ocultar scrollbar en webkit (iOS) para contenedores con overflow: scroll */
+.hide-scrollbar::-webkit-scrollbar { display: none; }

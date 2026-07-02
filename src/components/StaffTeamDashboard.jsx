@@ -196,7 +196,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
 
       {/* Tabs principales */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", gap: 4, background: COLORS.panel, borderRadius: 12, padding: 4, overflowX: "auto", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ display: "flex", gap: 4, background: COLORS.panel, borderRadius: 12, padding: 4, overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}>
           {mainTabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               flex: "1 0 auto", padding: "8px 10px", borderRadius: 9, border: "none", fontSize: 11, fontWeight: 600,
@@ -212,7 +212,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         <>
           {/* Sub-tabs de Resumen */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", gap: 4, background: COLORS.panelRaised, borderRadius: 10, padding: 4, overflowX: "auto", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
+            <div style={{ display: "flex", gap: 4, background: COLORS.panelRaised, borderRadius: 10, padding: 4, overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}>
               {resumenSubTabs.map((t) => (
                 <button key={t.id} onClick={() => setResumenSubTab(t.id)} style={{
                   flex: "1 0 auto", padding: "7px 10px", borderRadius: 7, border: "none", fontSize: 11, fontWeight: 600,
