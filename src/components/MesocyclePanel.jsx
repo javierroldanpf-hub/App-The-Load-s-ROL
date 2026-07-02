@@ -135,20 +135,19 @@ function WeekEditor({ week, onSave, onClose }) {
           </div>
         </div>
 
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: COLORS.text }}>Volumen</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.lime }}>{volume}%</span>
+        <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Volumen (%)</div>
+            <input type="number" inputMode="numeric" min={0} max={200} value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              style={{ ...inputStyle, color: COLORS.lime }} />
           </div>
-          <input type="range" min={0} max={130} value={volume} onChange={(e) => setVolume(Number(e.target.value))} style={{ width: "100%", accentColor: COLORS.lime }} />
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: COLORS.text }}>Intensidad</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#ff9f40" }}>{intensity}%</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Intensidad (%)</div>
+            <input type="number" inputMode="numeric" min={0} max={100} value={intensity}
+              onChange={(e) => setIntensity(Number(e.target.value))}
+              style={{ ...inputStyle, color: "#ff9f40" }} />
           </div>
-          <input type="range" min={0} max={100} value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} style={{ width: "100%", accentColor: "#ff9f40" }} />
         </div>
 
         <div style={{ marginBottom: 20 }}>
