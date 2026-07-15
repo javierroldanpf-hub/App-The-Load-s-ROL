@@ -126,6 +126,7 @@ export default function PlayerDashboard({ user, onLogout }) {
       {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} rpe={rpe} refreshData={refreshData} />}
       {tab === "mydata" && <PlayerMyData user={user} team={team} onProfileUpdate={(p) => { setProfile(p); refreshData(); }} />}
       {tab === "settings" && <ReminderSettings username={user.username} />}
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} mode="player" />}
     </div>
   );
 }
@@ -728,7 +729,6 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
           refreshData={refreshData}
         />
       )}
-      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} mode="player" />}
     </div>
   );
 }
