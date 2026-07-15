@@ -71,7 +71,6 @@ export default function PlayerDashboard({ user, onLogout }) {
           : "Hoy ya está completo";
 
   return (
-    <>
     <div style={{ minHeight: "100vh", padding: "1.5rem 1.25rem 3rem", maxWidth: 480, margin: "0 auto" }}>
       <TopBar rightSlot={
         <div style={{ display: "flex", gap: 8 }}>
@@ -729,8 +728,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
           refreshData={refreshData}
         />
       )}
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} mode="player" />}
     </div>
-    {showHelp && <HelpPanel onClose={() => setShowHelp(false)} mode="player" />}
-    </>
   );
 }
