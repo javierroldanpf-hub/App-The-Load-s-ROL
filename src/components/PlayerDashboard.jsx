@@ -9,9 +9,11 @@ import WellnessForm from "./WellnessForm";
 import RpeForm from "./RpeForm";
 import SessionDetailModal from "./SessionDetailModal";
 import PlayerMyData from "./PlayerMyData";
+import HelpPanel from "./HelpPanel";
 
 export default function PlayerDashboard({ user, onLogout }) {
   const [tab, setTab] = useState("today");
+  const [showHelp, setShowHelp] = useState(false);
   const [team, setTeam] = useState(null);
   const [profile, setProfile] = useState(null);
   const [wellness, setWellness] = useState([]);
@@ -71,7 +73,18 @@ export default function PlayerDashboard({ user, onLogout }) {
   return (
     <div style={{ minHeight: "100vh", padding: "1.5rem 1.25rem 3rem", maxWidth: 480, margin: "0 auto" }}>
       <TopBar rightSlot={
-        <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill={COLORS.lime}><path d="M320 64H80C62 64 48 78 48 96v320c0 18 14 32 32 32h240c18 0 32-14 32-32v-80h-48v64H96V112h208v64h48V96c0-18-14-32-32-32z"/><path d="M456 234l-92-92-34 34 50 50H192v48h188l-50 50 34 34 92-92c9-9 9-24 0-32z"/></svg> Salir</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => setShowHelp(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="256" cy="256" r="220" />
+              <circle cx="256" cy="160" r="18" fill={COLORS.lime} stroke="none" />
+              <line x1="256" y1="220" x2="256" y2="360" strokeWidth="40" />
+              <line x1="210" y1="360" x2="302" y2="360" strokeWidth="36" />
+            </svg>
+            Info
+          </button>
+          <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill={COLORS.lime}><path d="M320 64H80C62 64 48 78 48 96v320c0 18 14 32 32 32h240c18 0 32-14 32-32v-80h-48v64H96V112h208v64h48V96c0-18-14-32-32-32z"/><path d="M456 234l-92-92-34 34 50 50H192v48h188l-50 50 34 34 92-92c9-9 9-24 0-32z"/></svg> Salir</button>
+        </div>
       } />
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, marginBottom: 20 }}>
         <Avatar name={displayName} photoUrl={photoUrl} size={48} isInjured={(team.injuredPlayers || []).includes(user.username)} />
@@ -715,6 +728,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
           refreshData={refreshData}
         />
       )}
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} mode="player" />}
     </div>
   );
 }

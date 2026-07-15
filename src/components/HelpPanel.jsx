@@ -58,10 +58,33 @@ function AccordionItem({ title, content, isOpen, onToggle }) {
   );
 }
 
+const SECTIONS_PLAYER = [
+  {
+    title: "Hoy",
+    content: `Es la pantalla principal que ves al entrar. Muestra lo que tienes pendiente para el día de hoy.\n\n• Wellness: formulario diario de bienestar. Responde preguntas sobre tu sueño, fatiga, dolor muscular, humor y estrés. Es importante rellenarlo cada mañana.\n• RPE (Esfuerzo Percibido): formulario que rellenas después del entreno. Indica cuánto esfuerzo te ha supuesto la sesión del día en una escala del 0 al 10. También puedes añadir un comentario para tu preparador/a.\n• Avisos: si tu preparador/a te ha enviado algún mensaje o alerta, aparecerá aquí.`,
+  },
+  {
+    title: "Calendario",
+    content: `Muestra la planificación de tu equipo o grupo en formato semana o mes.\n\n• Pulsa sobre un día para ver el detalle de la sesión: tipo, intensidad, duración y contenidos.\n• Si tu preparador/a ha habilitado la opción de nota del atleta, podrás añadir un texto sobre la sesión directamente desde el detalle.\n• Los colores indican la intensidad planificada de cada sesión.\n• Si perteneces a un mesociclo menstrual, verás las fases del ciclo reflejadas en el calendario.`,
+  },
+  {
+    title: "Mis datos",
+    content: `Acceso a tu perfil personal y tu historial.\n\n• Datos personales: puedes editar tu información como modalidad deportiva, posición, fecha de nacimiento y foto de perfil.\n• Historial de wellness: gráfica con la evolución de tus valores de bienestar a lo largo del tiempo.\n• Historial de RPE: evolución de tu carga de entrenamiento sesión a sesión.\n• Datos físicos: tests físicos registrados por tu preparador/a y tu historial lesivo.`,
+  },
+  {
+    title: "Notificaciones",
+    content: `Configura a qué hora quieres recibir recordatorios para rellenar los formularios.\n\n• Recordatorio de Wellness: actívalo y elige la hora a la que quieres que te avise para rellenar el wellness diario.\n• Recordatorio de RPE: actívalo y elige la hora del recordatorio para el formulario de esfuerzo post-entreno.\n\nNota: las notificaciones funcionan mientras tienes la app abierta o en segundo plano.`,
+  },
+];
+
 const READONLY_EXCLUDED = ["Avisos", "Ajustes"];
 
-export default function HelpPanel({ onClose, readOnly = false }) {
-  const SECTIONS = readOnly ? SECTIONS_ALL.filter((s) => !READONLY_EXCLUDED.includes(s.title)) : SECTIONS_ALL;
+export default function HelpPanel({ onClose, readOnly = false, mode = "coach" }) {
+  const SECTIONS = mode === "player"
+    ? SECTIONS_PLAYER
+    : readOnly
+      ? SECTIONS_ALL.filter((s) => !READONLY_EXCLUDED.includes(s.title))
+      : SECTIONS_ALL;
   const [openIdx, setOpenIdx] = useState(null);
 
   return (
@@ -69,12 +92,21 @@ export default function HelpPanel({ onClose, readOnly = false }) {
       <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, width: "100%", maxWidth: 640, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: `1px solid ${COLORS.line}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <svg width="20" height="20" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="256" cy="256" r="220" />
-              <path d="M190 186c0-36 29-66 66-66s66 30 66 66c0 44-66 66-66 88" />
-              <circle cx="256" cy="370" r="18" fill={COLORS.lime} stroke="none" />
-            </svg>
-            <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: COLORS.text }}>Ayuda</span>
+            {mode === "player" ? (
+              <svg width="20" height="20" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="256" cy="256" r="220" />
+                <circle cx="256" cy="160" r="18" fill={COLORS.lime} stroke="none" />
+                <line x1="256" y1="220" x2="256" y2="360" strokeWidth="40" />
+                <line x1="210" y1="360" x2="302" y2="360" strokeWidth="36" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="256" cy="256" r="220" />
+                <path d="M190 186c0-36 29-66 66-66s66 30 66 66c0 44-66 66-66 88" />
+                <circle cx="256" cy="370" r="18" fill={COLORS.lime} stroke="none" />
+              </svg>
+            )}
+            <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: COLORS.text }}>{mode === "player" ? "Info" : "Ayuda"}</span>
           </div>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: COLORS.text, fontSize: 20, cursor: "pointer", lineHeight: 1 }}>✕</button>
         </div>
