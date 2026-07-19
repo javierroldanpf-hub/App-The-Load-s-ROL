@@ -533,6 +533,7 @@ export async function savePlayerProfile(profile) {
     position: profile.position || null,
     dominant_leg: profile.dominantLeg || null,
     dominant_arm: profile.dominantArm || null,
+    sexo: profile.sexo || null,
     ts: profile.ts || Date.now(),
   };
   const { error } = await sb
@@ -735,6 +736,7 @@ function dbTeamToApp(r) {
     isTrainingGroup: raw?.isTrainingGroup || r.kind === "grupo" || r.kind === "individual" || false,
     playerSpecificTests: raw?.playerSpecificTests || {},
     defaultMatchDuration: raw?.defaultMatchDuration ?? null,
+    sexo: raw?.sexo || null,
     crestUrl: r.crest_url || null,
   };
 }
@@ -767,6 +769,7 @@ function appTeamToDb(team) {
       isTrainingGroup: team.isTrainingGroup || false,
       playerSpecificTests: team.playerSpecificTests || {},
       defaultMatchDuration: team.defaultMatchDuration ?? null,
+      sexo: team.sexo || null,
     },
     crest_url: team.crestUrl || null,
   };
@@ -864,6 +867,7 @@ function dbProfileToApp(r) {
     position: r.position || null,
     dominantLeg: r.dominant_leg || null,
     dominantArm: r.dominant_arm || null,
+    sexo: r.sexo || null,
     ts: r.ts,
   };
 }

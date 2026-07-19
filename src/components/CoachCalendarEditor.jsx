@@ -289,7 +289,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   );
 }
 
-export default function CoachCalendarEditor({ team, sessions, onSessionsChange, readOnly = false, displayNames = {}, coachName = "" }) {
+export default function CoachCalendarEditor({ team, sessions, onSessionsChange, readOnly = false, displayNames = {}, coachName = "", teamGender = "masculino" }) {
   const [viewMode, setViewMode] = useState("week");
   const [showPdf, setShowPdf] = useState(false);
   const [mesocycles, setMesocycles] = useState([]);
@@ -557,7 +557,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
         <div style={{ flex: 1, display: "flex", gap: 6, background: COLORS.panelRaised, borderRadius: 10, padding: 4 }}>
-          {[{ id: "week", label: "Semana" }, { id: "month", label: "Mes" }, { id: "mesociclo", label: "Mesociclo" }].map((v) => (
+          {[{ id: "week", label: "Semanal" }, { id: "month", label: "Mensual" }, { id: "mesociclo", label: "Mesociclo" }].map((v) => (
             <button key={v.id} onClick={() => setViewMode(v.id)} style={{
               flex: 1, padding: "6px 0", borderRadius: 7, border: "none", fontSize: 12, fontWeight: 600,
               background: viewMode === v.id ? COLORS.panel : "transparent",
@@ -568,7 +568,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         <button onClick={() => setShowPdf(true)} title="Exportar PDF" style={{ padding: "7px 12px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>↓ PDF</button>
       </div>
 
-      {viewMode === "mesociclo" && <MesocyclePanel team={team} roster={team.roster || []} displayNames={displayNames} onMesocyclesChange={setMesocycles} readOnly={readOnly} />}
+      {viewMode === "mesociclo" && <MesocyclePanel team={team} roster={team.roster || []} displayNames={displayNames} onMesocyclesChange={setMesocycles} readOnly={readOnly} teamGender={teamGender} />}
 
       {viewMode !== "mesociclo" && viewMode === "week" ? (
         <>

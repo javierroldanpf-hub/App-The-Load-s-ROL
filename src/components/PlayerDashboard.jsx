@@ -51,6 +51,15 @@ export default function PlayerDashboard({ user, onLogout }) {
   const todayWellnessDone = myWellness.some((e) => e.date === todayStr());
   const todayRpeDone = myRpe.some((e) => e.date === todayStr() && e.sessionType === (todaySession && todaySession.sessionType));
 
+  // Sesión de ayer pendiente de RPE si el entrenador lo permite hasta el día siguiente
+  const yesterdayStr = addDays(todayStr(), -1);
+  const yesterdaySession = sessions.find((s) => s.date === yesterdayStr && s.sessionType && !s.isRest);
+  const yesterdayRpeDone = myRpe.some((e) => e.date === yesterdayStr);
+  const rpeDeadlineDay = team?.formDeadlineRpeDay || "same";
+  const rpeDeadlineTime = team?.formDeadlineRpe || null;
+  const nowTime = new Date().toTimeString().slice(0, 5);
+  const showYesterdayRpe = rpeDeadlineDay === "next" && rpeDeadlineTime && nowTime <= rpeDeadlineTime && yesterdaySession && !yesterdayRpeDone;
+
   if (loading || !team) {
     return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.text }}>Cargando...</div>;
   }
@@ -96,7 +105,7 @@ export default function PlayerDashboard({ user, onLogout }) {
       </div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 20, background: COLORS.panel, borderRadius: 12, padding: 4 }}>
-        {[{ id: "today", label: "Hoy" }, { id: "calendar", label: "Calendario" }, { id: "mydata", label: "Mis datos" }, { id: "settings", label: "Notificaciones" }].map((t) => (
+        {[{ id: "today", label: "Hoy" }, { id: "calendar", label: "Planificación" }, { id: "mydata", label: "Mis datos" }, { id: "settings", label: "Notificaciones" }].map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             flex: 1, padding: "8px 0", borderRadius: 9, border: "none", fontSize: 12, fontWeight: 600,
             background: tab === t.id ? COLORS.panelRaised : "transparent",
@@ -121,6 +130,9 @@ export default function PlayerDashboard({ user, onLogout }) {
           refreshData={refreshData}
           alerts={alerts}
           onDismissAlert={async (id) => { await dismissPlayerAlert(id); refreshAlerts(); }}
+          showYesterdayRpe={showYesterdayRpe}
+          yesterdaySession={yesterdaySession}
+          existingYesterdayRpe={myRpe.find((e) => e.date === yesterdayStr)}
         />
       )}
       {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} rpe={rpe} refreshData={refreshData} />}
@@ -286,7 +298,7 @@ function AlertBanner({ alert, onDismiss }) {
   );
 }
 
-function PlayerToday({ user, team, session, wellnessDone, rpeDone, existingWellness, existingRpe, refreshData, alerts = [], onDismissAlert }) {
+function PlayerToday({ user, team, session, wellnessDone, rpeDone, existingWellness, existingRpe, refreshData, alerts = [], onDismissAlert, showYesterdayRpe, yesterdaySession, existingYesterdayRpe }) {
   const [showDetail, setShowDetail] = useState(false);
 
   const alertBanners = alerts.length > 0 ? (
@@ -295,10 +307,23 @@ function PlayerToday({ user, team, session, wellnessDone, rpeDone, existingWelln
     </div>
   ) : null;
 
+  const yesterdayRpeBanner = showYesterdayRpe && yesterdaySession ? (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ background: "#1e2a1a", border: "1px solid #4a7c3a", borderRadius: 14, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 18 }}>⏰</span>
+        <div style={{ fontSize: 13, color: COLORS.text }}>RPE pendiente de ayer — <strong>{yesterdaySession.sessionType}</strong>. Tienes hasta la hora límite para registrarlo.</div>
+      </div>
+      <PlayerStepCard stepNumber={null} title="RPE de ayer" subtitle={`Esfuerzo percibido de ${yesterdaySession.sessionType}`} done={!!existingYesterdayRpe}>
+        <RpeForm user={user} session={yesterdaySession} existing={existingYesterdayRpe} refreshData={refreshData} dateOverride={yesterdaySession.date} />
+      </PlayerStepCard>
+    </div>
+  ) : null;
+
   if (!session || (!session.sessionType && !session.isRest)) {
     return (
       <div>
         {alertBanners}
+        {yesterdayRpeBanner}
         <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 18 }}>📅</span>
           <div style={{ fontSize: 13, color: COLORS.text }}>Hoy no hay sesión planificada — puedes registrar tu wellness igualmente.</div>
@@ -314,6 +339,7 @@ function PlayerToday({ user, team, session, wellnessDone, rpeDone, existingWelln
     return (
       <div>
         {alertBanners}
+        {yesterdayRpeBanner}
         <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "1.5rem", textAlign: "center" }}>
           <div style={{ fontSize: 14, color: COLORS.text, marginBottom: 6 }}>Hoy es día de descanso</div>
           <div style={{ fontSize: 13, color: COLORS.text }}>No tienes que completar wellness ni RPE.</div>
@@ -327,6 +353,7 @@ function PlayerToday({ user, team, session, wellnessDone, rpeDone, existingWelln
   return (
     <div>
       {alertBanners}
+      {yesterdayRpeBanner}
       <button onClick={() => setShowDetail(true)} style={{
         display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
         background: intensity.dark, border: `1px solid ${intensity.color}`, borderRadius: 14,
@@ -535,7 +562,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
       )}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
         <div style={{ display: "flex", gap: 6, background: COLORS.panel, borderRadius: 12, padding: 5, flex: 1 }}>
-          {[{ id: "week", label: "Semana" }, { id: "month", label: "Mes" }].map((v) => (
+          {[{ id: "week", label: "Semanal" }, { id: "month", label: "Mensual" }].map((v) => (
             <button key={v.id} onClick={() => setViewMode(v.id)} style={{
               flex: 1, padding: "10px 0", borderRadius: 9, border: "none", fontSize: 14, fontWeight: 700,
               background: viewMode === v.id ? COLORS.panelRaised : "transparent",

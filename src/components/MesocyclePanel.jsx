@@ -41,6 +41,28 @@ const MENSTRUAL_PHASES = [
   },
 ];
 
+const SJ_PERCENTAGES = [
+  { sgj_eg: 18, sgj_em: 18, sgj_ep: 14, smj_eg: 13, smj_em: 12, smj_ep: 10, srj_eg: 6,  srj_em: 5,  srj_ep: 4,  micro: 0  },
+  { sgj_eg: 18, sgj_em: 18, sgj_ep: 14, smj_eg: 13, smj_em: 12, smj_ep: 10, srj_eg: 6,  srj_em: 5,  srj_ep: 4,  micro: 0  },
+  { sgj_eg: 6,  sgj_em: 5,  sgj_ep: 4,  smj_eg: 18, smj_em: 18, smj_ep: 14, srj_eg: 13, srj_em: 12, srj_ep: 10, micro: 0  },
+  { sgj_eg: 6,  sgj_em: 5,  sgj_ep: 4,  smj_eg: 18, smj_em: 18, smj_ep: 14, srj_eg: 13, srj_em: 12, srj_ep: 10, micro: 0  },
+  { sgj_eg: 12, sgj_em: 11, sgj_ep: 7,  smj_eg: 6,  smj_em: 5,  smj_ep: 4,  srj_eg: 18, srj_em: 18, srj_ep: 14, micro: 5  },
+  { sgj_eg: 10, sgj_em: 10, sgj_ep: 5,  smj_eg: 5,  smj_em: 5,  smj_ep: 5,  srj_eg: 18, srj_em: 18, srj_ep: 14, micro: 10 },
+];
+
+const SJ_COLS = [
+  { key: "sgj_eg", label: "EG", group: "SGJ", color: "#38bdf8" },
+  { key: "sgj_em", label: "EM", group: "SGJ", color: "#38bdf8" },
+  { key: "sgj_ep", label: "EP", group: "SGJ", color: "#38bdf8" },
+  { key: "smj_eg", label: "EG", group: "SMJ", color: "#a78bfa" },
+  { key: "smj_em", label: "EM", group: "SMJ", color: "#a78bfa" },
+  { key: "smj_ep", label: "EP", group: "SMJ", color: "#a78bfa" },
+  { key: "srj_eg", label: "EG", group: "SRJ", color: "#fb923c" },
+  { key: "srj_em", label: "EM", group: "SRJ", color: "#fb923c" },
+  { key: "srj_ep", label: "EP", group: "SRJ", color: "#fb923c" },
+  { key: "micro",  label: "1x1-2x2", group: null, color: "#94a3b8" },
+];
+
 function mesoWeeks(startDate, endDate) {
   const weeks = [];
   let monday = mondayOf(startDate);
@@ -102,12 +124,14 @@ function RangePicker({ startDate, endDate, onChange }) {
 }
 
 /* ── Editor de semana ────────────────────────────────────────────────── */
-function WeekEditor({ week, onSave, onClose }) {
+function WeekEditor({ week, onSave, onClose, isSJ = false }) {
   const [name, setName]           = useState(week.name || "");
   const [type, setType]           = useState(week.type || "carga");
-  const [volume, setVolume]       = useState(String(week.volume ?? 70));
+  const [volume, setVolume]       = useState(String(week.volume ?? (isSJ ? 100 : 70)));
   const [intensity, setIntensity] = useState(String(week.intensity ?? 70));
   const [contenidos, setContenidos] = useState(week.contenidos || "");
+  const [sjDays, setSjDays]       = useState(String(week.sjDays ?? 4));
+  const [sjBaseMin, setSjBaseMin] = useState(String(week.sjBaseMinutes ?? 100));
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
 
@@ -135,6 +159,19 @@ function WeekEditor({ week, onSave, onClose }) {
           </div>
         </div>
 
+        {isSJ && (
+          <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Días semana tipo</div>
+              <input type="number" inputMode="numeric" min={1} max={7} value={sjDays} onChange={(e) => setSjDays(e.target.value)} style={{ ...inputStyle, color: "#38bdf8" }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Min. semana tipo</div>
+              <input type="number" inputMode="numeric" min={0} value={sjBaseMin} onChange={(e) => setSjBaseMin(e.target.value)} style={{ ...inputStyle, color: "#38bdf8" }} />
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Volumen (%)</div>
@@ -157,7 +194,7 @@ function WeekEditor({ week, onSave, onClose }) {
 
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-          <button onClick={() => onSave({ name, type, volume: Number(volume) || 0, intensity: Number(intensity) || 0, contenidos })} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Guardar</button>
+          <button onClick={() => onSave({ name, type, volume: Number(volume) || 0, intensity: Number(intensity) || 0, contenidos, ...(isSJ ? { sjDays: Number(sjDays) || 4, sjBaseMinutes: Number(sjBaseMin) || 100 } : {}) })} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Guardar</button>
         </div>
       </div>
     </div>
@@ -165,22 +202,45 @@ function WeekEditor({ week, onSave, onClose }) {
 }
 
 /* ── Creador de mesociclo ────────────────────────────────────────────── */
-function CreateMesoModal({ teamId, onSave, onClose }) {
-  const [name, setName]         = useState("");
-  const [startDate, setStart]   = useState(null);
-  const [endDate, setEnd]       = useState(null);
-  const [color, setColor]       = useState(MESO_COLORS[0]);
-  const [saving, setSaving]     = useState(false);
+function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = {}, showMenstrual = false, showSJ = false }) {
+  const [name, setName]               = useState("");
+  const [startDate, setStart]         = useState(null);
+  const [endDate, setEnd]             = useState(null);
+  const [color, setColor]             = useState(MESO_COLORS[0]);
+  const [isMenstrual, setIsMenstrual] = useState(false);
+  const [menstrualPlayers, setMenstrualPlayers] = useState([]);
+  const [isSJ, setIsSJ]               = useState(false);
+  const [saving, setSaving]           = useState(false);
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
 
+  const togglePlayer = (username) => setMenstrualPlayers((prev) =>
+    prev.includes(username) ? prev.filter((u) => u !== username) : [...prev, username]
+  );
+
   const handleSave = async () => {
-    if (!startDate || !endDate) return;
+    if (!startDate) return;
+    if (!isSJ && !endDate) return;
     setSaving(true);
     try {
-      const weeks = mesoWeeks(startDate, endDate).map((w) => ({ ...w, name: "", type: "carga", volume: 70, intensity: 70 }));
-      const id = await saveMesocycle({ teamId, name, startDate, endDate, weeks, color });
-      onSave({ id, teamId, name, startDate, endDate, weeks, color });
+      const sjEndDate = isSJ ? addDays(mondayOf(startDate), 41) : null;
+      const effectiveEnd = isSJ ? sjEndDate : endDate;
+      const weeks = (isSJ
+        ? Array.from({ length: 6 }, (_, i) => {
+            const ws = addDays(mondayOf(startDate), i * 7);
+            return { weekStart: ws, weekEnd: addDays(ws, 6) };
+          })
+        : mesoWeeks(startDate, effectiveEnd)
+      ).map((w, i) => {
+        if (isSJ) return { ...w, name: `Microciclo ${i + 1}`, type: "carga", volume: 100, intensity: 70, sjDays: 4, sjBaseMinutes: 100 };
+        if (isMenstrual) {
+          const phase = MENSTRUAL_PHASES[i] || MENSTRUAL_PHASES[MENSTRUAL_PHASES.length - 1];
+          return { ...w, name: phase.label, type: phase.type, volume: 70, intensity: 70, contenidos: phase.contenidos };
+        }
+        return { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
+      });
+      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: isSJ ? false : isMenstrual, menstrualPlayers: isSJ ? [] : menstrualPlayers, isSituacionesJugadas: isSJ });
+      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: isSJ ? false : isMenstrual, menstrualPlayers: isSJ ? [] : menstrualPlayers, isSituacionesJugadas: isSJ });
     } catch (err) {
       const msg = err?.message || err?.error_description || JSON.stringify(err);
       alert("Error al guardar: " + msg);
@@ -215,14 +275,106 @@ function CreateMesoModal({ teamId, onSave, onClose }) {
           <RangePicker startDate={startDate} endDate={endDate} onChange={(s, e) => { setStart(s); setEnd(e); }} />
         </div>
 
+        {showSJ && (
+          <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>⚽ Situaciones Jugadas</div>
+                <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>6 microciclos con tabla de volumen por situación</div>
+              </div>
+              <button onClick={() => { setIsSJ((v) => !v); if (!isSJ) setIsMenstrual(false); }} style={{
+                width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+                background: isSJ ? "#38bdf8" : COLORS.line, transition: "background 0.2s",
+              }}>
+                <span style={{ position: "absolute", top: 3, left: isSJ ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+              </button>
+            </div>
+            {isSJ && (
+              <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, background: "#0c1e2a", border: "1px solid #38bdf844" }}>
+                <div style={{ fontSize: 11, color: "#38bdf8" }}>Se crearán automáticamente 6 microciclos desde la fecha de inicio seleccionada.</div>
+                <div style={{ fontSize: 11, color: COLORS.text, marginTop: 4 }}>La fecha de fin se calcula automáticamente (42 días desde el inicio).</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {showMenstrual && (
+          <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>🔴 Ciclo menstrual</div>
+                <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Semanas prefijadas según fase del ciclo</div>
+              </div>
+              <button onClick={() => { setIsMenstrual((v) => !v); if (!isMenstrual) setIsSJ(false); }} style={{
+                width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+                background: isMenstrual ? "#e879f9" : COLORS.line, transition: "background 0.2s",
+              }}>
+                <span style={{ position: "absolute", top: 3, left: isMenstrual ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+              </button>
+            </div>
+            {isMenstrual && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Fases automáticas:</div>
+                {MENSTRUAL_PHASES.map((p, i) => {
+                  const wt = WEEK_TYPES.find((t) => t.id === p.type);
+                  return (
+                    <div key={i} style={{ marginBottom: 8, padding: "8px 10px", borderRadius: 8, background: COLORS.panel, border: `1px solid ${COLORS.line}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                        <span style={{ fontSize: 12 }}>{p.emoji}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.text }}>M{i + 1} · {p.label}</span>
+                        <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${wt.color}22`, color: wt.color, fontWeight: 700, marginLeft: "auto" }}>{wt.label}</span>
+                      </div>
+                      <div style={{ fontSize: 10, color: "#e879f9", fontWeight: 600, marginBottom: 2 }}>{p.fase}</div>
+                      <div style={{ fontSize: 10, color: COLORS.text, lineHeight: 1.4 }}>{p.metabolismo}</div>
+                    </div>
+                  );
+                })}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, padding: "6px 8px", borderRadius: 8, background: "#2a2a0a", border: "1px solid #fde68a44" }}>
+                  <span style={{ fontSize: 12 }}>⚡</span>
+                  <span style={{ fontSize: 11, color: "#fde68a" }}>Días 20–22 del ciclo (13–15 post sangrado) · Pico de relaxina</span>
+                  <span style={{ fontSize: 10, color: COLORS.text }}>Cuidado con estiramientos y movilidad</span>
+                </div>
+                {(() => {
+                  const femRoster = roster.filter((p) => (typeof p === "object" ? p.sexo : null) === "femenino");
+                  return femRoster.length > 0 && (
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 6, fontWeight: 600 }}>Atletas que ven este ciclo:</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 160, overflowY: "auto" }}>
+                        {femRoster.map((p) => {
+                          const username = typeof p === "string" ? p : p.username;
+                          const dn = displayNames[username];
+                          const label = (typeof dn === "object" ? dn?.displayName : dn) || (typeof p === "object" && (p.displayName || p.name)) || username;
+                          const checked = menstrualPlayers.includes(username);
+                          return (
+                            <button key={username} onClick={() => togglePlayer(username)} style={{
+                              display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8,
+                              border: `1px solid ${checked ? "#e879f9" : COLORS.line}`,
+                              background: checked ? "#2a0a2e" : "transparent", cursor: "pointer", textAlign: "left",
+                            }}>
+                              <span style={{ width: 14, height: 14, borderRadius: 4, border: `2px solid ${checked ? "#e879f9" : COLORS.line}`, background: checked ? "#e879f9" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#14171c", fontWeight: 700 }}>{checked ? "✓" : ""}</span>
+                              <span style={{ fontSize: 12, color: COLORS.text }}>{label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-          <button onClick={handleSave} disabled={!startDate || !endDate || saving} style={{
+          {(() => { const canSave = startDate && (isSJ || endDate); return (
+          <button onClick={handleSave} disabled={!canSave || saving} style={{
             flex: 1, padding: "11px 0", borderRadius: 12, border: "none",
-            background: startDate && endDate ? COLORS.lime : COLORS.panelRaised,
-            color: startDate && endDate ? "#14171c" : COLORS.text,
-            fontWeight: 700, fontSize: 14, cursor: startDate && endDate ? "pointer" : "default", opacity: saving ? 0.6 : 1,
+            background: canSave ? COLORS.lime : COLORS.panelRaised,
+            color: canSave ? "#14171c" : COLORS.text,
+            fontWeight: 700, fontSize: 14, cursor: canSave ? "pointer" : "default", opacity: saving ? 0.6 : 1,
           }}>{saving ? "Guardando..." : "Crear"}</button>
+          ); })()}
         </div>
       </div>
     </div>
@@ -230,13 +382,14 @@ function CreateMesoModal({ teamId, onSave, onClose }) {
 }
 
 /* ── Editor de mesociclo (nombre + fechas) ───────────────────────────── */
-function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {} }) {
+function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, showMenstrual = false, showSJ = false }) {
   const [name, setName]             = useState(meso.name || "");
   const [startDate, setStart]       = useState(meso.startDate);
   const [endDate, setEnd]           = useState(meso.endDate);
   const [color, setColor]           = useState(meso.color || MESO_COLORS[0]);
   const [contenidos, setContenidos] = useState(meso.contenidos || "");
   const [isMenstrual, setIsMenstrual] = useState(meso.isMenstrual || false);
+  const [isSJ, setIsSJ]             = useState(meso.isSituacionesJugadas || false);
   const [menstrualPlayers, setMenstrualPlayers] = useState(meso.menstrualPlayers || []);
   const [saving, setSaving]         = useState(false);
 
@@ -252,6 +405,10 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {} }
     try {
       const newWeeks = mesoWeeks(startDate, endDate).map((w, i) => {
         const existing = meso.weeks.find((ew) => ew.weekStart === w.weekStart);
+        if (isSJ) {
+          const base = existing ? { ...w, ...existing } : { ...w, volume: 100, intensity: 70 };
+          return { ...base, name: `Microciclo ${i + 1}`, sjDays: base.sjDays ?? 4, sjBaseMinutes: base.sjBaseMinutes ?? 100, isSituacionesJugadas: true };
+        }
         if (isMenstrual) {
           const phase = MENSTRUAL_PHASES[i] || MENSTRUAL_PHASES[MENSTRUAL_PHASES.length - 1];
           const base = existing ? { ...w, ...existing } : { ...w, volume: 70, intensity: 70 };
@@ -259,7 +416,7 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {} }
         }
         return existing ? { ...w, ...existing } : { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
       });
-      const updated = { ...meso, name, startDate, endDate, weeks: newWeeks, color, contenidos, isMenstrual, menstrualPlayers };
+      const updated = { ...meso, name, startDate, endDate, weeks: newWeeks, color, contenidos, isMenstrual: isSJ ? false : isMenstrual, menstrualPlayers: isSJ ? [] : menstrualPlayers, isSituacionesJugadas: isSJ };
       await saveMesocycle(updated);
       onSave(updated);
     } catch (err) {
@@ -300,14 +457,37 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {} }
           <textarea value={contenidos} onChange={(e) => setContenidos(e.target.value)} rows={3} placeholder="Describe los contenidos generales del mesociclo..." style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", lineHeight: 1.5, boxSizing: "border-box" }} />
         </div>
 
+        {showSJ && (
+          <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>⚽ Situaciones Jugadas</div>
+                <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>6 microciclos con tabla de volumen por situación</div>
+              </div>
+              <button onClick={() => { setIsSJ((v) => !v); if (!isSJ) setIsMenstrual(false); }} style={{
+                width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+                background: isSJ ? "#38bdf8" : COLORS.line, transition: "background 0.2s",
+              }}>
+                <span style={{ position: "absolute", top: 3, left: isSJ ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+              </button>
+            </div>
+            {isSJ && (
+              <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, background: "#0c1e2a", border: "1px solid #38bdf844" }}>
+                <div style={{ fontSize: 11, color: "#38bdf8" }}>Al guardar, los microciclos se actualizarán con la configuración de Situaciones Jugadas.</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Ciclo menstrual toggle */}
+        {showMenstrual && (
         <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>🔴 Ciclo menstrual</div>
               <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Semanas prefijadas según fase del ciclo</div>
             </div>
-            <button onClick={() => setIsMenstrual((v) => !v)} style={{
+            <button onClick={() => { setIsMenstrual((v) => !v); if (!isMenstrual) setIsSJ(false); }} style={{
               width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
               background: isMenstrual ? "#e879f9" : COLORS.line, transition: "background 0.2s",
             }}>
@@ -338,32 +518,36 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {} }
                 <span style={{ fontSize: 10, color: COLORS.text }}>Cuidado con estiramientos y movilidad</span>
               </div>
 
-              {roster.length > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 6, fontWeight: 600 }}>Atletas que ven este ciclo:</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 160, overflowY: "auto" }}>
-                    {roster.map((p) => {
-                      const username = typeof p === "string" ? p : p.username;
-                      const dn = displayNames[username];
-                      const label = (typeof dn === "object" ? dn?.displayName : dn) || (typeof p === "object" && (p.displayName || p.name)) || username;
-                      const checked = menstrualPlayers.includes(username);
-                      return (
-                        <button key={username} onClick={() => togglePlayer(username)} style={{
-                          display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8,
-                          border: `1px solid ${checked ? "#e879f9" : COLORS.line}`,
-                          background: checked ? "#2a0a2e" : "transparent", cursor: "pointer", textAlign: "left",
-                        }}>
-                          <span style={{ width: 14, height: 14, borderRadius: 4, border: `2px solid ${checked ? "#e879f9" : COLORS.line}`, background: checked ? "#e879f9" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#14171c", fontWeight: 700 }}>{checked ? "✓" : ""}</span>
-                          <span style={{ fontSize: 12, color: COLORS.text }}>{label}</span>
-                        </button>
-                      );
-                    })}
+              {(() => {
+                const femRoster = roster.filter((p) => (typeof p === "object" ? p.sexo : null) === "femenino");
+                return femRoster.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 6, fontWeight: 600 }}>Atletas que ven este ciclo:</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 160, overflowY: "auto" }}>
+                      {femRoster.map((p) => {
+                        const username = typeof p === "string" ? p : p.username;
+                        const dn = displayNames[username];
+                        const label = (typeof dn === "object" ? dn?.displayName : dn) || (typeof p === "object" && (p.displayName || p.name)) || username;
+                        const checked = menstrualPlayers.includes(username);
+                        return (
+                          <button key={username} onClick={() => togglePlayer(username)} style={{
+                            display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8,
+                            border: `1px solid ${checked ? "#e879f9" : COLORS.line}`,
+                            background: checked ? "#2a0a2e" : "transparent", cursor: "pointer", textAlign: "left",
+                          }}>
+                            <span style={{ width: 14, height: 14, borderRadius: 4, border: `2px solid ${checked ? "#e879f9" : COLORS.line}`, background: checked ? "#e879f9" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#14171c", fontWeight: 700 }}>{checked ? "✓" : ""}</span>
+                            <span style={{ fontSize: 12, color: COLORS.text }}>{label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>
+        )}
 
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
@@ -380,10 +564,11 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {} }
 }
 
 /* ── Vista de un mesociclo ───────────────────────────────────────────── */
-function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {} }) {
+function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {}, showSJ = false, showMenstrual = false }) {
   const [editingWeek, setEditingWeek] = useState(null);
   const [editingMeso, setEditingMeso] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sjEdits, setSjEdits] = useState({});
   const today = todayStr();
   const isActive = today >= meso.startDate && today <= meso.endDate;
 
@@ -394,6 +579,18 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
       await saveMesocycle({ ...meso, weeks });
       onUpdate({ ...meso, weeks });
     } finally { setSaving(false); setEditingWeek(null); }
+  };
+
+  const handleSJWeekSave = async (weekStart) => {
+    const edit = sjEdits[weekStart];
+    if (!edit) return;
+    const weeks = meso.weeks.map((w) => w.weekStart === weekStart ? { ...w, sjDays: Number(edit.days) || w.sjDays, sjBaseMinutes: Number(edit.baseMin) || w.sjBaseMinutes } : w);
+    setSaving(true);
+    try {
+      await saveMesocycle({ ...meso, weeks });
+      onUpdate({ ...meso, weeks });
+      setSjEdits((prev) => { const n = { ...prev }; delete n[weekStart]; return n; });
+    } finally { setSaving(false); }
   };
 
   const weekColor = (type) => WEEK_TYPES.find((t) => t.id === type)?.color || COLORS.text;
@@ -412,6 +609,15 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
         {!readOnly && <button onClick={() => { if (confirm("¿Eliminar este mesociclo?")) onDelete(meso.id); }} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>Eliminar</button>}
       </div>
 
+      {meso.isSituacionesJugadas && (
+        <div style={{ background: "#0c1e2a", border: `1px solid #38bdf844`, borderRadius: 12, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14 }}>⚽</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#38bdf8" }}>Mesociclo Situaciones Jugadas</div>
+            <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>6 microciclos · Distribución de volumen por tipo de situación</div>
+          </div>
+        </div>
+      )}
       {meso.isMenstrual && (
         <div style={{ background: "#1a0a1e", border: `1px solid #e879f944`, borderRadius: 12, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 14 }}>🔴</span>
@@ -434,6 +640,99 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           const dark = weekDark(w.type);
           const isCurrent = today >= w.weekStart && today <= w.weekEnd;
           const phase = meso.isMenstrual ? MENSTRUAL_PHASES[i] || MENSTRUAL_PHASES[MENSTRUAL_PHASES.length - 1] : null;
+
+          if (meso.isSituacionesJugadas) {
+            const pct = SJ_PERCENTAGES[i] || SJ_PERCENTAGES[SJ_PERCENTAGES.length - 1];
+            const edit = sjEdits[w.weekStart];
+            const curDays = edit ? edit.days : String(w.sjDays ?? 4);
+            const curBaseMin = edit ? edit.baseMin : String(w.sjBaseMinutes ?? 100);
+            const totalMin = Math.round((Number(curBaseMin) || 0) * (w.volume ?? 100) / 100);
+            const groups = [
+              { label: "SGJ (8x8-10x10)", color: "#38bdf8", cols: ["sgj_eg","sgj_em","sgj_ep"] },
+              { label: "SMJ (5x5-7x7)",   color: "#a78bfa", cols: ["smj_eg","smj_em","smj_ep"] },
+              { label: "SRJ (3x3-4x4)",   color: "#fb923c", cols: ["srj_eg","srj_em","srj_ep"] },
+              { label: "1x1-2x2",         color: "#94a3b8", cols: ["micro"] },
+            ];
+            return (
+              <div key={w.weekStart} style={{ background: "#0c1520", border: `1px solid ${isCurrent ? "#38bdf8" : COLORS.line}`, borderRadius: 12, padding: "12px 14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 2 }}>Microciclo {i + 1} · {fmtDateShort(w.weekStart)} – {fmtDateShort(w.weekEnd)}</div>
+                    <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: "#38bdf8" }}>{w.name || `Microciclo ${i + 1}`}</div>
+                  </div>
+                  {!readOnly && <button onClick={() => setEditingWeek(w)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 11 }}>Editar</button>}
+                </div>
+
+                {/* Semana tipo inputs */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "flex-end" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Días semana tipo</div>
+                    <input type="number" inputMode="numeric" min={1} max={7} value={curDays}
+                      onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { days: e.target.value, baseMin: curBaseMin } }))}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Min. semana tipo</div>
+                    <input type="number" inputMode="numeric" min={0} value={curBaseMin}
+                      onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { days: curDays, baseMin: e.target.value } }))}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Volumen semana</div>
+                    <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: COLORS.lime }}>{w.volume ?? 100}%</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Min. totales</div>
+                    <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>{totalMin} min</div>
+                  </div>
+                  {!readOnly && edit && (
+                    <button onClick={() => handleSJWeekSave(w.weekStart)} style={{ padding: "7px 12px", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
+                      {saving ? "..." : "✓"}
+                    </button>
+                  )}
+                </div>
+
+                {/* SJ Table */}
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
+                    <thead>
+                      <tr>
+                        {groups.map((g) => (
+                          <th key={g.label} colSpan={g.cols.length} style={{ fontSize: 9, fontWeight: 700, color: g.color, textAlign: "center", padding: "4px 2px", borderBottom: `2px solid ${g.color}44`, whiteSpace: "nowrap" }}>
+                            {g.label}
+                          </th>
+                        ))}
+                      </tr>
+                      <tr>
+                        {SJ_COLS.map((c) => (
+                          <th key={c.key} style={{ fontSize: 9, color: COLORS.text, textAlign: "center", padding: "3px 2px", fontWeight: 600 }}>{c.label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        {SJ_COLS.map((c) => (
+                          <td key={c.key} style={{ fontSize: 11, color: c.color, textAlign: "center", padding: "4px 2px", fontWeight: 700, background: `${c.color}11`, borderBottom: `1px solid ${COLORS.line}` }}>
+                            {pct[c.key]}%
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        {SJ_COLS.map((c) => (
+                          <td key={c.key} style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "4px 2px" }}>
+                            {Math.round(totalMin * pct[c.key] / 100)} min
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div key={w.weekStart} style={{ background: dark, border: `1px solid ${isCurrent ? col : COLORS.line}`, borderRadius: 12, padding: "12px 14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -475,6 +774,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
       {editingWeek && (
         <WeekEditor
           week={editingWeek}
+          isSJ={meso.isSituacionesJugadas}
           onSave={(data) => handleWeekSave(editingWeek.weekStart, data)}
           onClose={() => setEditingWeek(null)}
         />
@@ -484,6 +784,8 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           meso={meso}
           roster={roster}
           displayNames={displayNames}
+          showSJ={showSJ}
+          showMenstrual={showMenstrual}
           onSave={(updated) => { onUpdate(updated); setEditingMeso(false); }}
           onClose={() => setEditingMeso(false)}
         />
@@ -493,7 +795,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
 }
 
 /* ── Panel principal ─────────────────────────────────────────────────── */
-export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = false, roster = [], displayNames = {} }) {
+export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = false, roster = [], displayNames = {}, teamGender = "masculino" }) {
   const [mesocycles, setMesocycles] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -529,6 +831,9 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
 
   if (loading) return <div style={{ color: COLORS.text, fontSize: 13, padding: "1rem 0" }}>Cargando mesociclos...</div>;
 
+  const showSJ = (team.kind || "equipo") === "equipo";
+  const showMenstrual = teamGender === "femenino" || teamGender === "mixto";
+
   if (selected) {
     return (
       <MesoDetail
@@ -539,6 +844,8 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
         onDelete={handleDelete}
         onBack={() => setSelected(null)}
         readOnly={readOnly}
+        showSJ={showSJ}
+        showMenstrual={showMenstrual}
       />
     );
   }
@@ -572,7 +879,11 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
                       {m.color && <span style={{ width: 8, height: 8, borderRadius: "50%", background: m.color, display: "inline-block", flexShrink: 0 }} />}
                       <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 13, color: COLORS.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name || "Sin nombre"}</div>
                     </div>
-                    {isActive && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, background: "#1e3010", borderRadius: 5, padding: "2px 5px", flexShrink: 0 }}>ACTIVO</span>}
+                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      {isActive && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, background: "#1e3010", borderRadius: 5, padding: "2px 5px" }}>ACTIVO</span>}
+                      {m.isSituacionesJugadas && <span style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", background: "#0c1e2a", borderRadius: 5, padding: "2px 5px" }}>⚽ SJ</span>}
+                      {m.isMenstrual && <span style={{ fontSize: 9, fontWeight: 700, color: "#e879f9", background: "#1a0a1e", borderRadius: 5, padding: "2px 5px" }}>🔴</span>}
+                    </div>
                   </div>
                   <div style={{ fontSize: 10, color: COLORS.text, marginTop: 3 }}>{fmtDateShort(m.startDate)} – {fmtDateShort(m.endDate)}</div>
                   <div style={{ fontSize: 10, color: COLORS.text, opacity: 0.7 }}>{m.weeks.length} microciclos</div>
@@ -597,7 +908,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
       )}
 
       {showCreate && (
-        <CreateMesoModal teamId={team.teamId} onSave={handleCreate} onClose={() => setShowCreate(false)} />
+        <CreateMesoModal teamId={team.teamId} onSave={handleCreate} onClose={() => setShowCreate(false)} roster={roster} displayNames={displayNames} showMenstrual={showMenstrual} showSJ={showSJ} />
       )}
     </div>
   );

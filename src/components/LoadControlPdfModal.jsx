@@ -34,15 +34,23 @@ const QUAD_COLORS = {
   bad:     "#ff5a5f",
 };
 
-export default function LoadControlPdfModal({ team, wellness, rpe, sessions, onClose }) {
+export default function LoadControlPdfModal({ team, wellness, rpe, sessions, onClose, teamGender = "masculino" }) {
   const reportRef = useRef();
   const [downloading, setDownloading] = useState(false);
   const [photoB64, setPhotoB64] = useState({});
   const [mesocycles, setMesocycles] = useState([]);
   const today = todayStr();
   const isTrainingGroup = team.isTrainingGroup || false;
-  const personLabel = isTrainingGroup ? "atletas" : "jugadores";
-  const PersonLabel = isTrainingGroup ? "Atletas" : "Jugadores";
+  const isIndividual = team.kind === "individual";
+  const isFem = teamGender === "femenino";
+  const isMixto = teamGender === "mixto";
+  const adjSing = isFem ? "cargada" : "cargado";
+  const adjPlural = isMixto ? "cargad@s" : isFem ? "cargadas" : "cargados";
+  const malSing = isFem ? "adaptada" : "adaptado";
+  const malPlural = isMixto ? "adaptad@s" : isFem ? "adaptadas" : "adaptados";
+  const personLabel = isIndividual ? "atleta" : isTrainingGroup ? "atletas" : (isFem ? "jugadoras" : "jugadores");
+  const PersonLabel = isIndividual ? "Atleta" : isTrainingGroup ? "Atletas" : (isFem ? "Jugadoras" : "Jugadores");
+  const teamGroupLabel = isIndividual ? "atleta" : isTrainingGroup ? "grupo" : "equipo";
   const loadPdf = team.pdfSettings?.load || {};
   const show = (key) => loadPdf[key] !== false;
   const DEFAULT_LOAD_ORDER = ["teamStatus", "wellnessRpeQuadrant", "wellnessRpeChart", "weekCalendar", "mesoInfo"];
@@ -139,9 +147,9 @@ export default function LoadControlPdfModal({ team, wellness, rpe, sessions, onC
   /* Quadrant groups */
   const quads = [
     { label: "Asimila bien la carga", color: QUAD_COLORS.good,   list: playerStats.filter((p) => (p.avgWS ?? 0) >= xMid && (p.avgRpe ?? 0) >= yMid) },
-    { label: `${PersonLabel} cargados`,    color: QUAD_COLORS.loaded, list: playerStats.filter((p) => (p.avgWS ?? 10) < xMid && (p.avgRpe ?? 0) >= yMid) },
-    { label: "Poco cargados",         color: QUAD_COLORS.low,    list: playerStats.filter((p) => (p.avgWS ?? 0) >= xMid && (p.avgRpe ?? 10) < yMid) },
-    { label: "Mal adaptados",         color: QUAD_COLORS.bad,    list: playerStats.filter((p) => (p.avgWS ?? 10) < xMid && (p.avgRpe ?? 10) < yMid) },
+    { label: isIndividual ? `Atleta ${adjSing}`  : `${PersonLabel} ${adjPlural}`, color: QUAD_COLORS.loaded, list: playerStats.filter((p) => (p.avgWS ?? 10) < xMid && (p.avgRpe ?? 0) >= yMid) },
+    { label: isIndividual ? `Poco ${adjSing}`    : `Poco ${adjPlural}`,           color: QUAD_COLORS.low,    list: playerStats.filter((p) => (p.avgWS ?? 0) >= xMid && (p.avgRpe ?? 10) < yMid) },
+    { label: isIndividual ? `Mal ${malSing}`     : `Mal ${malPlural}`,            color: QUAD_COLORS.bad,    list: playerStats.filter((p) => (p.avgWS ?? 10) < xMid && (p.avgRpe ?? 10) < yMid) },
   ];
 
 
@@ -209,7 +217,7 @@ export default function LoadControlPdfModal({ team, wellness, rpe, sessions, onC
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 24, color: "#eef1f4" }}>{team.name}</div>
                 <div style={{ fontSize: 13, color: "#9aa0ab", marginTop: 2 }}>
-                  {roster.length} {personLabel} · Semana {weekNum} · {fmtDateShort(weekDays[0])} – {fmtDateShort(weekDays[6])}
+                  {isIndividual ? "Atleta individual" : `${roster.length} ${personLabel}`} · Semana {weekNum} · {fmtDateShort(weekDays[0])} – {fmtDateShort(weekDays[6])}
                   {weekSpecialSession && (() => {
                     const rival = weekSpecialSession.description ? (() => { try { return null; } catch { return weekSpecialSession.description; } })() : null;
                     const rivalName = weekSpecialSession.description && (() => { try { JSON.parse(weekSpecialSession.description); return null; } catch { return weekSpecialSession.description; } })();
@@ -228,11 +236,11 @@ export default function LoadControlPdfModal({ team, wellness, rpe, sessions, onC
               if (!show(key)) return null;
               if (key === "teamStatus") return (
                 <div key={key} style={{ marginBottom: 20 }}>
-                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 15, marginBottom: 12, color: "#eef1f4" }}>Estado del {isTrainingGroup ? "grupo" : "equipo"}</div>
-                  <StatusGroup title={`${PersonLabel} cargados (ACWR)`} players={loaded} color="#ff9f40" />
-                  <StatusGroup title={`${PersonLabel} en alerta (≥4 factores en rojo)`} players={alert4} color="#ff5a5f" />
-                  <StatusGroup title={`${PersonLabel} en duda (2–3 factores en rojo)`} players={doubt} color="#f2c63c" />
-                  <StatusGroup title={`${PersonLabel} en buena forma`} players={goodForm} color="#a3e635" />
+                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 15, marginBottom: 12, color: "#eef1f4" }}>Estado del {teamGroupLabel}</div>
+                  <StatusGroup title={isIndividual ? `Atleta ${adjSing} (ACWR)`               : `${PersonLabel} ${adjPlural} (ACWR)`}               players={loaded}   color="#ff9f40" />
+                  <StatusGroup title={isIndividual ? "Atleta en alerta (≥4 factores en rojo)"  : `${PersonLabel} en alerta (≥4 factores en rojo)`}  players={alert4}   color="#ff5a5f" />
+                  <StatusGroup title={isIndividual ? "Atleta en duda (2–3 factores en rojo)"   : `${PersonLabel} en duda (2–3 factores en rojo)`}   players={doubt}    color="#f2c63c" />
+                  <StatusGroup title={isIndividual ? "Atleta en buena forma"                   : `${PersonLabel} en buena forma`}                   players={goodForm} color="#a3e635" />
                 </div>
               );
               if (key === "wellnessRpeQuadrant") return (
@@ -272,10 +280,10 @@ export default function LoadControlPdfModal({ team, wellness, rpe, sessions, onC
                         <line x1={midX} y1={pad.t} x2={midX} y2={svgH - pad.b} stroke="#eef1f4" strokeWidth={1} strokeDasharray="5 3" />
                         <line x1={pad.l} y1={midY} x2={svgW - pad.r} y2={midY} stroke="#eef1f4" strokeWidth={1} strokeDasharray="5 3" />
                         {[0,2.5,5,7.5,10].map((v) => (<g key={`x${v}`}><text x={px2(v)} y={svgH - pad.b + 12} textAnchor="middle" fill="#eef1f4" fontSize={9}>{v}</text><text x={pad.l - 6} y={py2(v)} textAnchor="end" dominantBaseline="middle" fill="#eef1f4" fontSize={9}>{v}</text></g>))}
-                        <text x={pad.l + 6} y={pad.t + 14} fontSize={9} fill="#ff9f40" fontWeight="600">{PersonLabel} cargados</text>
+                        <text x={pad.l + 6} y={pad.t + 14} fontSize={9} fill="#ff9f40" fontWeight="600">{isIndividual ? `Atleta ${adjSing}` : `${PersonLabel} ${adjPlural}`}</text>
                         <text x={midX + 6} y={pad.t + 14} fontSize={9} fill="#a3e635" fontWeight="600">Asimila bien la carga</text>
-                        <text x={pad.l + 6} y={svgH - pad.b - 8} fontSize={9} fill="#ff5a5f" fontWeight="600">Mal adaptados</text>
-                        <text x={midX + 6} y={svgH - pad.b - 8} fontSize={9} fill="#60a5fa" fontWeight="600">Poco cargados</text>
+                        <text x={pad.l + 6} y={svgH - pad.b - 8} fontSize={9} fill="#ff5a5f" fontWeight="600">{isIndividual ? `Mal ${malSing}` : `Mal ${malPlural}`}</text>
+                        <text x={midX + 6} y={svgH - pad.b - 8} fontSize={9} fill="#60a5fa" fontWeight="600">{isIndividual ? `Poco ${adjSing}` : `Poco ${adjPlural}`}</text>
                         <text x={pad.l + plotW / 2} y={svgH - 4} fontSize={9} fill="#eef1f4" textAnchor="middle">WS →</text>
                         <text x={10} y={pad.t + plotH / 2} fontSize={9} fill="#eef1f4" textAnchor="middle" transform={`rotate(-90,10,${pad.t + plotH / 2})`}>RPE →</text>
                         <defs>{playerStats.map((p) => (<clipPath key={`clip-${p.username}`} id={`clip-pdf-${p.username}`}><circle cx={0} cy={0} r={10} /></clipPath>))}</defs>

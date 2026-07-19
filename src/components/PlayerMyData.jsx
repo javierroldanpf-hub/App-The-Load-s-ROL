@@ -100,7 +100,7 @@ function PlayerPersonalData({ user, team, onProfileUpdate }) {
         teamId, username: user.username,
         displayName: values.displayName, height: values.height,
         position: values.position, dominantLeg: values.dominantLeg, dominantArm: values.dominantArm,
-        birthDate: values.birthDate,
+        birthDate: values.birthDate, sexo: values.sexo || null,
         photoUrl: photoDataUrl !== undefined ? photoDataUrl : (profile ? profile.photoUrl : null),
         ts: Date.now(),
       };
@@ -164,6 +164,7 @@ function PlayerPersonalData({ user, team, onProfileUpdate }) {
         <PersonalDataField label="Fecha de nacimiento" value={profile && profile.birthDate ? fmtDateLong(profile.birthDate) : "–"} />
         <PersonalDataField label="Altura" value={profile && profile.height ? `${profile.height} cm` : "–"} />
         <PersonalDataField label="Peso actual" value={latestWeight ? `${latestWeight} kg` : "–"} />
+        <PersonalDataField label="Sexo" value={profile && profile.sexo ? (profile.sexo === "masculino" ? "Masculino" : "Femenino") : "–"} />
         {!team.isTrainingGroup && <>
           <PersonalDataField label="Pierna dominante" value={profile && profile.dominantLeg ? profile.dominantLeg : "–"} />
           <PersonalDataField label="Brazo dominante" value={profile && profile.dominantArm ? profile.dominantArm : "–"} />
@@ -269,6 +270,7 @@ function PersonalDataForm({ profile, currentWeight, positions, isTrainingGroup, 
   const [dominantLeg, setDominantLeg] = useState(profile ? profile.dominantLeg || "" : "");
   const [dominantArm, setDominantArm] = useState(profile ? profile.dominantArm || "" : "");
   const [birthDate, setBirthDate] = useState(profile && profile.birthDate ? profile.birthDate : "");
+  const [sexo, setSexo] = useState(profile ? profile.sexo || "" : "");
   const [photoDataUrl, setPhotoDataUrl] = useState(undefined);
   const [error, setError] = useState("");
 
@@ -278,7 +280,7 @@ function PersonalDataForm({ profile, currentWeight, positions, isTrainingGroup, 
   const handleSubmit = () => {
     if (!displayName.trim()) { setError("El nombre no puede estar vacío."); return; }
     setError("");
-    onSave({ displayName: displayName.trim(), height: height ? parseFloat(height) : null, weight: weight ? parseFloat(weight) : null, position: isTrainingGroup ? null : (position || null), specificTest: isTrainingGroup ? (specificTest || null) : null, dominantLeg: dominantLeg || null, dominantArm: dominantArm || null, birthDate: birthDate || null }, photoDataUrl);
+    onSave({ displayName: displayName.trim(), height: height ? parseFloat(height) : null, weight: weight ? parseFloat(weight) : null, position: isTrainingGroup ? null : (position || null), specificTest: isTrainingGroup ? (specificTest || null) : null, dominantLeg: dominantLeg || null, dominantArm: dominantArm || null, birthDate: birthDate || null, sexo: sexo || null }, photoDataUrl);
   };
 
   return (
@@ -293,6 +295,16 @@ function PersonalDataForm({ profile, currentWeight, positions, isTrainingGroup, 
         <div>
           <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Fecha de nacimiento {computedAge !== null && <span style={{ color: COLORS.lime }}>· {computedAge} años</span>}</div>
           <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={{ ...inputStyle, colorScheme: "dark" }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Sexo</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {["masculino", "femenino"].map((opt) => (
+              <button key={opt} onClick={() => setSexo(sexo === opt ? "" : opt)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${sexo === opt ? COLORS.lime : COLORS.line}`, background: sexo === opt ? COLORS.limeDark : "transparent", color: sexo === opt ? COLORS.lime : COLORS.text, fontSize: 13, fontWeight: sexo === opt ? 700 : 400, cursor: "pointer", textTransform: "capitalize" }}>
+                {opt === "masculino" ? "Masculino" : "Femenino"}
+              </button>
+            ))}
+          </div>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <div style={{ flex: 1 }}>

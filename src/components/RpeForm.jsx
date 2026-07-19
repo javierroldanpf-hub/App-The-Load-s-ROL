@@ -4,7 +4,7 @@ import { COLORS, RPE_ANCHORS } from "@/lib/constants";
 import { rpeStatus, todayStr } from "@/lib/utils";
 import { saveRpe } from "@/lib/db";
 
-export default function RpeForm({ user, session, existing, refreshData }) {
+export default function RpeForm({ user, session, existing, refreshData, dateOverride }) {
   const [rpe, setRpe] = useState(existing ? existing.rpe : 5);
   const [comment, setComment] = useState(existing ? existing.comment || "" : "");
   const [saving, setSaving] = useState(false);
@@ -32,7 +32,7 @@ export default function RpeForm({ user, session, existing, refreshData }) {
       teamId: user.team_id || user.teamId,
       username: user.username,
       displayName: user.display_name || user.displayName,
-      date: todayStr(), rpe, duration, sessionType: session.sessionType, plannedIntensity: session.intensity,
+      date: dateOverride || todayStr(), rpe, duration, sessionType: session.sessionType, plannedIntensity: session.intensity,
       comment: comment.trim(),
       commentRead: existing ? (comment.trim() !== (existing.comment || "").trim() ? false : existing.commentRead || false) : false,
       id: existing ? existing.id : undefined, ts: Date.now(),

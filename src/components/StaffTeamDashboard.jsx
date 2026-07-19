@@ -104,14 +104,28 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       displayName: nameFromEntries || prof?.displayName || dn?.displayName || username,
       photoUrl: prof?.photoUrl || dn?.photoUrl || null,
       position: prof?.position || dn?.position || null,
+      sexo: prof?.sexo || null,
     };
   });
   const teamWithPhotos = { ...team, roster: enrichedRosterForTeam };
   const todaySession = sessions.find((s) => s.date === todayStr() && !s.isRest);
 
+  // Compute effective gender for label adaptation
+  const teamKind = team.kind || "equipo";
+  const teamGender = (() => {
+    if (teamKind === "equipo") return team.sexo || "masculino";
+    // grupo or individual: derive from player profiles
+    const sexos = roster.map((u) => playerProfiles[u]?.sexo).filter(Boolean);
+    if (sexos.length === 0) return "masculino";
+    if (sexos.every((s) => s === "femenino")) return "femenino";
+    if (teamKind === "individual") return sexos[0] || "masculino";
+    if (sexos.some((s) => s === "masculino") && sexos.some((s) => s === "femenino")) return "mixto";
+    return "masculino";
+  })();
+
   const mainTabs = [
     { id: "resumen", label: "Datos de Carga" },
-    { id: "calendario", label: "Calendario" },
+    { id: "calendario", label: "Planificación" },
     ...(!readOnly ? [{ id: "mensajes", label: unreadCount > 0 ? `Avisos (${unreadCount})` : "Avisos" }] : []),
     { id: "fisicos", label: "Datos Físicos" },
     ...(!readOnly ? [{ id: "ajustes", label: "Ajustes" }] : []),
@@ -308,13 +322,14 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
               rpe={rpe}
               sessions={sessions}
               onPlayerClick={(player) => setSelectedPlayer(player)}
+              teamGender={teamGender}
             />
           )}
         </>
       )}
 
       {tab === "calendario" && (
-        <CoachCalendarEditor team={team} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} />
+        <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} />
       )}
 
       {tab === "mensajes" && (

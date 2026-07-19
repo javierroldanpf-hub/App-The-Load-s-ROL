@@ -46,7 +46,7 @@ function Cell({ value, color, fmt = (v) => v !== null ? (typeof v === "number" ?
 }
 
 /* ── Quadrant chart (X=WS, Y=RPE) ──────────────────────────────────── */
-function QuadrantChart({ players }) {
+function QuadrantChart({ players, PersonLabel, isIndividual, isFem, isMixto }) {
   const [selected, setSelected] = useState(null);
   const svgW = 300, svgH = 260;
   const pad = { l: 28, r: 10, t: 10, b: 28 };
@@ -58,11 +58,15 @@ function QuadrantChart({ players }) {
   const px = (ws) => pad.l + (ws / maxX) * plotW;
   const py = (rpe) => svgH - pad.b - (rpe / maxY) * plotH;
 
+  const adjSing = isFem ? "cargada" : "cargado";
+  const adjPlural = isMixto ? "cargad@s" : isFem ? "cargadas" : "cargados";
+  const malSing = isFem ? "adaptada" : "adaptado";
+  const malPlural = isMixto ? "adaptad@s" : isFem ? "adaptadas" : "adaptados";
   const quadLabels = [
-    { x: pad.l + 4,           y: pad.t + 14, text: "Jugadores cargados",       color: "#ff9f40" },
-    { x: pad.l + plotW / 2 + 4, y: pad.t + 14, text: "Asimila bien la carga",  color: COLORS.lime },
-    { x: pad.l + 4,           y: svgH - pad.b - 6, text: "Mal adaptados",       color: COLORS.coral },
-    { x: pad.l + plotW / 2 + 4, y: svgH - pad.b - 6, text: "Poco cargados",    color: COLORS.blue },
+    { x: pad.l + 4,             y: pad.t + 14,         text: isIndividual ? `Atleta ${adjSing}`  : `${PersonLabel} ${adjPlural}`, color: "#ff9f40" },
+    { x: pad.l + plotW / 2 + 4, y: pad.t + 14,         text: "Asimila bien la carga",                                            color: COLORS.lime },
+    { x: pad.l + 4,             y: svgH - pad.b - 6,   text: isIndividual ? `Mal ${malSing}`     : `Mal ${malPlural}`,            color: COLORS.coral },
+    { x: pad.l + plotW / 2 + 4, y: svgH - pad.b - 6,   text: isIndividual ? `Poco ${adjSing}`   : `Poco ${adjPlural}`,           color: COLORS.blue },
   ];
 
   return (
@@ -147,13 +151,17 @@ function QuadrantChart({ players }) {
 }
 
 /* ── Player names by quadrant ───────────────────────────────────────── */
-function QuadrantLists({ players, onPlayerClick }) {
+function QuadrantLists({ players, onPlayerClick, PersonLabel, isIndividual, isFem, isMixto }) {
   const xMid = 5, yMid = 5;
+  const adjSing = isFem ? "cargada" : "cargado";
+  const adjPlural = isMixto ? "cargad@s" : isFem ? "cargadas" : "cargados";
+  const malSing = isFem ? "adaptada" : "adaptado";
+  const malPlural = isMixto ? "adaptad@s" : isFem ? "adaptadas" : "adaptados";
   const quads = [
-    { label: "Asimila bien la carga",   color: COLORS.lime,  filter: (p) => p.avgWS >= xMid && p.avgRpe >= yMid },
-    { label: "Jugadores cargados",      color: "#ff9f40",    filter: (p) => p.avgWS < xMid  && p.avgRpe >= yMid },
-    { label: "Poco cargados",           color: COLORS.blue,  filter: (p) => p.avgWS >= xMid && p.avgRpe < yMid  },
-    { label: "Mal adaptados a la carga",color: COLORS.coral, filter: (p) => p.avgWS < xMid  && p.avgRpe < yMid  },
+    { label: "Asimila bien la carga",                                                         color: COLORS.lime,  filter: (p) => p.avgWS >= xMid && p.avgRpe >= yMid },
+    { label: isIndividual ? `Atleta ${adjSing}`        : `${PersonLabel} ${adjPlural}`,       color: "#ff9f40",    filter: (p) => p.avgWS < xMid  && p.avgRpe >= yMid },
+    { label: isIndividual ? `Poco ${adjSing}`          : `Poco ${adjPlural}`,                 color: COLORS.blue,  filter: (p) => p.avgWS >= xMid && p.avgRpe < yMid  },
+    { label: isIndividual ? `Mal ${malSing} a la carga` : `Mal ${malPlural} a la carga`,      color: COLORS.coral, filter: (p) => p.avgWS < xMid  && p.avgRpe < yMid  },
     { label: "Sin datos",               color: COLORS.text,  filter: (p) => p.avgWS === null || p.avgRpe === null },
   ];
   return (
@@ -185,9 +193,22 @@ function QuadrantLists({ players, onPlayerClick }) {
 }
 
 /* ── Main ───────────────────────────────────────────────────────────── */
-export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlayerClick }) {
+export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlayerClick, teamGender = "masculino" }) {
   const today = todayStr();
   const roster = team.roster || [];
+  const kind = team.kind || "equipo";
+  const isIndividual = kind === "individual";
+  const isFem = teamGender === "femenino";
+  const isMixto = teamGender === "mixto";
+  const personLabel = kind === "equipo" ? (isFem ? "jugadoras" : "jugadores") : "atletas";
+  const PersonLabel = kind === "equipo" ? (isFem ? "Jugadoras" : "Jugadores") : "Atletas";
+  const personLabelSing = kind === "equipo" ? (isFem ? "jugadora" : "jugador") : "atleta";
+  const adjPlural = isMixto ? "cargad@s" : isFem ? "cargadas" : "cargados";
+  const adjSing = isFem ? "cargada" : "cargado";
+  const adjMalPlural = isMixto ? "adaptad@s" : isFem ? "adaptadas" : "adaptados";
+  const adjMalSing = isFem ? "adaptada" : "adaptado";
+  const adjLowPlural = isMixto ? "cargad@s" : isFem ? "cargadas" : "cargados";
+  const adjLowSing = isFem ? "cargada" : "cargado";
   const [showPdf, setShowPdf] = useState(false);
 
   const playerStats = useMemo(() => {
@@ -262,7 +283,7 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
       {/* ── Alertas ─────────────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
         <div style={{ background: COLORS.panel, border: `1px solid ${alertPlayers.length > 0 ? COLORS.coral : COLORS.line}`, borderRadius: 12, padding: "10px 12px" }}>
-          <div style={{ fontSize: 9, color: COLORS.text, marginBottom: 4 }}>Jugadores en alerta</div>
+          <div style={{ fontSize: 9, color: COLORS.text, marginBottom: 4 }}>{isIndividual ? (isFem ? "Atleta en alerta" : "Atleta en alerta") : `${PersonLabel} en alerta`}</div>
           <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 26, color: alertPlayers.length > 0 ? COLORS.coral : COLORS.lime }}>
             {alertPlayers.length}<span style={{ fontSize: 14, color: COLORS.text, fontWeight: 400 }}>/{roster.length}</span>
           </div>
@@ -312,7 +333,7 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
           <thead>
             <tr>
-              <th style={{ ...thStyle, textAlign: "left" }}>Jugador</th>
+              <th style={{ ...thStyle, textAlign: "left" }}>{isIndividual ? "Atleta" : personLabelSing.charAt(0).toUpperCase() + personLabelSing.slice(1)}</th>
               <th style={thStyle}>Medio</th>
               <th style={thStyle}>A/C</th>
               <th style={thStyle}>Monotonía</th>
@@ -349,7 +370,7 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 360 }}>
           <thead>
             <tr>
-              <th style={{ ...thStyle, textAlign: "left" }}>Jugador</th>
+              <th style={{ ...thStyle, textAlign: "left" }}>{isIndividual ? "Atleta" : personLabelSing.charAt(0).toUpperCase() + personLabelSing.slice(1)}</th>
               <th style={thStyle}>Medio</th>
               <th style={thStyle}>sRPE</th>
               <th style={thStyle}>A/C</th>
@@ -377,9 +398,9 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
       {/* ── Cuadrante WS vs RPE ─────────────────────────────────────── */}
       <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "0.75rem", marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: COLORS.text, fontWeight: 600, marginBottom: 8 }}>Cuadrante Wellness vs RPE · media semana</div>
-        <QuadrantChart players={playerStats} />
+        <QuadrantChart players={playerStats} PersonLabel={PersonLabel} isIndividual={isIndividual} isFem={isFem} isMixto={isMixto} />
         <div style={{ marginTop: 12 }}>
-          <QuadrantLists players={playerStats} onPlayerClick={onPlayerClick} />
+          <QuadrantLists players={playerStats} onPlayerClick={onPlayerClick} PersonLabel={PersonLabel} isIndividual={isIndividual} isFem={isFem} isMixto={isMixto} />
         </div>
       </div>
 
@@ -390,6 +411,7 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
           rpe={rpe}
           sessions={sessions}
           onClose={() => setShowPdf(false)}
+          teamGender={teamGender}
         />
       )}
     </div>

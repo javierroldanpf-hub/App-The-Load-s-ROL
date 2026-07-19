@@ -12,7 +12,7 @@ const SECTIONS_ALL = [
     content: `Muestra el estado general del equipo o grupo en base a los registros de RPE y wellness.\n\n• Datos medios del equipo/grupo: gráficas y medias de carga, fatiga y bienestar del conjunto. Puedes filtrar por fecha.\n• Estado individual: tabla con el estado de cada jugador/a hoy. Pulsa sobre un jugador/a para ver su detalle completo con gráficas de evolución.\n• Control de carga: vista de la carga acumulada y ACWR (ratio carga aguda/crónica) para detectar riesgo de lesión.`,
   },
   {
-    title: "Calendario",
+    title: "Planificación",
     content: `Planificación semanal y mensual del equipo.\n\n• Vista semana / mes: navega entre semanas o meses con las flechas.\n• Añadir sesión: pulsa el botón + de un día para crear una sesión. Puedes elegir tipo, intensidad, duración y contenido por bloques.\n• Día de descanso: activa el toggle para marcar un día como descanso.\n• Sesiones individuales: dentro del editor de sesión, la pestaña "Sesión individual" permite asignar sesiones específicas a jugadores/as concretos.\n• Repetir en microciclos: si tienes mesociclos activos, puedes aplicar la misma sesión en semanas equivalentes de otros microciclos.\n• Exportar PDF: genera un informe del calendario en PDF desde el apartado de Ajustes.`,
   },
   {
@@ -64,7 +64,7 @@ const SECTIONS_PLAYER = [
     content: `Es la pantalla principal que ves al entrar. Muestra lo que tienes pendiente para el día de hoy.\n\n• Wellness: formulario diario de bienestar. Responde preguntas sobre tu sueño, fatiga, dolor muscular, humor y estrés. Es importante rellenarlo cada mañana.\n• RPE (Esfuerzo Percibido): formulario que rellenas después del entreno. Indica cuánto esfuerzo te ha supuesto la sesión del día en una escala del 0 al 10. También puedes añadir un comentario para tu preparador/a.\n• Avisos: si tu preparador/a te ha enviado algún mensaje o alerta, aparecerá aquí.`,
   },
   {
-    title: "Calendario",
+    title: "Planificación",
     content: `Muestra la planificación de tu equipo o grupo en formato semana o mes.\n\n• Pulsa sobre un día para ver el detalle de la sesión: tipo, intensidad, duración y contenidos.\n• Si tu preparador/a ha habilitado la opción de nota del atleta, podrás añadir un texto sobre la sesión directamente desde el detalle.\n• Los colores indican la intensidad planificada de cada sesión.\n• Si perteneces a un mesociclo menstrual, verás las fases del ciclo reflejadas en el calendario.`,
   },
   {

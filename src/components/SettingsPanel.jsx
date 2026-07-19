@@ -42,6 +42,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
   const [formDeadlineWellness, setFormDeadlineWellness] = useState(team.formDeadlineWellness || "");
   const [formDeadlineRpe, setFormDeadlineRpe] = useState(team.formDeadlineRpe || "");
   const [formDeadlineRpeDay, setFormDeadlineRpeDay] = useState(team.formDeadlineRpeDay || "same");
+  const [teamSexo, setTeamSexo] = useState(team.sexo || "");
   const [transferPlayer, setTransferPlayer] = useState("");
   const [transferTarget, setTransferTarget] = useState("");
   const [transferring, setTransferring] = useState(false);
@@ -233,7 +234,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       )}
 
       {/* ── PLANTILLA ── */}
-      <Accordion title="Gestión de plantilla" defaultOpen>
+      <Accordion title="Gestión de plantilla">
         {roster.length === 0 && <div style={{ fontSize: 13, color: COLORS.text }}>No hay jugadores en el equipo.</div>}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {roster.map((player) => {
@@ -425,6 +426,21 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
           <button onClick={saveMatchDuration} disabled={saving} style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar</button>
         </div>
       </Accordion>}
+
+      {/* ── SEXO DEL EQUIPO (solo equipo, no grupo ni individual) ── */}
+      {(team.kind || "equipo") === "equipo" && (
+        <Accordion title="Sexo del equipo">
+          <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 12 }}>Indica el sexo del equipo para adaptar el lenguaje en las estadísticas y el PDF.</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            {["masculino", "femenino"].map((opt) => (
+              <button key={opt} onClick={() => setTeamSexo(teamSexo === opt ? "" : opt)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${teamSexo === opt ? COLORS.lime : COLORS.line}`, background: teamSexo === opt ? COLORS.limeDark : "transparent", color: teamSexo === opt ? COLORS.lime : COLORS.text, fontSize: 13, fontWeight: teamSexo === opt ? 700 : 400, cursor: "pointer" }}>
+                {opt === "masculino" ? "Masculino" : "Femenino"}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => save({ sexo: teamSexo || null })} disabled={saving} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar</button>
+        </Accordion>
+      )}
 
       {/* ── FORMULARIOS ── */}
       <Accordion title="Hora límite de formularios">
