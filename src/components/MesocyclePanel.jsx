@@ -707,7 +707,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                         {SJ_COLS.map((c) => (
                           <td key={c.key} style={{ fontSize: 11, color: c.color, textAlign: "center", padding: "4px 2px", fontWeight: 700, background: `${c.color}11`, borderBottom: `1px solid ${COLORS.line}` }}>
                             {pct[c.key]}%
-                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 8, color: "#94a3b8", fontWeight: 400 }}>({pct.micro}% 1x1)</div>}
+                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 10, color: "#ff5a5f", fontWeight: 700, marginTop: 2 }}>1x1 · 2x2<br/>{pct.micro}%</div>}
                           </td>
                         ))}
                       </tr>
@@ -715,7 +715,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                         {SJ_COLS.map((c) => (
                           <td key={c.key} style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "4px 2px" }}>
                             {Math.round(totalMin * pct[c.key] / 100)} min
-                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 8, color: "#94a3b8" }}>({Math.round(totalMin * pct.micro / 100)} 1x1)</div>}
+                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 10, color: "#ff5a5f", fontWeight: 700, marginTop: 2 }}>{Math.round(totalMin * pct.micro / 100)} min</div>}
                           </td>
                         ))}
                       </tr>
