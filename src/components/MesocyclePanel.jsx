@@ -42,12 +42,12 @@ const MENSTRUAL_PHASES = [
 ];
 
 const SJ_PERCENTAGES = [
-  { sgj_eg: 18, sgj_em: 18, sgj_ep: 14, smj_eg: 13, smj_em: 12, smj_ep: 10, srj_eg: 6,  srj_em: 5,  srj_ep: 4,  micro: 0  },
-  { sgj_eg: 18, sgj_em: 18, sgj_ep: 14, smj_eg: 13, smj_em: 12, smj_ep: 10, srj_eg: 6,  srj_em: 5,  srj_ep: 4,  micro: 0  },
-  { sgj_eg: 6,  sgj_em: 5,  sgj_ep: 4,  smj_eg: 18, smj_em: 18, smj_ep: 14, srj_eg: 13, srj_em: 12, srj_ep: 10, micro: 0  },
-  { sgj_eg: 6,  sgj_em: 5,  sgj_ep: 4,  smj_eg: 18, smj_em: 18, smj_ep: 14, srj_eg: 13, srj_em: 12, srj_ep: 10, micro: 0  },
-  { sgj_eg: 12, sgj_em: 11, sgj_ep: 7,  smj_eg: 6,  smj_em: 5,  smj_ep: 4,  srj_eg: 18, srj_em: 18, srj_ep: 14, micro: 5  },
-  { sgj_eg: 10, sgj_em: 10, sgj_ep: 5,  smj_eg: 5,  smj_em: 5,  smj_ep: 5,  srj_eg: 18, srj_em: 18, srj_ep: 14, micro: 10 },
+  { sgj_eg: 15, sgj_em: 25, sgj_ep: 10, smj_eg: 10, smj_em: 10, smj_ep: 15, srj_eg: 5,  srj_em: 5,  srj_ep: 5,  micro: 0 },
+  { sgj_eg: 20, sgj_em: 30, sgj_ep: 0,  smj_eg: 15, smj_em: 15, smj_ep: 5,  srj_eg: 0,  srj_em: 5,  srj_ep: 10, micro: 0 },
+  { sgj_eg: 15, sgj_em: 0,  sgj_ep: 0,  smj_eg: 25, smj_em: 10, smj_ep: 15, srj_eg: 0,  srj_em: 20, srj_ep: 15, micro: 0 },
+  { sgj_eg: 15, sgj_em: 0,  sgj_ep: 0,  smj_eg: 30, smj_em: 5,  smj_ep: 15, srj_eg: 5,  srj_em: 10, srj_ep: 20, micro: 0 },
+  { sgj_eg: 15, sgj_em: 5,  sgj_ep: 15, smj_eg: 10, smj_em: 5,  smj_ep: 0,  srj_eg: 5,  srj_em: 20, srj_ep: 25, micro: 5 },
+  { sgj_eg: 10, sgj_em: 15, sgj_ep: 10, smj_eg: 0,  smj_em: 5,  smj_ep: 10, srj_eg: 5,  srj_em: 15, srj_ep: 30, micro: 0 },
 ];
 
 const SJ_COLS = [
@@ -59,8 +59,7 @@ const SJ_COLS = [
   { key: "smj_ep", label: "EP", group: "SMJ", color: "#a78bfa" },
   { key: "srj_eg", label: "EG", group: "SRJ", color: "#fb923c" },
   { key: "srj_em", label: "EM", group: "SRJ", color: "#fb923c" },
-  { key: "srj_ep", label: "EP", group: "SRJ", color: "#fb923c" },
-  { key: "micro",  label: "1x1-2x2", group: null, color: "#94a3b8" },
+  { key: "srj_ep", label: "EP*", group: "SRJ", color: "#fb923c" },
 ];
 
 function mesoWeeks(startDate, endDate) {
@@ -647,12 +646,6 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
             const curDays = edit ? edit.days : String(w.sjDays ?? 4);
             const curBaseMin = edit ? edit.baseMin : String(w.sjBaseMinutes ?? 100);
             const totalMin = Math.round((Number(curBaseMin) || 0) * (w.volume ?? 100) / 100);
-            const groups = [
-              { label: "SGJ (8x8-10x10)", color: "#38bdf8", cols: ["sgj_eg","sgj_em","sgj_ep"] },
-              { label: "SMJ (5x5-7x7)",   color: "#a78bfa", cols: ["smj_eg","smj_em","smj_ep"] },
-              { label: "SRJ (3x3-4x4)",   color: "#fb923c", cols: ["srj_eg","srj_em","srj_ep"] },
-              { label: "1x1-2x2",         color: "#94a3b8", cols: ["micro"] },
-            ];
             return (
               <div key={w.weekStart} style={{ background: "#0c1520", border: `1px solid ${isCurrent ? "#38bdf8" : COLORS.line}`, borderRadius: 12, padding: "12px 14px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -696,14 +689,12 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
 
                 {/* SJ Table */}
                 <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 420 }}>
                     <thead>
                       <tr>
-                        {groups.map((g) => (
-                          <th key={g.label} colSpan={g.cols.length} style={{ fontSize: 9, fontWeight: 700, color: g.color, textAlign: "center", padding: "4px 2px", borderBottom: `2px solid ${g.color}44`, whiteSpace: "nowrap" }}>
-                            {g.label}
-                          </th>
-                        ))}
+                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #38bdf844" }}>SGJ (8x8–10x10)</th>
+                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#a78bfa", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #a78bfa44" }}>SMJ (5x5–7x7)</th>
+                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#fb923c", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #fb923c44" }}>SRJ (3x3–4x4)</th>
                       </tr>
                       <tr>
                         {SJ_COLS.map((c) => (
@@ -716,6 +707,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                         {SJ_COLS.map((c) => (
                           <td key={c.key} style={{ fontSize: 11, color: c.color, textAlign: "center", padding: "4px 2px", fontWeight: 700, background: `${c.color}11`, borderBottom: `1px solid ${COLORS.line}` }}>
                             {pct[c.key]}%
+                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 8, color: "#94a3b8", fontWeight: 400 }}>({pct.micro}% 1x1)</div>}
                           </td>
                         ))}
                       </tr>
@@ -723,6 +715,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                         {SJ_COLS.map((c) => (
                           <td key={c.key} style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "4px 2px" }}>
                             {Math.round(totalMin * pct[c.key] / 100)} min
+                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 8, color: "#94a3b8" }}>({Math.round(totalMin * pct.micro / 100)} 1x1)</div>}
                           </td>
                         ))}
                       </tr>
