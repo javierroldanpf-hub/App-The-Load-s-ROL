@@ -47,7 +47,7 @@ const SJ_PERCENTAGES = [
   { sgj_eg: 15, sgj_em: 0,  sgj_ep: 0,  smj_eg: 25, smj_em: 10, smj_ep: 15, srj_eg: 0,  srj_em: 20, srj_ep: 15, micro: 0 },
   { sgj_eg: 15, sgj_em: 0,  sgj_ep: 0,  smj_eg: 30, smj_em: 5,  smj_ep: 15, srj_eg: 5,  srj_em: 10, srj_ep: 20, micro: 0 },
   { sgj_eg: 15, sgj_em: 5,  sgj_ep: 15, smj_eg: 10, smj_em: 5,  smj_ep: 0,  srj_eg: 5,  srj_em: 20, srj_ep: 25, micro: 5 },
-  { sgj_eg: 10, sgj_em: 15, sgj_ep: 10, smj_eg: 0,  smj_em: 5,  smj_ep: 10, srj_eg: 5,  srj_em: 15, srj_ep: 30, micro: 0 },
+  { sgj_eg: 10, sgj_em: 15, sgj_ep: 10, smj_eg: 0,  smj_em: 5,  smj_ep: 10, srj_eg: 5,  srj_em: 15, srj_ep: 30, micro: 10 },
 ];
 
 const SJ_COLS = [
