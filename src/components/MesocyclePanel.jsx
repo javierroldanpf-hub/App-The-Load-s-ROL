@@ -280,6 +280,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>⚽ Situaciones Jugadas</div>
                 <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>6 microciclos con tabla de volumen por situación</div>
+                <div style={{ fontSize: 10, color: "#fb923c", marginTop: 2, fontWeight: 600 }}>Específico de fútbol</div>
               </div>
               <button onClick={() => { setIsSJ((v) => !v); if (!isSJ) setIsMenstrual(false); }} style={{
                 width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
@@ -462,6 +463,7 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>⚽ Situaciones Jugadas</div>
                 <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>6 microciclos con tabla de volumen por situación</div>
+                <div style={{ fontSize: 10, color: "#fb923c", marginTop: 2, fontWeight: 600 }}>Específico de fútbol</div>
               </div>
               <button onClick={() => { setIsSJ((v) => !v); if (!isSJ) setIsMenstrual(false); }} style={{
                 width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
