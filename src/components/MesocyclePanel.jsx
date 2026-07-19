@@ -231,7 +231,8 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
           })
         : mesoWeeks(startDate, effectiveEnd)
       ).map((w, i) => {
-        if (isSJ) return { ...w, name: `Microciclo ${i + 1}`, type: "carga", volume: 100, intensity: 70, sjDays: 4, sjBaseMinutes: 100 };
+        const SJ_NAMES = ["FOCO EXTENSIVO SGJ EM", "FOCO EXTENSIVO SGJ EM", "FOCO VELOCIDAD SMJ EG", "FOCO VELOCIDAD SMJ EG", "FOCO INTENSIVO SRJ EP", "FOCO INTENSIVO SRJ EP"];
+        if (isSJ) return { ...w, name: SJ_NAMES[i] || `Microciclo ${i + 1}`, type: "carga", volume: 100, intensity: 70, sjDays: 4, sjBaseMinutes: 100 };
         if (isMenstrual) {
           const phase = MENSTRUAL_PHASES[i] || MENSTRUAL_PHASES[MENSTRUAL_PHASES.length - 1];
           return { ...w, name: phase.label, type: phase.type, volume: 70, intensity: 70, contenidos: phase.contenidos };
@@ -405,9 +406,10 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
     try {
       const newWeeks = mesoWeeks(startDate, endDate).map((w, i) => {
         const existing = meso.weeks.find((ew) => ew.weekStart === w.weekStart);
+        const SJ_NAMES = ["FOCO EXTENSIVO SGJ EM", "FOCO EXTENSIVO SGJ EM", "FOCO VELOCIDAD SMJ EG", "FOCO VELOCIDAD SMJ EG", "FOCO INTENSIVO SRJ EP", "FOCO INTENSIVO SRJ EP"];
         if (isSJ) {
           const base = existing ? { ...w, ...existing } : { ...w, volume: 100, intensity: 70 };
-          return { ...base, name: `Microciclo ${i + 1}`, sjDays: base.sjDays ?? 4, sjBaseMinutes: base.sjBaseMinutes ?? 100, isSituacionesJugadas: true };
+          return { ...base, name: base.name || SJ_NAMES[i] || `Microciclo ${i + 1}`, sjDays: base.sjDays ?? 4, sjBaseMinutes: base.sjBaseMinutes ?? 100, isSituacionesJugadas: true };
         }
         if (isMenstrual) {
           const phase = MENSTRUAL_PHASES[i] || MENSTRUAL_PHASES[MENSTRUAL_PHASES.length - 1];
