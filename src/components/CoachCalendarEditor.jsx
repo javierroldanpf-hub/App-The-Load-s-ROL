@@ -32,7 +32,8 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle }) {
   );
 }
 
-function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster = [], displayNames = {}, defaultTab = "grupo" }) {
+function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo" }) {
+  const roster = rosterRaw.map((u) => typeof u === "string" ? u : u.username);
   const availableTypes = isTrainingGroup ? GROUP_SESSION_TYPES : SESSION_TYPES;
   const [editorTab, setEditorTab] = useState(defaultTab);
 
