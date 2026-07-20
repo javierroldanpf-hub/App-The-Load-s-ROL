@@ -144,7 +144,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
       </div>
 
       {/* Main table */}
-      <form autoComplete="off" onSubmit={(e) => e.preventDefault()} style={{ overflowX: "auto" }}>
+      <div style={{ overflowX: "auto" }}>
         <table style={{ borderCollapse: "collapse", minWidth: 460, width: "100%", fontSize: 10 }}>
           <thead>
             <tr>
@@ -219,7 +219,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
         </table>
       </div>
 
-      </form>
+      </div>
 
       {!readOnly && dirty && (
         <button onClick={() => { onSave(plan); setDirty(false); }} style={{ marginTop: 10, width: "100%", padding: "8px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
