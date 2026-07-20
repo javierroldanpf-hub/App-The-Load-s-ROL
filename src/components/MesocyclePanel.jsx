@@ -110,7 +110,13 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
 
   const allocated = (key) => key === "topup" ? null : Math.round(totalMin * (pct[key] ?? 0) / 100);
   const sumDays   = (key) => SJ_DAYS.reduce((acc, d) => getDayType(d.key) === "entreno" ? acc + (Number(plan.cells?.[d.key]?.[key]) || 0) : acc, 0);
-  const remaining = (key) => { const a = allocated(key); return a === null ? null : a - sumDays(key); };
+  const remaining = (key) => {
+    const a = allocated(key);
+    if (a === null) return null;
+    // Los minutos de 1x1/2x2 también se descuentan del contador de SRJ EP
+    if (key === "srj_ep") return a - sumDays("srj_ep") - sumDays("micro");
+    return a - sumDays(key);
+  };
 
   // Totals for summary row
   const totalSJ    = SJ_ROWS.filter((r) => r.key !== "topup").reduce((acc, r) => acc + sumDays(r.key), 0);
@@ -194,6 +200,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
                             type="number" min={0} value={val === "" ? "" : val}
                             onChange={(e) => !readOnly && setCell(d.key, row.key, e.target.value)}
                             readOnly={readOnly}
+                            className="no-arrows"
                             style={{ ...cellInputStyle, borderColor: val ? `${row.color}66` : COLORS.line, color: val ? row.color : COLORS.text }}
                           />
                         )}
@@ -900,12 +907,12 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                         <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", whiteSpace: "nowrap", fontWeight: 600 }}>Rest.</td>
                         {SJ_COLS.map((c) => {
                           const plan = w.sjWeekPlan || { days: {}, cells: {} };
-                          const sumPlanned = SJ_DAYS.reduce((acc, d) => {
+                          const sumKey = (k) => SJ_DAYS.reduce((acc, d) => {
                             const dtype = plan.days?.[d.key] || "entreno";
-                            return dtype === "entreno" ? acc + (Number(plan.cells?.[d.key]?.[c.key]) || 0) : acc;
+                            return dtype === "entreno" ? acc + (Number(plan.cells?.[d.key]?.[k]) || 0) : acc;
                           }, 0);
                           const alloc = Math.round(totalMin * pct[c.key] / 100);
-                          const rem = alloc - sumPlanned;
+                          const rem = alloc - sumKey(c.key) - (c.key === "srj_ep" ? sumKey("micro") : 0);
                           const rc = rem < 0 ? "#ff5a5f" : rem === 0 ? COLORS.lime : COLORS.text;
                           return (
                             <td key={c.key} style={{ fontSize: 10, color: rc, textAlign: "center", padding: "4px 2px", fontWeight: 700 }}>
