@@ -473,7 +473,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
 
       {/* ── NOTIFICACIONES ── */}
       <Accordion title="Notificaciones">
-        <NotifSection coachUsername={coachUsername} />
+        <NotifSection coachUsername={coachUsername} team={team} teamWithPhotos={teamWithPhotos} />
       </Accordion>
 
       {saving && <div style={{ fontSize: 12, color: COLORS.lime, textAlign: "center", marginTop: 8 }}>Guardando...</div>}
@@ -639,7 +639,29 @@ function PdfSettingsSection({ team, save }) {
   );
 }
 
-function NotifSection({ coachUsername }) {
+function NotifSection({ coachUsername, team = {}, teamWithPhotos = {} }) {
+  const kind = team.kind || "equipo";
+  const isGrupo = kind === "grupo";
+  const isIndividual = kind === "individual";
+  const isEquipo = !isGrupo && !isIndividual;
+
+  // Calcular género efectivo igual que en StaffTeamDashboard
+  const teamGender = (() => {
+    if (isEquipo) return team.sexo || "masculino";
+    const roster = teamWithPhotos?.roster || [];
+    const sexos = roster.map((u) => (typeof u === "object" ? u.sexo : null)).filter(Boolean);
+    if (sexos.length === 0) return "masculino";
+    if (sexos.every((s) => s === "femenino")) return "femenino";
+    if (isIndividual) return sexos[0] || "masculino";
+    return sexos.some((s) => s === "masculino") && sexos.some((s) => s === "femenino") ? "mixto" : "masculino";
+  })();
+
+  const isFem = teamGender === "femenino";
+  // jugador/jugadora o atleta/atleta
+  const personLabel = isEquipo
+    ? (isFem ? "jugadora" : "jugador")
+    : (isFem ? "atleta (femenina)" : "atleta");
+  const PersonLabel = personLabel.charAt(0).toUpperCase() + personLabel.slice(1);
   const [alertWellness, setAlertWellness] = useState(false);
   const [alertAcwr, setAlertAcwr] = useState(false);
   const [alertAviso, setAlertAviso] = useState(false);
@@ -678,9 +700,9 @@ function NotifSection({ coachUsername }) {
 
   return (
     <div>
-      <Toggle label="Jugador en estado de alerta" desc="Notificación cuando un jugador registra wellness en zona roja" value={alertWellness} onChange={setAlertWellness} />
-      <Toggle label="Jugador en riesgo ACWR" desc="Notificación cuando el ACWR de un jugador supera 1.5 o baja de 0.8" value={alertAcwr} onChange={setAlertAcwr} />
-      <Toggle label="Nuevos avisos" desc="Notificación cuando hay mensajes nuevos de jugadores sin leer" value={alertAviso} onChange={setAlertAviso} />
+      <Toggle label={`${PersonLabel} en estado de alerta`} desc={`Notificación cuando un ${personLabel} registra wellness en zona roja`} value={alertWellness} onChange={setAlertWellness} />
+      <Toggle label={`${PersonLabel} en riesgo ACWR`} desc={`Notificación cuando el ACWR de un ${personLabel} supera 1.5 o baja de 0.8`} value={alertAcwr} onChange={setAlertAcwr} />
+      <Toggle label="Nuevos avisos" desc={`Notificación cuando hay mensajes nuevos de ${personLabel}s sin leer`} value={alertAviso} onChange={setAlertAviso} />
       <button onClick={handleSave} disabled={saving || !coachUsername} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: 14 }}>
         {saved ? "✓ Guardado" : saving ? "Guardando..." : "Guardar"}
       </button>
