@@ -108,7 +108,12 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
     setDirty(true);
   };
 
-  const allocated = (key) => key === "topup" ? null : Math.round(totalMin * (pct[key] ?? 0) / 100);
+  const allocated = (key) => {
+    if (key === "topup") return null;
+    const base = Math.round(totalMin * (pct[key] ?? 0) / 100);
+    if (key === "srj_ep") return base - sumDays("micro");
+    return base;
+  };
   const sumDays   = (key) => SJ_DAYS.reduce((acc, d) => getDayType(d.key) === "entreno" ? acc + (Number(plan.cells?.[d.key]?.[key]) || 0) : acc, 0);
   const remaining = (key) => {
     const a = allocated(key);
