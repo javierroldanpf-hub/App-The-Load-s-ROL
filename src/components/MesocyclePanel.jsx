@@ -373,7 +373,7 @@ function WeekEditor({ week, onSave, onClose, isSJ = false }) {
 }
 
 /* ── Creador de mesociclo ────────────────────────────────────────────── */
-function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = {}, showMenstrual = false, showSJ = false }) {
+function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = {}, showMenstrual = false, showSJ = false, customTemplates = [] }) {
   const [name, setName]               = useState("");
   const [startDate, setStart]         = useState(null);
   const [endDate, setEnd]             = useState(null);
@@ -381,6 +381,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
   const [isMenstrual, setIsMenstrual] = useState(false);
   const [menstrualPlayers, setMenstrualPlayers] = useState([]);
   const [isSJ, setIsSJ]               = useState(false);
+  const [activeCustomTpl, setActiveCustomTpl] = useState(null); // template id
   const [saving, setSaving]           = useState(false);
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
@@ -391,13 +392,15 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
 
   const handleSave = async () => {
     if (!startDate) return;
-    if (!isSJ && !endDate) return;
+    const activeTpl = activeCustomTpl ? customTemplates.find((t) => t.id === activeCustomTpl) : null;
+    if (!isSJ && !activeTpl && !endDate) return;
     setSaving(true);
     try {
-      const sjEndDate = isSJ ? addDays(mondayOf(startDate), 41) : null;
-      const effectiveEnd = isSJ ? sjEndDate : endDate;
-      const weeks = (isSJ
-        ? Array.from({ length: 6 }, (_, i) => {
+      const numWeeks = activeTpl ? Number(activeTpl.weeks) || 6 : isSJ ? 6 : null;
+      const sjEndDate = (isSJ || activeTpl) ? addDays(mondayOf(startDate), numWeeks * 7 - 1) : null;
+      const effectiveEnd = (isSJ || activeTpl) ? sjEndDate : endDate;
+      const weeks = (isSJ || activeTpl
+        ? Array.from({ length: numWeeks }, (_, i) => {
             const ws = addDays(mondayOf(startDate), i * 7);
             return { weekStart: ws, weekEnd: addDays(ws, 6) };
           })
@@ -405,14 +408,15 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
       ).map((w, i) => {
         const SJ_NAMES = ["FOCO EXTENSIVO SGJ EM", "FOCO EXTENSIVO SGJ EM", "FOCO VELOCIDAD SMJ EG", "FOCO VELOCIDAD SMJ EG", "FOCO INTENSIVO SRJ EP", "FOCO INTENSIVO SRJ EP"];
         if (isSJ) return { ...w, name: SJ_NAMES[i] || `Microciclo ${i + 1}`, type: "carga", volume: 100, intensity: 70, sjDays: 4, sjBaseMinutes: 100 };
+        if (activeTpl) return { ...w, name: `Microciclo ${i + 1}`, type: "carga", volume: 100, intensity: 70 };
         if (isMenstrual) {
           const phase = MENSTRUAL_PHASES[i] || MENSTRUAL_PHASES[MENSTRUAL_PHASES.length - 1];
           return { ...w, name: phase.label, type: phase.type, volume: 70, intensity: 70, contenidos: phase.contenidos };
         }
         return { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
       });
-      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: isSJ ? false : isMenstrual, menstrualPlayers: isSJ ? [] : menstrualPlayers, isSituacionesJugadas: isSJ });
-      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: isSJ ? false : isMenstrual, menstrualPlayers: isSJ ? [] : menstrualPlayers, isSituacionesJugadas: isSJ });
+      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
+      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
     } catch (err) {
       const msg = err?.message || err?.error_description || JSON.stringify(err);
       alert("Error al guardar: " + msg);
@@ -455,7 +459,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
                 <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>6 microciclos con tabla de volumen por situación</div>
                 <div style={{ fontSize: 10, color: "#fb923c", marginTop: 2, fontWeight: 600 }}>Específico de fútbol</div>
               </div>
-              <button onClick={() => { setIsSJ((v) => !v); if (!isSJ) setIsMenstrual(false); }} style={{
+              <button onClick={() => { setIsSJ((v) => !v); if (!isSJ) { setIsMenstrual(false); setActiveCustomTpl(null); } }} style={{
                 width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
                 background: isSJ ? "#38bdf8" : COLORS.line, transition: "background 0.2s",
               }}>
@@ -471,6 +475,32 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
           </div>
         )}
 
+        {showSJ && customTemplates.length > 0 && customTemplates.map((tpl) => {
+          const isActive = activeCustomTpl === tpl.id;
+          const tplColor = tpl.types?.[0]?.color || COLORS.lime;
+          return (
+            <div key={tpl.id} style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>📋 {tpl.name}</div>
+                  <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>{tpl.weeks} microciclos · {tpl.types?.map((t) => t.label).join(" / ")}</div>
+                </div>
+                <button onClick={() => { setActiveCustomTpl(isActive ? null : tpl.id); if (!isActive) { setIsSJ(false); setIsMenstrual(false); } }} style={{
+                  width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+                  background: isActive ? tplColor : COLORS.line, transition: "background 0.2s",
+                }}>
+                  <span style={{ position: "absolute", top: 3, left: isActive ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+                </button>
+              </div>
+              {isActive && (
+                <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, background: `${tplColor}18`, border: `1px solid ${tplColor}44` }}>
+                  <div style={{ fontSize: 11, color: tplColor }}>Se crearán automáticamente {tpl.weeks} microciclos desde la fecha de inicio seleccionada.</div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
         {showMenstrual && (
           <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -478,7 +508,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
                 <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>🔴 Ciclo menstrual</div>
                 <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Semanas prefijadas según fase del ciclo</div>
               </div>
-              <button onClick={() => { setIsMenstrual((v) => !v); if (!isMenstrual) setIsSJ(false); }} style={{
+              <button onClick={() => { setIsMenstrual((v) => !v); if (!isMenstrual) { setIsSJ(false); setActiveCustomTpl(null); } }} style={{
                 width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
                 background: isMenstrual ? "#e879f9" : COLORS.line, transition: "background 0.2s",
               }}>
@@ -540,7 +570,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
 
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-          {(() => { const canSave = startDate && (isSJ || endDate); return (
+          {(() => { const canSave = startDate && (isSJ || activeCustomTpl || endDate); return (
           <button onClick={handleSave} disabled={!canSave || saving} style={{
             flex: 1, padding: "11px 0", borderRadius: 12, border: "none",
             background: canSave ? COLORS.lime : COLORS.panelRaised,
@@ -1117,7 +1147,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
       )}
 
       {showCreate && (
-        <CreateMesoModal teamId={team.teamId} onSave={handleCreate} onClose={() => setShowCreate(false)} roster={roster} displayNames={displayNames} showMenstrual={showMenstrual} showSJ={showSJ} />
+        <CreateMesoModal teamId={team.teamId} onSave={handleCreate} onClose={() => setShowCreate(false)} roster={roster} displayNames={displayNames} showMenstrual={showMenstrual} showSJ={showSJ} customTemplates={team.customMesoTemplates || []} />
       )}
     </div>
   );

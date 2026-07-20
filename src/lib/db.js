@@ -737,6 +737,7 @@ function dbTeamToApp(r) {
     playerSpecificTests: raw?.playerSpecificTests || {},
     defaultMatchDuration: raw?.defaultMatchDuration ?? null,
     sexo: raw?.sexo || null,
+    customMesoTemplates: raw?.customMesoTemplates || [],
     crestUrl: r.crest_url || null,
   };
 }
@@ -770,6 +771,7 @@ function appTeamToDb(team) {
       playerSpecificTests: team.playerSpecificTests || {},
       defaultMatchDuration: team.defaultMatchDuration ?? null,
       sexo: team.sexo || null,
+      customMesoTemplates: team.customMesoTemplates || [],
     },
     crest_url: team.crestUrl || null,
   };

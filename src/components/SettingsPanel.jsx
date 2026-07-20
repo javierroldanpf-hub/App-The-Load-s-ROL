@@ -471,6 +471,13 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
         <PdfSettingsSection team={team} save={save} />
       </Accordion>
 
+      {/* ── PLANTILLAS MESOCICLO ── */}
+      {(team.kind || "equipo") === "equipo" && (
+        <Accordion title="Planificación del mesociclo">
+          <MesoTemplatesSection team={team} save={save} />
+        </Accordion>
+      )}
+
       {/* ── NOTIFICACIONES ── */}
       <Accordion title="Notificaciones">
         <NotifSection coachUsername={coachUsername} team={team} teamWithPhotos={teamWithPhotos} />
@@ -635,6 +642,202 @@ function PdfSettingsSection({ team, save }) {
       </div>
       <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>PDF Datos Físicos del jugador</div>
       <SectionList pdfType="physical" />
+    </div>
+  );
+}
+
+/* ── Plantillas de mesociclo ─────────────────────────────────────────── */
+const TEMPLATE_COLORS = ["#38bdf8","#a78bfa","#fb923c","#34d399","#f472b6","#fbbf24","#f87171","#60a5fa","#e879f9","#94a3b8"];
+
+function TemplateEditor({ template, onSave, onCancel }) {
+  const [name, setName]   = useState(template?.name || "");
+  const [weeks, setWeeks] = useState(template?.weeks || 6);
+  const [types, setTypes] = useState(template?.types || [
+    { id: "t1", label: "Tipo 1", color: TEMPLATE_COLORS[0], subtypes: [{ id: "s1", label: "EG" },{ id: "s2", label: "EM" },{ id: "s3", label: "EP" }] },
+  ]);
+  const [percentages, setPercentages] = useState(template?.percentages || []);
+
+  // Ensure percentages matrix matches weeks × cols
+  const getCols = () => types.flatMap((t) => t.subtypes?.length ? t.subtypes.map((s) => ({ key: `${t.id}_${s.id}`, typeLabel: t.label, subLabel: s.label, color: t.color })) : [{ key: t.id, typeLabel: t.label, subLabel: null, color: t.color }]);
+
+  const getPct = (wIdx, colKey) => percentages[wIdx]?.[colKey] ?? "";
+  const setPct = (wIdx, colKey, val) => {
+    setPercentages((prev) => {
+      const next = [...prev];
+      if (!next[wIdx]) next[wIdx] = {};
+      next[wIdx] = { ...next[wIdx], [colKey]: val === "" ? "" : Math.min(100, Math.max(0, Number(val) || 0)) };
+      return next;
+    });
+  };
+  const rowSum = (wIdx) => getCols().reduce((acc, c) => acc + (Number(percentages[wIdx]?.[c.key]) || 0), 0);
+
+  const addType = () => setTypes((prev) => [...prev, { id: `t${Date.now()}`, label: `Tipo ${prev.length + 1}`, color: TEMPLATE_COLORS[prev.length % TEMPLATE_COLORS.length], subtypes: [] }]);
+  const removeType = (tid) => setTypes((prev) => prev.filter((t) => t.id !== tid));
+  const updateType = (tid, field, val) => setTypes((prev) => prev.map((t) => t.id === tid ? { ...t, [field]: val } : t));
+  const addSubtype = (tid) => setTypes((prev) => prev.map((t) => t.id !== tid ? t : { ...t, subtypes: [...(t.subtypes || []), { id: `s${Date.now()}`, label: `Sub ${(t.subtypes?.length || 0) + 1}` }] }));
+  const removeSubtype = (tid, sid) => setTypes((prev) => prev.map((t) => t.id !== tid ? t : { ...t, subtypes: t.subtypes.filter((s) => s.id !== sid) }));
+  const updateSubtype = (tid, sid, val) => setTypes((prev) => prev.map((t) => t.id !== tid ? t : { ...t, subtypes: t.subtypes.map((s) => s.id === sid ? { ...s, label: val } : s) }));
+
+  const handleSave = () => {
+    if (!name.trim()) return alert("Ponle un nombre a la plantilla");
+    onSave({ id: template?.id || `tpl_${Date.now()}`, name: name.trim(), weeks: Number(weeks) || 6, types, percentages });
+  };
+
+  const cols = getCols();
+  const inputStyle = { padding: "6px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 12, outline: "none", boxSizing: "border-box" };
+
+  return (
+    <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "1rem", marginBottom: 12 }}>
+      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 15, fontWeight: 700, color: COLORS.text, marginBottom: 14 }}>
+        {template?.id ? "Editar plantilla" : "Nueva plantilla"}
+      </div>
+
+      {/* Nombre y semanas */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+        <div style={{ flex: 2 }}>
+          <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 4 }}>Nombre</div>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Fuerza y velocidad..." style={{ ...inputStyle, width: "100%" }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 4 }}>Nº semanas</div>
+          <input type="number" min={1} max={20} value={weeks} onChange={(e) => setWeeks(e.target.value)} style={{ ...inputStyle, width: "100%" }} />
+        </div>
+      </div>
+
+      {/* Tipos y subtipos */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>Tipos de carga</div>
+        {types.map((t) => (
+          <div key={t.id} style={{ background: COLORS.panelRaised, borderRadius: 10, padding: "10px 12px", marginBottom: 8, border: `1px solid ${t.color}44` }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+              <input
+                type="color" value={t.color} onChange={(e) => updateType(t.id, "color", e.target.value)}
+                style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "none", cursor: "pointer", padding: 0 }}
+              />
+              <input value={t.label} onChange={(e) => updateType(t.id, "label", e.target.value)} style={{ ...inputStyle, flex: 1, color: t.color, fontWeight: 700 }} />
+              <button onClick={() => removeType(t.id)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>✕</button>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+              {(t.subtypes || []).map((s) => (
+                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 4, background: `${t.color}18`, borderRadius: 6, padding: "3px 8px", border: `1px solid ${t.color}44` }}>
+                  <input value={s.label} onChange={(e) => updateSubtype(t.id, s.id, e.target.value)} style={{ background: "transparent", border: "none", color: t.color, fontSize: 11, fontWeight: 600, outline: "none", width: 80 }} />
+                  <button onClick={() => removeSubtype(t.id, s.id)} style={{ background: "transparent", border: "none", color: COLORS.coral, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: 0 }}>✕</button>
+                </div>
+              ))}
+              <button onClick={() => addSubtype(t.id)} style={{ background: "transparent", border: `1px dashed ${t.color}`, color: t.color, borderRadius: 6, padding: "3px 10px", cursor: "pointer", fontSize: 11 }}>+ Subtipo</button>
+            </div>
+          </div>
+        ))}
+        <button onClick={addType} style={{ width: "100%", padding: "8px 0", borderRadius: 8, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir tipo</button>
+      </div>
+
+      {/* Tabla de porcentajes */}
+      {cols.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>Porcentajes por semana</div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ borderCollapse: "collapse", fontSize: 10, minWidth: 300 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: "4px 6px", color: COLORS.text, textAlign: "left", borderBottom: `1px solid ${COLORS.line}` }}>Semana</th>
+                  {cols.map((c) => (
+                    <th key={c.key} style={{ padding: "4px 4px", color: c.color, textAlign: "center", borderBottom: `1px solid ${COLORS.line}`, whiteSpace: "nowrap", fontSize: 9 }}>
+                      {c.subLabel ? `${c.typeLabel}\n${c.subLabel}` : c.typeLabel}
+                    </th>
+                  ))}
+                  <th style={{ padding: "4px 4px", color: COLORS.text, textAlign: "center", borderBottom: `1px solid ${COLORS.line}`, fontSize: 9 }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: Number(weeks) || 6 }, (_, wi) => {
+                  const sum = rowSum(wi);
+                  const sumColor = sum > 100 ? "#ff5a5f" : sum === 100 ? COLORS.lime : COLORS.text;
+                  return (
+                    <tr key={wi}>
+                      <td style={{ padding: "3px 6px", color: COLORS.text, fontWeight: 600, fontSize: 10 }}>M{wi + 1}</td>
+                      {cols.map((c) => (
+                        <td key={c.key} style={{ padding: "2px 3px" }}>
+                          <input
+                            type="number" min={0} max={100} value={getPct(wi, c.key)}
+                            onChange={(e) => setPct(wi, c.key, e.target.value)}
+                            className="no-arrows"
+                            style={{ width: 42, padding: "3px 2px", borderRadius: 4, border: `1px solid ${COLORS.line}`, background: "#1c2128", color: c.color, fontSize: 10, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                          />
+                        </td>
+                      ))}
+                      <td style={{ padding: "3px 6px", color: sumColor, fontWeight: 700, textAlign: "center" }}>{sum}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={onCancel} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancelar</button>
+        <button onClick={handleSave} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar plantilla</button>
+      </div>
+    </div>
+  );
+}
+
+function MesoTemplatesSection({ team, save }) {
+  const templates = team.customMesoTemplates || [];
+  const [editing, setEditing] = useState(null); // null | "new" | template object
+
+  const handleSave = (tpl) => {
+    const existing = templates.find((t) => t.id === tpl.id);
+    const next = existing ? templates.map((t) => t.id === tpl.id ? tpl : t) : [...templates, tpl];
+    save({ customMesoTemplates: next });
+    setEditing(null);
+  };
+
+  const handleDelete = (id) => {
+    if (!confirm("¿Eliminar esta plantilla?")) return;
+    save({ customMesoTemplates: templates.filter((t) => t.id !== id) });
+  };
+
+  return (
+    <div>
+      {/* Built-in template */}
+      <div style={{ background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 10, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 16 }}>⚽</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>Situaciones Jugadas (Fútbol)</div>
+          <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Predeterminada · 6 semanas · SGJ / SMJ / SRJ</div>
+        </div>
+        <span style={{ fontSize: 10, color: "#38bdf8", background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 6, padding: "2px 8px", fontWeight: 700 }}>BUILT-IN</span>
+      </div>
+
+      {/* Custom templates */}
+      {templates.map((t) => (
+        <div key={t.id} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 10, padding: "10px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{t.name}</div>
+            <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>
+              {t.weeks} semanas · {t.types?.map((tp) => tp.label).join(" / ")}
+            </div>
+          </div>
+          <button onClick={() => setEditing(t)} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11 }}>Editar</button>
+          <button onClick={() => handleDelete(t.id)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11 }}>Eliminar</button>
+        </div>
+      ))}
+
+      {editing && (
+        <TemplateEditor
+          template={editing === "new" ? null : editing}
+          onSave={handleSave}
+          onCancel={() => setEditing(null)}
+        />
+      )}
+
+      {!editing && (
+        <button onClick={() => setEditing("new")} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 13, cursor: "pointer", marginTop: 4 }}>
+          + Nueva plantilla de mesociclo
+        </button>
+      )}
     </div>
   );
 }

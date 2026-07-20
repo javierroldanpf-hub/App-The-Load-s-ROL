@@ -44,3 +44,8 @@ input::placeholder { color: #5a6470; }
 
 /* Ocultar scrollbar en webkit (iOS) para contenedores con overflow: scroll */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Ocultar flechas de inputs numéricos */
+.no-arrows::-webkit-outer-spin-button,
+.no-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.no-arrows { -moz-appearance: textfield; }
