@@ -144,7 +144,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
       </div>
 
       {/* Main table */}
-      <div style={{ overflowX: "auto" }}>
+      <form autoComplete="off" onSubmit={(e) => e.preventDefault()} style={{ overflowX: "auto" }}>
         <table style={{ borderCollapse: "collapse", minWidth: 460, width: "100%", fontSize: 10 }}>
           <thead>
             <tr>
@@ -193,7 +193,11 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
                         ) : (
                           <input
                             type="text" inputMode="numeric" pattern="[0-9]*" value={val}
-                            autoComplete="off" autoCorrect="off" autoCapitalize="off"
+                            autoComplete="new-password"
+                            data-lpignore="true"
+                            data-1p-ignore="true"
+                            data-form-type="other"
+                            aria-autocomplete="none"
                             onChange={(e) => !readOnly && setCell(d.key, row.key, e.target.value.replace(/[^0-9]/g, ""))}
                             readOnly={readOnly}
                             style={{ ...cellInputStyle, borderColor: val ? `${row.color}66` : COLORS.line, color: val ? row.color : COLORS.text }}
@@ -214,6 +218,8 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
           </tbody>
         </table>
       </div>
+
+      </form>
 
       {!readOnly && dirty && (
         <button onClick={() => { onSave(plan); setDirty(false); }} style={{ marginTop: 10, width: "100%", padding: "8px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
