@@ -219,8 +219,6 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
         </table>
       </div>
 
-      </div>
-
       {!readOnly && dirty && (
         <button onClick={() => { onSave(plan); setDirty(false); }} style={{ marginTop: 10, width: "100%", padding: "8px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
           Guardar planificación semanal ✓
