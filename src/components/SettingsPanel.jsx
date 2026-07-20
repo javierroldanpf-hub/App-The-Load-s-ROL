@@ -472,9 +472,9 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       </Accordion>
 
       {/* ── PLANTILLAS MESOCICLO ── */}
-      {(team.kind || "equipo") === "equipo" && (
+      {((team.kind || "equipo") === "equipo" || team.kind === "grupo") && (
         <Accordion title="Planificación del mesociclo">
-          <MesoTemplatesSection team={team} save={save} />
+          <MesoTemplatesSection team={team} save={save} showBuiltIn={(team.kind || "equipo") === "equipo"} />
         </Accordion>
       )}
 
@@ -783,7 +783,7 @@ function TemplateEditor({ template, onSave, onCancel }) {
   );
 }
 
-function MesoTemplatesSection({ team, save }) {
+function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
   const templates = team.customMesoTemplates || [];
   const [editing, setEditing] = useState(null); // null | "new" | template object
 
@@ -802,14 +802,14 @@ function MesoTemplatesSection({ team, save }) {
   return (
     <div>
       {/* Built-in template */}
-      <div style={{ background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 10, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }}>
+      {showBuiltIn && <div style={{ background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 10, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 16 }}>⚽</span>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>Situaciones Jugadas (Fútbol)</div>
           <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Predeterminada · 6 semanas · SGJ / SMJ / SRJ</div>
         </div>
         <span style={{ fontSize: 10, color: "#38bdf8", background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 6, padding: "2px 8px", fontWeight: 700 }}>BUILT-IN</span>
-      </div>
+      </div>}
 
       {/* Custom templates */}
       {templates.map((t) => (
