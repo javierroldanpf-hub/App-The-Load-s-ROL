@@ -124,6 +124,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
     width: 36, padding: "3px 1px", borderRadius: 4, border: `1px solid ${COLORS.line}`,
     background: "#1c2128", color: COLORS.text, fontSize: 10, textAlign: "center",
     outline: "none", boxSizing: "border-box",
+    MozAppearance: "textfield",
   };
 
   return (
@@ -191,8 +192,8 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
                           <div style={{ fontSize: 9, color: dayColor[type], padding: "4px 0", fontWeight: 700 }}>—</div>
                         ) : (
                           <input
-                            type="number" inputMode="numeric" min={0} value={val}
-                            onChange={(e) => !readOnly && setCell(d.key, row.key, e.target.value)}
+                            type="text" inputMode="numeric" pattern="[0-9]*" value={val}
+                            onChange={(e) => !readOnly && setCell(d.key, row.key, e.target.value.replace(/[^0-9]/g, ""))}
                             readOnly={readOnly}
                             style={{ ...cellInputStyle, borderColor: val ? `${row.color}66` : COLORS.line, color: val ? row.color : COLORS.text }}
                           />
