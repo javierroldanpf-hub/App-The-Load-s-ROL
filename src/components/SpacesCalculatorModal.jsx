@@ -135,9 +135,12 @@ export default function SpacesCalculatorModal({ onClose }) {
     : null;
   const calcResultLabel = calcAxis === "largo" ? "Ancho" : "Largo";
 
-  const thSt  = (color) => ({ fontSize: 9, fontWeight: 700, color, textAlign: "center", padding: "4px 3px", whiteSpace: "nowrap", borderBottom: `2px solid ${color}44` });
+  const thSt  = (color) => ({ fontSize: 9, fontWeight: 700, color, textAlign: "center", padding: "3px 2px", whiteSpace: "nowrap", borderBottom: `2px solid ${color}44` });
   const subSt = { fontSize: 9, color: COLORS.text, textAlign: "center", padding: "3px 2px", fontWeight: 600, borderBottom: `1px solid ${COLORS.line}` };
-  const tdSt  = { fontSize: 9, color: COLORS.text, textAlign: "center", padding: "2px 3px", lineHeight: 1.4 };
+  const tdSt  = { fontSize: 9, color: COLORS.text, textAlign: "center", padding: "2px 2px", lineHeight: 1.4 };
+  // label column: very narrow; data cols: equal share; tipo col: fixed
+  const labelColW = 28;
+  const tipoColW  = 72;
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "1rem", zIndex: 80, overflowY: "auto" }}>
@@ -172,22 +175,27 @@ export default function SpacesCalculatorModal({ onClose }) {
         </div>
 
         {/* Main table */}
-        <div style={{ overflowX: "auto", marginBottom: 16 }}>
-          <table style={{ borderCollapse: "collapse", minWidth: 560, width: "100%", fontSize: 9 }}>
+        <div style={{ marginBottom: 16 }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", fontSize: 9 }}>
+            <colgroup>
+              <col style={{ width: labelColW }} />
+              {Array.from({ length: 9 }, (_, i) => <col key={i} />)}
+              <col style={{ width: tipoColW }} />
+            </colgroup>
             <thead>
               <tr>
-                <th style={{ ...thSt(COLORS.text), textAlign: "left", padding: "4px 6px", minWidth: 80 }}></th>
+                <th style={{ ...thSt(COLORS.text), textAlign: "left", padding: "3px 2px" }}></th>
                 {COL_GROUPS.map((cg) => (
                   <th key={cg.label} colSpan={3} style={thSt(cg.color)}>{cg.label}</th>
                 ))}
-                <th style={{ ...thSt(COLORS.text), minWidth: 90 }}>TIPOS DE SJ</th>
+                <th style={{ ...thSt(COLORS.text), borderLeft: `1px solid ${COLORS.line}` }}>TIPOS DE SJ</th>
               </tr>
               <tr>
-                <th style={{ ...subSt, textAlign: "left", padding: "3px 6px" }}></th>
+                <th style={{ ...subSt, textAlign: "left", padding: "3px 2px" }}></th>
                 {COL_GROUPS.flatMap((cg) => cg.sub.map((s) => (
                   <th key={`${cg.label}-${s}`} style={subSt}>{s}</th>
                 )))}
-                <th style={subSt}></th>
+                <th style={{ ...subSt, borderLeft: `1px solid ${COLORS.line}` }}></th>
               </tr>
             </thead>
             <tbody>
@@ -195,42 +203,42 @@ export default function SpacesCalculatorModal({ onClose }) {
                 <>
                   {/* Formation row */}
                   <tr key={`${gi}-form`} style={{ background: `${COLORS.panelRaised}` }}>
-                    <td style={{ ...tdSt, textAlign: "left", padding: "3px 6px", color: COLORS.text, borderTop: `1px solid ${COLORS.line}` }}></td>
+                    <td style={{ ...tdSt, textAlign: "left", padding: "3px 2px", color: COLORS.text, borderTop: `1px solid ${COLORS.line}`, overflow: "hidden" }}></td>
                     {grp.cells.map((c, ci) => {
                       const cg = COL_GROUPS.find((g) => g.cols.includes(ci));
                       return (
-                        <td key={ci} style={{ ...tdSt, color: cg?.color || COLORS.text, fontWeight: 700, borderTop: `1px solid ${COLORS.line}` }}>
+                        <td key={ci} style={{ ...tdSt, color: cg?.color || COLORS.text, fontWeight: 700, borderTop: `1px solid ${COLORS.line}`, overflow: "hidden" }}>
                           {c.formation}
                         </td>
                       );
                     })}
-                    <td rowSpan={4} style={{ ...tdSt, verticalAlign: "middle", padding: "6px 8px", fontWeight: 700, color: COLORS.text, borderTop: `1px solid ${COLORS.line}`, borderLeft: `1px solid ${COLORS.line}`, lineHeight: 1.5, textAlign: "center", fontSize: 9 }}>
+                    <td rowSpan={5} style={{ ...tdSt, verticalAlign: "middle", padding: "4px 4px", fontWeight: 700, color: COLORS.text, borderTop: `1px solid ${COLORS.line}`, borderLeft: `1px solid ${COLORS.line}`, lineHeight: 1.4, textAlign: "center", fontSize: 8, wordBreak: "break-word" }}>
                       {grp.label}
                       {grp.multiSpace && (
-                        <div style={{ color: "#ff5a5f", fontWeight: 700, fontSize: 8, marginTop: 4 }}>MULTIPLICAR ÁREA RELATIVA ×2</div>
+                        <div style={{ color: "#ff5a5f", fontWeight: 700, fontSize: 7, marginTop: 4 }}>×2 ÁREA</div>
                       )}
                     </td>
                   </tr>
                   {/* Dims row */}
                   <tr key={`${gi}-dims`}>
-                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 6px", color: COLORS.text }}></td>
+                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 2px", color: COLORS.text, overflow: "hidden" }}></td>
                     {grp.cells.map((c, ci) => {
                       const cg = COL_GROUPS.find((g) => g.cols.includes(ci));
                       return (
-                        <td key={ci} style={{ ...tdSt, color: `${cg?.color || COLORS.text}99` }}>{c.dims}</td>
+                        <td key={ci} style={{ ...tdSt, color: `${cg?.color || COLORS.text}99`, overflow: "hidden", fontSize: 8 }}>{c.dims}</td>
                       );
                     })}
                   </tr>
                   {/* Reference (evidence) row */}
                   <tr key={`${gi}-ref`}>
-                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 6px", color: "#38bdf8", fontWeight: 700 }}>Ref.</td>
+                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 2px", color: "#38bdf8", fontWeight: 700 }}>Ref.</td>
                     {grp.cells.map((c, ci) => (
                       <td key={ci} style={{ ...tdSt, color: "#38bdf8", fontWeight: 700 }}>{c.ref}</td>
                     ))}
                   </tr>
                   {/* Casa row */}
                   <tr key={`${gi}-casa`}>
-                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 6px", color: "#ff5a5f", fontWeight: 700 }}>Casa</td>
+                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 2px", color: "#ff5a5f", fontWeight: 700 }}>Casa</td>
                     {grp.cells.map((c, ci) => (
                       <td key={ci} style={{ ...tdSt, color: "#ff5a5f", fontWeight: 600 }}>
                         {casaArea > 0 ? calc(c.ref, casaArea) : "—"}
@@ -239,7 +247,7 @@ export default function SpacesCalculatorModal({ onClose }) {
                   </tr>
                   {/* Fuera row */}
                   <tr key={`${gi}-fuera`} style={{ borderBottom: `2px solid ${COLORS.line}` }}>
-                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 6px", color: "#4ade80", fontWeight: 700, paddingBottom: 6 }}>Visita</td>
+                    <td style={{ ...tdSt, textAlign: "left", padding: "2px 2px", color: "#4ade80", fontWeight: 700, paddingBottom: 6 }}>Visita</td>
                     {grp.cells.map((c, ci) => (
                       <td key={ci} style={{ ...tdSt, color: "#4ade80", fontWeight: 600, paddingBottom: 6 }}>
                         {fueraArea > 0 ? calc(c.ref, fueraArea) : "—"}
