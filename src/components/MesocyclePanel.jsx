@@ -1382,6 +1382,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
                       {isActive && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, background: "#1e3010", borderRadius: 5, padding: "2px 5px" }}>ACTIVO</span>}
                       {m.isSituacionesJugadas && <span style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", background: "#0c1e2a", borderRadius: 5, padding: "2px 5px" }}>⚽ SJ</span>}
+                      {m.customTemplateId && (() => { const tpl = customTemplates.find((t) => t.id === m.customTemplateId); return tpl ? <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.text, background: COLORS.panelRaised, borderRadius: 5, padding: "2px 5px" }}>{tpl.emoji || "📋"} {tpl.name}</span> : null; })()}
                       {m.isMenstrual && <span style={{ fontSize: 9, fontWeight: 700, color: "#e879f9", background: "#1a0a1e", borderRadius: 5, padding: "2px 5px" }}>🔴</span>}
                     </div>
                   </div>
