@@ -193,6 +193,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
                         ) : (
                           <input
                             type="text" inputMode="numeric" pattern="[0-9]*" value={val}
+                            autoComplete="off" autoCorrect="off" autoCapitalize="off"
                             onChange={(e) => !readOnly && setCell(d.key, row.key, e.target.value.replace(/[^0-9]/g, ""))}
                             readOnly={readOnly}
                             style={{ ...cellInputStyle, borderColor: val ? `${row.color}66` : COLORS.line, color: val ? row.color : COLORS.text }}
