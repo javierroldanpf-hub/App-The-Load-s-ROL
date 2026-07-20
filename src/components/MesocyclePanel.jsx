@@ -62,6 +62,166 @@ const SJ_COLS = [
   { key: "srj_ep", label: "EP*", group: "SRJ", color: "#fb923c" },
 ];
 
+const SJ_DAYS = [
+  { key: "mon", label: "L" },
+  { key: "tue", label: "M" },
+  { key: "wed", label: "X" },
+  { key: "thu", label: "J" },
+  { key: "fri", label: "V" },
+  { key: "sat", label: "S" },
+  { key: "sun", label: "D" },
+];
+
+const SJ_ROWS = [
+  { key: "sgj_eg", groupLabel: "8x8-10x10", subLabel: "EG",           color: "#38bdf8", isGroupStart: true },
+  { key: "sgj_em", groupLabel: "",           subLabel: "EM",           color: "#38bdf8" },
+  { key: "sgj_ep", groupLabel: "",           subLabel: "EP",           color: "#38bdf8" },
+  { key: "smj_eg", groupLabel: "5x5-7x7",   subLabel: "EG",           color: "#a78bfa", isGroupStart: true },
+  { key: "smj_em", groupLabel: "",           subLabel: "EM",           color: "#a78bfa" },
+  { key: "smj_ep", groupLabel: "",           subLabel: "EP",           color: "#a78bfa" },
+  { key: "srj_eg", groupLabel: "3x3-4x4",   subLabel: "EG",           color: "#fb923c", isGroupStart: true },
+  { key: "srj_em", groupLabel: "",           subLabel: "EM",           color: "#fb923c" },
+  { key: "srj_ep", groupLabel: "",           subLabel: "EP",           color: "#fb923c" },
+  { key: "micro",  groupLabel: "1x1 / 2x2", subLabel: "Ac. Analít.",  color: "#ff5a5f", isGroupStart: true },
+  { key: "topup",  groupLabel: "TOP UP",     subLabel: "Compensatorio",color: "#94a3b8", isGroupStart: true },
+];
+
+/* ── Planificador semanal SJ ─────────────────────────────────────────── */
+function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
+  const initPlan = () => week.sjWeekPlan || { days: {}, cells: {} };
+  const [plan, setPlan] = useState(initPlan);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => { setPlan(initPlan()); setDirty(false); }, [week.weekStart, week.sjWeekPlan]);
+
+  const getDayType = (dk) => plan.days?.[dk] || "entreno";
+  const cycleDayType = (dk) => {
+    if (readOnly) return;
+    const order = ["entreno", "descanso", "partido"];
+    const next = order[(order.indexOf(getDayType(dk)) + 1) % order.length];
+    setPlan((p) => ({ ...p, days: { ...p.days, [dk]: next } }));
+    setDirty(true);
+  };
+  const getCell = (dk, rk) => plan.cells?.[dk]?.[rk] ?? "";
+  const setCell = (dk, rk, val) => {
+    setPlan((p) => ({ ...p, cells: { ...p.cells, [dk]: { ...(p.cells?.[dk] || {}), [rk]: val === "" ? "" : Number(val) || 0 } } }));
+    setDirty(true);
+  };
+
+  const allocated = (key) => key === "topup" ? null : Math.round(totalMin * (pct[key] ?? 0) / 100);
+  const sumDays   = (key) => SJ_DAYS.reduce((acc, d) => getDayType(d.key) === "entreno" ? acc + (Number(plan.cells?.[d.key]?.[key]) || 0) : acc, 0);
+  const remaining = (key) => { const a = allocated(key); return a === null ? null : a - sumDays(key); };
+
+  // Totals for summary row
+  const totalSJ    = SJ_ROWS.filter((r) => r.key !== "topup").reduce((acc, r) => acc + sumDays(r.key), 0);
+  const totalTopup = sumDays("topup");
+
+  const dayBg    = { entreno: "transparent", descanso: "#0c204088", partido: "#2a101088" };
+  const dayColor = { entreno: COLORS.text, descanso: "#60a5fa", partido: "#ff5a5f" };
+  const dayShort = { entreno: "", descanso: "DESC", partido: "PART" };
+
+  const cellInputStyle = {
+    width: 36, padding: "3px 1px", borderRadius: 4, border: `1px solid ${COLORS.line}`,
+    background: "#1c2128", color: COLORS.text, fontSize: 10, textAlign: "center",
+    outline: "none", boxSizing: "border-box",
+  };
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      {/* Summary strip */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+        {[
+          { label: "Tiempo SJ", val: totalSJ, color: "#38bdf8" },
+          { label: "TOP UP", val: totalTopup, color: "#94a3b8" },
+          { label: "Tiempo total", val: totalSJ + totalTopup, color: COLORS.lime },
+        ].map(({ label, val, color }) => (
+          <div key={label} style={{ flex: 1, minWidth: 80, background: COLORS.panelRaised, borderRadius: 8, padding: "6px 10px", textAlign: "center" }}>
+            <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 600 }}>{label}</div>
+            <div style={{ fontSize: 14, color, fontWeight: 700 }}>{val} <span style={{ fontSize: 9 }}>min</span></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Main table */}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ borderCollapse: "collapse", minWidth: 460, width: "100%", fontSize: 10 }}>
+          <thead>
+            <tr>
+              <th colSpan={2} style={{ padding: "4px 6px", textAlign: "left", color: COLORS.text, borderBottom: `1px solid ${COLORS.line}`, fontSize: 9 }}>Situación</th>
+              {SJ_DAYS.map((d) => {
+                const type = getDayType(d.key);
+                return (
+                  <th key={d.key} style={{ padding: "2px", textAlign: "center", borderBottom: `1px solid ${COLORS.line}`, minWidth: 40 }}>
+                    <button onClick={() => cycleDayType(d.key)} style={{
+                      width: "100%", padding: "4px 2px", borderRadius: 6,
+                      border: `1px solid ${type !== "entreno" ? dayColor[type] : COLORS.line}`,
+                      background: dayBg[type], color: dayColor[type],
+                      fontSize: 9, fontWeight: 700, cursor: readOnly ? "default" : "pointer",
+                      lineHeight: 1.3,
+                    }}>
+                      {d.label}{dayShort[type] ? `\n${dayShort[type]}` : ""}
+                    </button>
+                  </th>
+                );
+              })}
+              <th style={{ padding: "4px 4px", textAlign: "center", color: COLORS.text, borderBottom: `1px solid ${COLORS.line}`, fontSize: 9, whiteSpace: "nowrap" }}>Asig.</th>
+              <th style={{ padding: "4px 4px", textAlign: "center", color: COLORS.text, borderBottom: `1px solid ${COLORS.line}`, fontSize: 9, whiteSpace: "nowrap" }}>Rest.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SJ_ROWS.map((row) => {
+              const rem   = remaining(row.key);
+              const alloc = allocated(row.key);
+              const remColor = rem === null ? COLORS.text : rem < 0 ? "#ff5a5f" : rem === 0 ? COLORS.lime : COLORS.text;
+              return (
+                <tr key={row.key} style={{ borderBottom: `1px solid ${COLORS.line}22`, background: row.isGroupStart ? `${row.color}08` : "transparent" }}>
+                  <td style={{ fontSize: 9, color: row.color, fontWeight: row.isGroupStart ? 700 : 400, padding: "2px 6px", whiteSpace: "nowrap", borderRight: `1px solid ${COLORS.line}22`, borderTop: row.isGroupStart ? `1px solid ${COLORS.line}44` : "none" }}>
+                    {row.groupLabel}
+                  </td>
+                  <td style={{ fontSize: 9, color: row.color, padding: "2px 6px", whiteSpace: "nowrap", borderRight: `1px solid ${COLORS.line}`, borderTop: row.isGroupStart ? `1px solid ${COLORS.line}44` : "none" }}>
+                    {row.subLabel}
+                  </td>
+                  {SJ_DAYS.map((d) => {
+                    const type = getDayType(d.key);
+                    const isBlocked = type !== "entreno";
+                    const val = getCell(d.key, row.key);
+                    return (
+                      <td key={d.key} style={{ padding: "2px", textAlign: "center", background: isBlocked ? dayBg[type] : "transparent", borderTop: row.isGroupStart ? `1px solid ${COLORS.line}44` : "none" }}>
+                        {isBlocked ? (
+                          <div style={{ fontSize: 9, color: dayColor[type], padding: "4px 0", fontWeight: 700 }}>—</div>
+                        ) : (
+                          <input
+                            type="number" inputMode="numeric" min={0} value={val}
+                            onChange={(e) => !readOnly && setCell(d.key, row.key, e.target.value)}
+                            readOnly={readOnly}
+                            style={{ ...cellInputStyle, borderColor: val ? `${row.color}66` : COLORS.line, color: val ? row.color : COLORS.text }}
+                          />
+                        )}
+                      </td>
+                    );
+                  })}
+                  <td style={{ fontSize: 10, color: row.color, textAlign: "center", padding: "2px 4px", fontWeight: 600, borderTop: row.isGroupStart ? `1px solid ${COLORS.line}44` : "none" }}>
+                    {alloc !== null ? `${alloc}` : "—"}
+                  </td>
+                  <td style={{ fontSize: 10, color: remColor, textAlign: "center", padding: "2px 4px", fontWeight: 700, borderTop: row.isGroupStart ? `1px solid ${COLORS.line}44` : "none" }}>
+                    {rem !== null ? rem : "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {!readOnly && dirty && (
+        <button onClick={() => { onSave(plan); setDirty(false); }} style={{ marginTop: 10, width: "100%", padding: "8px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+          Guardar planificación semanal ✓
+        </button>
+      )}
+    </div>
+  );
+}
+
 function mesoWeeks(startDate, endDate) {
   const weeks = [];
   let monday = mondayOf(startDate);
@@ -596,6 +756,15 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
     } finally { setSaving(false); }
   };
 
+  const handleSJPlanSave = async (weekStart, plan) => {
+    const weeks = meso.weeks.map((w) => w.weekStart === weekStart ? { ...w, sjWeekPlan: plan } : w);
+    setSaving(true);
+    try {
+      await saveMesocycle({ ...meso, weeks });
+      onUpdate({ ...meso, weeks });
+    } finally { setSaving(false); }
+  };
+
   const weekColor = (type) => WEEK_TYPES.find((t) => t.id === type)?.color || COLORS.text;
   const weekDark  = (type) => WEEK_TYPES.find((t) => t.id === type)?.dark  || COLORS.panelRaised;
 
@@ -691,16 +860,18 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                   )}
                 </div>
 
-                {/* SJ Table */}
-                <div style={{ overflowX: "auto" }}>
+                {/* SJ Summary Table (% / min / restantes) */}
+                <div style={{ overflowX: "auto", marginBottom: 4 }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 420 }}>
                     <thead>
                       <tr>
-                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #38bdf844" }}>SGJ (8x8–10x10)</th>
-                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#a78bfa", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #a78bfa44" }}>SMJ (5x5–7x7)</th>
-                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#fb923c", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #fb923c44" }}>SRJ (3x3–4x4)</th>
+                        <th style={{ fontSize: 9, color: COLORS.text, textAlign: "left", padding: "3px 4px", borderBottom: `1px solid ${COLORS.line}` }}></th>
+                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #38bdf844" }}>SGJ</th>
+                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#a78bfa", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #a78bfa44" }}>SMJ</th>
+                        <th colSpan={3} style={{ fontSize: 9, fontWeight: 700, color: "#fb923c", textAlign: "center", padding: "4px 2px", borderBottom: "2px solid #fb923c44" }}>SRJ</th>
                       </tr>
                       <tr>
+                        <th style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px" }}></th>
                         {SJ_COLS.map((c) => (
                           <th key={c.key} style={{ fontSize: 9, color: COLORS.text, textAlign: "center", padding: "3px 2px", fontWeight: 600 }}>{c.label}</th>
                         ))}
@@ -708,24 +879,53 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                     </thead>
                     <tbody>
                       <tr>
+                        <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", whiteSpace: "nowrap", fontWeight: 600 }}>%</td>
                         {SJ_COLS.map((c) => (
                           <td key={c.key} style={{ fontSize: 11, color: c.color, textAlign: "center", padding: "4px 2px", fontWeight: 700, background: `${c.color}11`, borderBottom: `1px solid ${COLORS.line}` }}>
                             {pct[c.key]}%
-                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 10, color: "#ff5a5f", fontWeight: 700, marginTop: 2 }}>1x1 · 2x2<br/>{pct.micro}%</div>}
+                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 9, color: "#ff5a5f", fontWeight: 700 }}>({pct.micro}% 1x1)</div>}
                           </td>
                         ))}
                       </tr>
                       <tr>
+                        <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", whiteSpace: "nowrap", fontWeight: 600 }}>Min.</td>
                         {SJ_COLS.map((c) => (
-                          <td key={c.key} style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "4px 2px" }}>
-                            {Math.round(totalMin * pct[c.key] / 100)} min
-                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 10, color: "#ff5a5f", fontWeight: 700, marginTop: 2 }}>{Math.round(totalMin * pct.micro / 100)} min</div>}
+                          <td key={c.key} style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "4px 2px", borderBottom: `1px solid ${COLORS.line}` }}>
+                            {Math.round(totalMin * pct[c.key] / 100)}
+                            {c.key === "srj_ep" && pct.micro > 0 && <div style={{ fontSize: 9, color: "#ff5a5f", fontWeight: 700 }}>({Math.round(totalMin * pct.micro / 100)})</div>}
                           </td>
                         ))}
+                      </tr>
+                      <tr>
+                        <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", whiteSpace: "nowrap", fontWeight: 600 }}>Rest.</td>
+                        {SJ_COLS.map((c) => {
+                          const plan = w.sjWeekPlan || { days: {}, cells: {} };
+                          const sumPlanned = SJ_DAYS.reduce((acc, d) => {
+                            const dtype = plan.days?.[d.key] || "entreno";
+                            return dtype === "entreno" ? acc + (Number(plan.cells?.[d.key]?.[c.key]) || 0) : acc;
+                          }, 0);
+                          const alloc = Math.round(totalMin * pct[c.key] / 100);
+                          const rem = alloc - sumPlanned;
+                          const rc = rem < 0 ? "#ff5a5f" : rem === 0 ? COLORS.lime : COLORS.text;
+                          return (
+                            <td key={c.key} style={{ fontSize: 10, color: rc, textAlign: "center", padding: "4px 2px", fontWeight: 700 }}>
+                              {rem}
+                            </td>
+                          );
+                        })}
                       </tr>
                     </tbody>
                   </table>
                 </div>
+
+                {/* Planificador semanal */}
+                <SJWeekPlanner
+                  week={w}
+                  pct={pct}
+                  totalMin={totalMin}
+                  onSave={(plan) => handleSJPlanSave(w.weekStart, plan)}
+                  readOnly={readOnly}
+                />
               </div>
             );
           }
