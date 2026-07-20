@@ -597,7 +597,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
             <div key={tpl.id} style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>📋 {tpl.name}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>{tpl.emoji || "📋"} {tpl.name}</div>
                   <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>{tpl.weeks} microciclos · {tpl.types?.map((t) => t.label).join(" / ")}</div>
                 </div>
                 <button onClick={() => { setActiveCustomTpl(isActive ? null : tpl.id); if (!isActive) { setIsSJ(false); setIsMenstrual(false); } }} style={{
@@ -1108,7 +1108,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                   <div>
                     <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 2 }}>Microciclo {i + 1} · {fmtDateShort(w.weekStart)} – {fmtDateShort(w.weekEnd)}</div>
                     <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: tplColor }}>{w.name || `Microciclo ${i + 1}`}</div>
-                    <div style={{ fontSize: 10, color: tplColor, marginTop: 2, opacity: 0.8 }}>📋 {activeTpl.name}</div>
+                    <div style={{ fontSize: 10, color: tplColor, marginTop: 2, opacity: 0.8 }}>{activeTpl.emoji || "📋"} {activeTpl.name}</div>
                   </div>
                   {!readOnly && <button onClick={() => setEditingWeek(w)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 11 }}>Editar</button>}
                 </div>

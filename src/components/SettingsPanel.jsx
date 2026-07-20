@@ -755,8 +755,47 @@ function PdfSettingsSection({ team, save }) {
 /* ── Plantillas de mesociclo ─────────────────────────────────────────── */
 const TEMPLATE_COLORS = ["#38bdf8","#a78bfa","#fb923c","#34d399","#f472b6","#fbbf24","#f87171","#60a5fa","#e879f9","#94a3b8"];
 
+const SPORT_EMOJIS = {
+  "Deportes de equipo": ["⚽","🏀","🏈","⚾","🥎","🏐","🏉","🎾","🏸","🏓","🏒","🏑","🥍","🏏","🤾","🏊‍♂️","🤽"],
+  "Deportes individuales": ["🏋️","🤸","🥊","🥋","⛷️","🏂","🤺","🏄","🧗","🏌️","🚴","🏇","🤿","🛹","🛼","🧘","🏹","🚵","🤼","🏃","🎽","🎿","🛷","🤺","🧜"],
+  "Otros": ["🏆","🥇","🎯","🎱","🎣","⛳","🪃","🥅","🏟️","🎖️"],
+};
+
+function EmojiPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{ fontSize: 24, background: open ? COLORS.panelRaised : "#1c2128", border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "4px 10px", cursor: "pointer", lineHeight: 1 }}
+      >
+        {value || "🏅"}
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: 44, left: 0, zIndex: 50, background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: "10px 12px", width: 260, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+          {Object.entries(SPORT_EMOJIS).map(([group, emojis]) => (
+            <div key={group} style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: COLORS.text, opacity: 0.6, marginBottom: 4, textTransform: "uppercase" }}>{group}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                {emojis.map((e) => (
+                  <button key={e} type="button" onClick={() => { onChange(e); setOpen(false); }}
+                    style={{ fontSize: 20, background: value === e ? COLORS.panelRaised : "transparent", border: value === e ? `1px solid ${COLORS.line}` : "1px solid transparent", borderRadius: 6, padding: "2px 4px", cursor: "pointer", lineHeight: 1 }}>
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TemplateEditor({ template, onSave, onCancel }) {
   const [name, setName]   = useState(template?.name || "");
+  const [emoji, setEmoji] = useState(template?.emoji || "");
   const [weeks, setWeeks] = useState(template?.weeks || 6);
   const [types, setTypes] = useState(template?.types || [
     { id: "t1", label: "Tipo 1", color: TEMPLATE_COLORS[0], subtypes: [{ id: "s1", label: "EG" },{ id: "s2", label: "EM" },{ id: "s3", label: "EP" }] },
@@ -786,7 +825,7 @@ function TemplateEditor({ template, onSave, onCancel }) {
 
   const handleSave = () => {
     if (!name.trim()) return alert("Ponle un nombre a la plantilla");
-    onSave({ id: template?.id || `tpl_${Date.now()}`, name: name.trim(), weeks: Number(weeks) || 6, types, percentages });
+    onSave({ id: template?.id || `tpl_${Date.now()}`, name: name.trim(), emoji: emoji || null, weeks: Number(weeks) || 6, types, percentages });
   };
 
   const cols = getCols();
@@ -798,8 +837,12 @@ function TemplateEditor({ template, onSave, onCancel }) {
         {template?.id ? "Editar plantilla" : "Nueva plantilla"}
       </div>
 
-      {/* Nombre y semanas */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+      {/* Emoji, nombre y semanas */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 4 }}>Deporte</div>
+          <EmojiPicker value={emoji} onChange={setEmoji} />
+        </div>
         <div style={{ flex: 2 }}>
           <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 4 }}>Nombre</div>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Fuerza y velocidad..." style={{ ...inputStyle, width: "100%" }} />
@@ -920,6 +963,7 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
       {/* Custom templates */}
       {templates.map((t) => (
         <div key={t.id} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 10, padding: "10px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
+          {t.emoji && <span style={{ fontSize: 22 }}>{t.emoji}</span>}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{t.name}</div>
             <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>
