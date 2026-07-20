@@ -581,7 +581,8 @@ function SeasonStartSection({ team, save }) {
     if (!firstMonday || !targetMonday) return null;
     const a = new Date(firstMonday + "T12:00:00");
     const b = new Date(targetMonday + "T12:00:00");
-    return Math.round((b - a) / 86400000 / 7) + 1;
+    const diff = Math.round((b - a) / 86400000 / 7);
+    return diff >= 0 ? diff + 1 : diff;
   };
 
   const fmtSpanish = (dateStr) => {

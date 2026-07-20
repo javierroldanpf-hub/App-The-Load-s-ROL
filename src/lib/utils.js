@@ -40,7 +40,8 @@ export function weekNumberFrom(firstMonday, targetMonday) {
   const b = new Date(targetMonday + "T12:00:00");
   const diffDays = Math.round((b - a) / 86400000);
   const diffWeeks = Math.round(diffDays / 7);
-  return diffWeeks + 1;
+  // No week 0: before week 1 goes directly to -1
+  return diffWeeks >= 0 ? diffWeeks + 1 : diffWeeks;
 }
 export function fmtDateLong(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
