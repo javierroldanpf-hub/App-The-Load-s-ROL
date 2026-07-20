@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { COLORS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateShort, fmtDateLong, monthLabel, firstOfMonth, addMonths, monthGridDates } from "@/lib/utils";
 import { loadMesocycles, saveMesocycle, deleteMesocycle } from "@/lib/db";
+import SpacesCalculatorModal from "./SpacesCalculatorModal";
 
 const MESO_COLORS = [
   "#a3e635", "#60a5fa", "#f472b6", "#fb923c", "#a78bfa", "#34d399", "#fbbf24", "#f87171", "#38bdf8", "#e879f9",
@@ -1286,6 +1287,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
 export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = false, roster = [], displayNames = {}, teamGender = "masculino" }) {
   const [mesocycles, setMesocycles] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [showSpaces, setShowSpaces] = useState(false);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const today = todayStr();
@@ -1347,7 +1349,12 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 16, color: COLORS.text }}>Mesociclos</div>
-        {!readOnly && <button onClick={() => setShowCreate(true)} style={{ background: COLORS.lime, border: "none", color: "#14171c", borderRadius: 10, padding: "8px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>+ Nuevo</button>}
+        <div style={{ display: "flex", gap: 8 }}>
+          {showSJ && (
+            <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 10, padding: "8px 14px", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>📐 Calc. espacios</button>
+          )}
+          {!readOnly && <button onClick={() => setShowCreate(true)} style={{ background: COLORS.lime, border: "none", color: "#14171c", borderRadius: 10, padding: "8px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>+ Nuevo</button>}
+        </div>
       </div>
 
       {mesocycles.length === 0 ? (
@@ -1403,6 +1410,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
       {showCreate && (
         <CreateMesoModal teamId={team.teamId} onSave={handleCreate} onClose={() => setShowCreate(false)} roster={roster} displayNames={displayNames} showMenstrual={showMenstrual} showSJ={showSJ} showCustomTemplates={showCustomTemplates} customTemplates={customTemplates} />
       )}
+      {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
     </div>
   );
 }
