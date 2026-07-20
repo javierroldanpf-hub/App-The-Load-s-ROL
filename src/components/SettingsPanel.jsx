@@ -466,6 +466,11 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
         <button onClick={saveFormDeadlines} disabled={saving} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar</button>
       </Accordion>
 
+      {/* ── SEMANA 1 DE TEMPORADA ── */}
+      <Accordion title="Semana 1 de temporada">
+        <SeasonStartSection team={team} save={save} />
+      </Accordion>
+
       {/* ── PDF SETTINGS ── */}
       <Accordion title="Exportar PDF — Ajustes de informe">
         <PdfSettingsSection team={team} save={save} />
@@ -560,6 +565,106 @@ const BASE_PHYS_SECTIONS = [
   { key: "performance",    label: "Métricas de Rendimiento" },
   { key: "customSections", label: "Secciones personalizadas" },
 ];
+/* ── Semana 1 de temporada ───────────────────────────────────────────── */
+function SeasonStartSection({ team, save }) {
+  // firstMonday is stored as "YYYY-MM-DD" (always a Monday)
+  const toMonday = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr + "T12:00:00");
+    const day = d.getDay(); // 0=sun,1=mon,...
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const weekNumFromDate = (firstMonday, targetMonday) => {
+    if (!firstMonday || !targetMonday) return null;
+    const a = new Date(firstMonday + "T12:00:00");
+    const b = new Date(targetMonday + "T12:00:00");
+    return Math.round((b - a) / 86400000 / 7) + 1;
+  };
+
+  const fmtSpanish = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  };
+
+  const current = team.firstMonday || null;
+  const [picked, setPicked] = useState(current || "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Current week number relative to set firstMonday
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+  const today = todayStr();
+  const todayMonday = toMonday(today);
+  const currentWeekNum = current ? weekNumFromDate(current, todayMonday) : null;
+
+  const handleSave = async () => {
+    if (!picked) return;
+    const monday = toMonday(picked);
+    if (!monday) return;
+    setSaving(true);
+    try {
+      await save({ firstMonday: monday });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally { setSaving(false); }
+  };
+
+  const pickedMonday = picked ? toMonday(picked) : null;
+  const pickedWeekNum = pickedMonday && current ? weekNumFromDate(current, pickedMonday) : null;
+
+  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
+
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 14, lineHeight: 1.6, opacity: 0.85 }}>
+        Define el lunes de la <strong style={{ color: COLORS.lime }}>Semana 1</strong> de tu temporada. El calendario y las gráficas de carga mostrarán los números de semana relativos a esta fecha. Las semanas anteriores serán Semana −1, Semana −2, etc.
+      </div>
+
+      {current && (
+        <div style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 10, padding: "10px 14px", marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 4 }}>Semana 1 actual</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.lime }}>{fmtSpanish(current)}</div>
+          {currentWeekNum !== null && (
+            <div style={{ fontSize: 11, color: COLORS.text, marginTop: 4 }}>
+              Esta semana es la <strong style={{ color: COLORS.lime }}>Semana {currentWeekNum}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 6 }}>Selecciona cualquier día de la semana 1 (se ajustará al lunes)</div>
+        <input
+          type="date"
+          value={picked}
+          onChange={(e) => { setPicked(e.target.value); setSaved(false); }}
+          style={inputStyle}
+        />
+        {pickedMonday && (
+          <div style={{ fontSize: 11, color: COLORS.text, marginTop: 6 }}>
+            La Semana 1 empezará el <strong style={{ color: COLORS.lime }}>{fmtSpanish(pickedMonday)}</strong>
+            {current && pickedWeekNum !== null && pickedMonday !== current && (
+              <span style={{ color: "#94a3b8" }}> (antes era Semana {pickedWeekNum})</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={!picked || saving}
+        style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: (!picked || saving) ? COLORS.panelRaised : COLORS.lime, color: (!picked || saving) ? COLORS.text : "#14171c", fontWeight: 700, fontSize: 13, cursor: (!picked || saving) ? "default" : "pointer" }}
+      >
+        {saved ? "✓ Guardado" : saving ? "Guardando..." : "Guardar Semana 1"}
+      </button>
+    </div>
+  );
+}
+
 // Quadrant keys are dynamic: quadrant_0, quadrant_1, etc.
 
 function PdfSettingsSection({ team, save }) {
