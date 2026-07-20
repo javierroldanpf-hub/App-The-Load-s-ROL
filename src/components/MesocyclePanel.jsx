@@ -87,7 +87,7 @@ const SJ_ROWS = [
 ];
 
 /* ── Planificador semanal SJ ─────────────────────────────────────────── */
-function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
+function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false, matchLabel = "MD" }) {
   const initPlan = () => week.sjWeekPlan || { days: {}, cells: {} };
   const [plan, setPlan] = useState(initPlan);
   const [dirty, setDirty] = useState(false);
@@ -129,7 +129,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false }) {
 
   const dayBg    = { entreno: "transparent", descanso: "#0c204088", partido: "#2a101088" };
   const dayColor = { entreno: COLORS.text, descanso: "#60a5fa", partido: "#ff5a5f" };
-  const dayShort = { entreno: "", descanso: "DESC", partido: "PART" };
+  const dayShort = { entreno: "", descanso: "REST", partido: matchLabel };
 
   const cellInputStyle = {
     width: 36, padding: "3px 1px", borderRadius: 4, border: `1px solid ${COLORS.line}`,
@@ -240,7 +240,7 @@ const TPL_DAYS = [
   { key: "thu", label: "J" }, { key: "fri", label: "V" }, { key: "sat", label: "S" }, { key: "sun", label: "D" },
 ];
 
-function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false }) {
+function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false, matchLabel = "MD" }) {
   const initPlan = () => week.customWeekPlan || { days: {}, cells: {} };
   const [plan, setPlan] = useState(initPlan);
   const [dirty, setDirty] = useState(false);
@@ -279,7 +279,7 @@ function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false 
 
   const dayBg    = { entreno: "transparent", descanso: "#0c204088", partido: "#2a101088" };
   const dayColor = { entreno: COLORS.text, descanso: "#60a5fa", partido: "#ff5a5f" };
-  const dayShort = { entreno: "", descanso: "DESC", partido: "PART" };
+  const dayShort = { entreno: "", descanso: "REST", partido: matchLabel };
 
   const cellInputStyle = { width: 36, padding: "3px 1px", borderRadius: 4, border: `1px solid ${COLORS.line}`, background: "#1c2128", color: COLORS.text, fontSize: 10, textAlign: "center", outline: "none", boxSizing: "border-box" };
 
@@ -883,13 +883,14 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
 }
 
 /* ── Vista de un mesociclo ───────────────────────────────────────────── */
-function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {}, showSJ = false, showMenstrual = false, customTemplates = [] }) {
+function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {}, showSJ = false, showMenstrual = false, customTemplates = [], isGrupo = false }) {
   const [editingWeek, setEditingWeek] = useState(null);
   const [editingMeso, setEditingMeso] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sjEdits, setSjEdits] = useState({});
   const today = todayStr();
   const activeTpl = meso.customTemplateId ? customTemplates.find((t) => t.id === meso.customTemplateId) : null;
+  const matchLabel = isGrupo ? "COMP" : "MD";
   const isActive = today >= meso.startDate && today <= meso.endDate;
 
   const handleWeekSave = async (weekStart, data) => {
@@ -1091,6 +1092,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                   totalMin={totalMin}
                   onSave={(plan) => handleSJPlanSave(w.weekStart, plan)}
                   readOnly={readOnly}
+                  matchLabel={matchLabel}
                 />
               </div>
             );
@@ -1135,12 +1137,85 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                     </button>
                   )}
                 </div>
+                {/* Tabla resumen % / Min. / Rest. */}
+                {(() => {
+                  const cols = (activeTpl.types || []).flatMap((t) =>
+                    t.subtypes?.length
+                      ? t.subtypes.map((s) => ({ key: `${t.id}_${s.id}`, typeLabel: t.label, subLabel: s.label, color: t.color }))
+                      : [{ key: t.id, typeLabel: t.label, subLabel: null, color: t.color }]
+                  );
+                  const pctRow = activeTpl.percentages?.[i] || {};
+                  const plan = w.customWeekPlan || { days: {}, cells: {} };
+                  const sumDaysFn = (ck) => TPL_DAYS.reduce((acc, d) => {
+                    const dtype = plan.days?.[d.key] || "entreno";
+                    return dtype === "entreno" ? acc + (Number(plan.cells?.[d.key]?.[ck]) || 0) : acc;
+                  }, 0);
+                  // Group by type for colspan headers
+                  const typeGroups = (activeTpl.types || []).map((t) => ({
+                    t,
+                    subCols: t.subtypes?.length
+                      ? t.subtypes.map((s) => ({ key: `${t.id}_${s.id}`, subLabel: s.label, color: t.color }))
+                      : [{ key: t.id, subLabel: null, color: t.color }],
+                  }));
+                  return (
+                    <div style={{ overflowX: "auto", marginBottom: 4 }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
+                        <thead>
+                          <tr>
+                            <th style={{ fontSize: 9, color: COLORS.text, textAlign: "left", padding: "3px 4px", borderBottom: `1px solid ${COLORS.line}` }}></th>
+                            {typeGroups.map(({ t, subCols }) => (
+                              <th key={t.id} colSpan={subCols.length} style={{ fontSize: 9, fontWeight: 700, color: t.color, textAlign: "center", padding: "4px 2px", borderBottom: `2px solid ${t.color}44` }}>{t.label}</th>
+                            ))}
+                          </tr>
+                          {typeGroups.some(({ t }) => t.subtypes?.length > 0) && (
+                            <tr>
+                              <th style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px" }}></th>
+                              {cols.map((c) => (
+                                <th key={c.key} style={{ fontSize: 9, color: COLORS.text, textAlign: "center", padding: "3px 2px", fontWeight: 600 }}>{c.subLabel || ""}</th>
+                              ))}
+                            </tr>
+                          )}
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", fontWeight: 600 }}>%</td>
+                            {cols.map((c) => (
+                              <td key={c.key} style={{ fontSize: 11, color: c.color, textAlign: "center", padding: "4px 2px", fontWeight: 700, background: `${c.color}11`, borderBottom: `1px solid ${COLORS.line}` }}>
+                                {Number(pctRow[c.key]) || 0}%
+                              </td>
+                            ))}
+                          </tr>
+                          <tr>
+                            <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", fontWeight: 600 }}>Min.</td>
+                            {cols.map((c) => (
+                              <td key={c.key} style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "4px 2px", borderBottom: `1px solid ${COLORS.line}` }}>
+                                {Math.round(totalMin * (Number(pctRow[c.key]) || 0) / 100)}
+                              </td>
+                            ))}
+                          </tr>
+                          <tr>
+                            <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", fontWeight: 600 }}>Rest.</td>
+                            {cols.map((c) => {
+                              const alloc = Math.round(totalMin * (Number(pctRow[c.key]) || 0) / 100);
+                              const rem = alloc - sumDaysFn(c.key);
+                              const rc = rem < 0 ? "#ff5a5f" : rem === 0 ? COLORS.lime : COLORS.text;
+                              return (
+                                <td key={c.key} style={{ fontSize: 10, color: rc, textAlign: "center", padding: "4px 2px", fontWeight: 700 }}>{rem}</td>
+                              );
+                            })}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
                 <CustomWeekPlanner
                   week={{ ...w, customWeekIndex: i }}
                   template={activeTpl}
                   totalMin={totalMin}
                   onSave={(plan) => handleCustomPlanSave(w.weekStart, plan)}
                   readOnly={readOnly}
+                  matchLabel={matchLabel}
                 />
               </div>
             );
@@ -1245,7 +1320,8 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
   if (loading) return <div style={{ color: COLORS.text, fontSize: 13, padding: "1rem 0" }}>Cargando mesociclos...</div>;
 
   const showSJ = (team.kind || "equipo") === "equipo";
-  const showCustomTemplates = (team.kind || "equipo") === "equipo" || team.kind === "grupo";
+  const isGrupo = team.kind === "grupo";
+  const showCustomTemplates = showSJ || isGrupo;
   const showMenstrual = teamGender === "femenino" || teamGender === "mixto";
   const customTemplates = team.customMesoTemplates || [];
 
@@ -1262,6 +1338,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
         showSJ={showSJ}
         showMenstrual={showMenstrual}
         customTemplates={customTemplates}
+        isGrupo={isGrupo}
       />
     );
   }
