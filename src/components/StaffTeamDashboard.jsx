@@ -12,6 +12,7 @@ import MessagesTab from "./MessagesTab";
 import CoachPhysicalDataTab, { CustomMetricEditor } from "./CoachPhysicalDataTab";
 import PhysicalQuadrantSection from "./PhysicalQuadrantSection";
 import LoadControlPanel from "./LoadControlPanel";
+import MonthlyLoadPanel from "./MonthlyLoadPanel";
 import TeamAveragesPanel, { ColorLegend } from "./TeamAveragesPanel";
 import SessionDetailModal from "./SessionDetailModal";
 import ExportDataModal from "./ExportDataModal";
@@ -136,6 +137,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
     { id: "medias", label: `Datos medios del ${ (team.kind || "equipo") === "individual" ? "atleta" : (team.kind || "equipo") === "grupo" ? "grupo" : "equipo"}` },
     { id: "individual", label: "Estado individual" },
     { id: "carga", label: "Control de carga" },
+    { id: "mensual", label: "Resumen mensual" },
   ];
 
   if (selectedPlayer) {
@@ -329,6 +331,10 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
               onPlayerClick={(player) => setSelectedPlayer(player)}
               teamGender={teamGender}
             />
+          )}
+
+          {resumenSubTab === "mensual" && (
+            <MonthlyLoadPanel sessions={sessions} />
           )}
         </>
       )}
