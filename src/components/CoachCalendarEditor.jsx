@@ -8,10 +8,23 @@ import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
 
-function SessionBlocksEditor({ blocks, setBlocks, inputStyle }) {
-  const addBlock = () => setBlocks((prev) => [...prev, { name: "", duration: "", content: "" }]);
+function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
+  const addBlock = () => setBlocks((prev) => [...prev, { name: "", duration: "", content: "", tasks: [] }]);
   const updateBlock = (i, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === i ? { ...b, [field]: val } : b));
   const removeBlock = (i) => setBlocks((prev) => prev.filter((_, idx) => idx !== i));
+
+  const addTask = (bi) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: [...(b.tasks || []), { id: Date.now(), name: "", workTime: "", restTime: "", space: "", relativeArea: "", imageBase64: "" }] } : b));
+  const updateTask = (bi, ti, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: (b.tasks || []).map((t, tidx) => tidx === ti ? { ...t, [field]: val } : t) } : b));
+  const removeTask = (bi, ti) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: (b.tasks || []).filter((_, tidx) => tidx !== ti) } : b));
+
+  const handleTaskImage = (bi, ti, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => updateTask(bi, ti, "imageBase64", ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Bloques del entrenamiento</div>
@@ -24,6 +37,40 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle }) {
               <button onClick={() => removeBlock(i)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
             </div>
             <textarea value={b.content} onChange={(e) => updateBlock(i, "content", e.target.value)} placeholder="Contenido del bloque..." rows={3} style={{ ...inputStyle, resize: "vertical", fontSize: 13, padding: "8px 10px", lineHeight: 1.5, width: "100%", boxSizing: "border-box" }} />
+            {isEquipo && (
+              <div style={{ marginTop: 10 }}>
+                {(b.tasks || []).length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
+                    {(b.tasks || []).map((t, ti) => (
+                      <div key={t.id || ti} style={{ background: COLORS.bg || "#14171c", border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "8px 10px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                          <span style={{ background: COLORS.lime, color: "#14171c", borderRadius: 5, padding: "2px 7px", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>T{ti + 1}</span>
+                          <input value={t.name} onChange={(e) => updateTask(i, ti, "name", e.target.value)} placeholder="Nombre de la tarea..." style={{ ...inputStyle, flex: 1, padding: "5px 8px", fontSize: 12 }} />
+                          <button onClick={() => removeTask(i, ti)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 7px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>✕</button>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
+                          <input value={t.workTime} onChange={(e) => updateTask(i, ti, "workTime", e.target.value)} placeholder="T. trabajo" style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                          <input value={t.restTime} onChange={(e) => updateTask(i, ti, "restTime", e.target.value)} placeholder="T. descanso" style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                          <input value={t.space} onChange={(e) => updateTask(i, ti, "space", e.target.value)} placeholder="Espacio" style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                          <input value={t.relativeArea} onChange={(e) => updateTask(i, ti, "relativeArea", e.target.value)} placeholder="Área rel." style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {t.imageBase64 ? (
+                            <img src={t.imageBase64} alt="tarea" onClick={() => updateTask(i, ti, "imageBase64", "")} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 6, cursor: "pointer", flexShrink: 0 }} title="Click para quitar" />
+                          ) : (
+                            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 7, border: `1px solid ${COLORS.line}`, cursor: "pointer", fontSize: 11, color: COLORS.text, background: "transparent" }}>
+                              + Imagen
+                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleTaskImage(i, ti, e)} />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button onClick={() => addTask(i)} style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir tarea</button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -32,7 +79,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle }) {
   );
 }
 
-function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo" }) {
+function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo", isEquipo = false }) {
   const roster = rosterRaw.map((u) => typeof u === "string" ? u : u.username);
   const availableTypes = isTrainingGroup ? GROUP_SESSION_TYPES : SESSION_TYPES;
   const [editorTab, setEditorTab] = useState(defaultTab);
@@ -184,7 +231,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                     )}
                   </div>
                 ) : (
-                  <SessionBlocksEditor blocks={blocks} setBlocks={setBlocks} inputStyle={inputStyle} />
+                  <SessionBlocksEditor blocks={blocks} setBlocks={setBlocks} inputStyle={inputStyle} isEquipo={isEquipo} />
                 )}
                 {mesoOptions.length > 0 && !isMatch && (
                   <div style={{ marginBottom: 16 }}>
@@ -273,7 +320,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                     })}
                   </div>
                 </div>
-                <SessionBlocksEditor blocks={s.blocks || []} setBlocks={(newBlocks) => updateIndBlocks(i, typeof newBlocks === "function" ? newBlocks(s.blocks || []) : newBlocks)} inputStyle={{ ...inputStyle, fontSize: 13, padding: "8px 10px" }} />
+                <SessionBlocksEditor blocks={s.blocks || []} setBlocks={(newBlocks) => updateIndBlocks(i, typeof newBlocks === "function" ? newBlocks(s.blocks || []) : newBlocks)} inputStyle={{ ...inputStyle, fontSize: 13, padding: "8px 10px" }} isEquipo={isEquipo} />
               </div>
             ))}
             <button onClick={addIndSession} style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: `1px dashed ${COLORS.blue}`, background: "transparent", color: COLORS.blue, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>+ Añadir sesión individual</button>
@@ -681,13 +728,14 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           defaultMatchDuration={team.defaultMatchDuration}
           isTrainingGroup={team.isTrainingGroup || false}
           isIndividualAthlete={(team.kind || "equipo") === "individual"}
+          isEquipo={(team.kind || "equipo") === "equipo"}
           mesocycles={mesocycles}
           roster={team.roster || []}
           displayNames={displayNames}
         />
       )}
       {viewDetail && sessionByDate[viewDetail] && (
-        <SessionDetailModal date={viewDetail} session={sessionByDate[viewDetail]} onClose={() => setViewDetail(null)} />
+        <SessionDetailModal date={viewDetail} session={sessionByDate[viewDetail]} onClose={() => setViewDetail(null)} isEquipo={(team.kind || "equipo") === "equipo"} />
       )}
       {showPdf && (
         <CalendarPdfExport
@@ -700,6 +748,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           coachName={coachName}
           displayNames={displayNames}
           onClose={() => setShowPdf(false)}
+          isEquipo={(team.kind || "equipo") === "equipo"}
         />
       )}
     </div>

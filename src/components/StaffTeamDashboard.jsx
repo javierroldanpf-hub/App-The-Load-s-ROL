@@ -353,7 +353,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         <PrintableReportModal team={teamWithPhotos} wellness={wellness} rpe={rpe} sessions={sessions} onClose={() => setShowPrint(false)} />
       )}
       {showSessionDetail && todaySession && (
-        <SessionDetailModal date={todayStr()} session={todaySession} onClose={() => setShowSessionDetail(false)} />
+        <SessionDetailModal date={todayStr()} session={todaySession} onClose={() => setShowSessionDetail(false)} isEquipo={(team.kind || "equipo") === "equipo"} />
       )}
     </div>
   );

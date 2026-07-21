@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { COLORS, WEEKDAY_LABELS } from "@/lib/constants";
 import { weekDates, mondayOf, addWeeks, addMonths, monthGridDates, weekNumberFrom, addDays } from "@/lib/utils";
 import Avatar from "./Avatar";
@@ -334,6 +334,94 @@ function MesoContent({ team, sessions, meso, mesocycles, coachName, showGroup, s
   );
 }
 
+// ── Session PDF content ───────────────────────────────────────────────────────
+function SessionContent({ team, session, date, coachName }) {
+  if (!session) return (
+    <div style={{ fontFamily: "'Segoe UI',Arial,sans-serif", color: D.text, background: D.bg, padding: 28, minWidth: 600 }}>
+      <div style={{ fontSize: 16, color: D.textMuted, textAlign: "center", marginTop: 40 }}>No hay sesión en esta fecha</div>
+    </div>
+  );
+  let blocks = [];
+  try {
+    const p = JSON.parse(session.description || "{}");
+    if (p.blocks) blocks = p.blocks.filter((b) => b.name || b.content);
+  } catch {}
+  const int = INT[session.intensity] || INT.amarillo;
+  const fmtDate = new Date(date + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return (
+    <div style={{ fontFamily: "'Segoe UI',Arial,sans-serif", color: D.text, background: D.bg, padding: 28, minWidth: 600, maxWidth: 800 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, paddingBottom: 16, borderBottom: `1px solid ${D.line}` }}>
+        <Avatar name={team.name} photoUrl={team.crestUrl || team.photoUrl} size={56} square />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 22, color: D.text }}>{team.name}</div>
+          <div style={{ fontSize: 13, color: D.textMuted, marginTop: 2, textTransform: "capitalize" }}>{fmtDate}</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, color: D.textMuted }}>Preparador físico</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: D.text }}>{coachName}</div>
+        </div>
+      </div>
+      {/* Session header */}
+      <div style={{ background: int.bg, border: `1px solid ${int.border}`, borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 20, color: int.color }}>{session.sessionType || "Sesión"}</div>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <div style={{ fontSize: 12, color: D.text }}><span style={{ color: D.textMuted }}>Intensidad: </span>{session.intensity}</div>
+          {session.duration > 0 && <div style={{ fontSize: 12, color: D.text }}><span style={{ color: D.textMuted }}>Duración: </span>{session.duration} min</div>}
+        </div>
+      </div>
+      {/* Blocks */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {blocks.map((b, i) => (
+          <div key={i} style={{ border: `1px solid ${D.line}`, borderRadius: 10, overflow: "hidden" }}>
+            <div style={{ background: D.panelRaised, padding: "8px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: D.text }}>{b.name || `Bloque ${i + 1}`}</div>
+              {b.duration && <div style={{ fontSize: 12, color: D.lime, fontWeight: 600 }}>{b.duration} min</div>}
+            </div>
+            {b.content && (
+              <div style={{ padding: "10px 14px", fontSize: 13, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.6, borderBottom: b.tasks?.length > 0 ? `1px solid ${D.line}` : "none" }}>{b.content}</div>
+            )}
+            {b.tasks?.length > 0 && (
+              <div style={{ padding: "10px 14px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  <thead>
+                    <tr style={{ background: D.bg }}>
+                      {["#", "Nombre", "T. trabajo", "T. descanso", "Espacio", "Área rel."].map((h) => (
+                        <th key={h} style={{ padding: "5px 8px", textAlign: "left", color: D.text, fontWeight: 700, borderBottom: `1px solid ${D.line}` }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {b.tasks.map((t, ti) => (
+                      <React.Fragment key={t.id || ti}>
+                        <tr style={{ borderBottom: `1px solid ${D.line}` }}>
+                          <td style={{ padding: "5px 8px", color: D.lime, fontWeight: 700 }}>T{ti + 1}</td>
+                          <td style={{ padding: "5px 8px", color: D.text }}>{t.name}</td>
+                          <td style={{ padding: "5px 8px", color: D.text }}>{t.workTime}</td>
+                          <td style={{ padding: "5px 8px", color: D.text }}>{t.restTime}</td>
+                          <td style={{ padding: "5px 8px", color: D.text }}>{t.space}</td>
+                          <td style={{ padding: "5px 8px", color: D.text }}>{t.relativeArea}</td>
+                        </tr>
+                        {t.imageBase64 && (
+                          <tr key={`${t.id || ti}-img`} style={{ borderBottom: `1px solid ${D.line}` }}>
+                            <td colSpan={6} style={{ padding: "8px 8px" }}>
+                              <img src={t.imageBase64} alt={`Tarea ${ti + 1}`} style={{ maxWidth: 200, maxHeight: 150, objectFit: "contain", borderRadius: 6, display: "block" }} />
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 function resolveDisplayName(displayNames, username) {
   const d = displayNames?.[username];
@@ -341,7 +429,7 @@ function resolveDisplayName(displayNames, username) {
   return typeof d === "object" ? (d.displayName || username) : d;
 }
 
-export default function CalendarPdfExport({ team, sessions, mesocycles, currentWeekMonday, currentMonthAnchor, coachName, displayNames, onClose }) {
+export default function CalendarPdfExport({ team, sessions, mesocycles, currentWeekMonday, currentMonthAnchor, coachName, displayNames, onClose, isEquipo = false }) {
   const [step, setStep] = useState("config"); // "config" | "preview"
   const [type, setType] = useState("week");
   const [weekMonday, setWeekMonday] = useState(currentWeekMonday);
@@ -349,6 +437,7 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
   const [mesoId, setMesoId] = useState(mesocycles[0]?.id || null);
   const [showGroup, setShowGroup] = useState(true);
   const [showInd, setShowInd] = useState(true);
+  const [sessionDate, setSessionDate] = useState(currentWeekMonday);
   const [downloading, setDownloading] = useState(false);
   const printRef = useRef(null);
   const selectedMeso = mesocycles.find((m) => m.id === mesoId) || mesocycles[0];
@@ -368,7 +457,7 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
       const w = canvas.width / 2, h = canvas.height / 2;
       const pdf = new jsPDF({ orientation: w > h ? "landscape" : "portrait", unit: "px", format: [w, h] });
       pdf.addImage(imgData, "PNG", 0, 0, w, h);
-      const name = type === "week" ? `semana-${weekMonday}` : type === "month" ? `mes-${monthAnchor.slice(0, 7)}` : `mesociclo-${selectedMeso?.name || "meso"}`;
+      const name = type === "week" ? `semana-${weekMonday}` : type === "month" ? `mes-${monthAnchor.slice(0, 7)}` : type === "session" ? `sesion-${sessionDate}` : `mesociclo-${selectedMeso?.name || "meso"}`;
       pdf.save(`${name}.pdf`);
     } finally { setDownloading(false); }
   };
@@ -393,7 +482,7 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", zIndex: 100 }}>
       <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 18, padding: "1.5rem", width: "100%", maxWidth: 500, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ fontFamily: "'Oswald',sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.text, marginBottom: 20 }}>Exportar PDF</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>{tabBtn("week","Semana")}{tabBtn("month","Mes")}{tabBtn("meso","Mesociclo")}</div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>{tabBtn("week","Semana")}{tabBtn("month","Mes")}{tabBtn("meso","Mesociclo")}{isEquipo && tabBtn("session","Sesión")}</div>
 
         {type === "week" && (
           <div style={{ marginBottom: 20 }}>
@@ -433,11 +522,32 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
           </div>
         )}
 
-        <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8 }}>Contenido</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
-          <Toggle label="Sesiones de grupo" value={showGroup} onChange={setShowGroup} />
-          <Toggle label="Sesiones individuales" value={showInd} onChange={setShowInd} />
-        </div>
+        {type === "session" && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8 }}>Seleccionar fecha de sesión</div>
+            <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+            {(() => {
+              const s = sessions.find((s) => s.date === sessionDate);
+              return s ? (
+                <div style={{ marginTop: 10, padding: "10px 14px", background: COLORS.panelRaised, borderRadius: 10, fontSize: 13, color: COLORS.text }}>
+                  <span style={{ fontWeight: 700 }}>{s.sessionType || "Sesión"}</span>
+                  {s.intensity && <span style={{ marginLeft: 8, color: COLORS.text }}>· {s.intensity}</span>}
+                  {s.duration > 0 && <span style={{ marginLeft: 8, color: COLORS.text }}>· {s.duration} min</span>}
+                </div>
+              ) : (
+                <div style={{ marginTop: 10, fontSize: 13, color: COLORS.text }}>No hay sesión en esta fecha</div>
+              );
+            })()}
+          </div>
+        )}
+        {type !== "session" && <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8 }}>Contenido</div>}
+        {type !== "session" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
+            <Toggle label="Sesiones de grupo" value={showGroup} onChange={setShowGroup} />
+            <Toggle label="Sesiones individuales" value={showInd} onChange={setShowInd} />
+          </div>
+        )}
+        {type === "session" && <div style={{ marginBottom: 22 }} />}
 
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
@@ -469,6 +579,7 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
           {type === "week" && <WeekContent team={team} sessions={sessions} mesocycles={mesocycles} weekMonday={weekMonday} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} />}
           {type === "month" && <MonthContent team={team} sessions={sessions} mesocycles={mesocycles} monthAnchor={monthAnchor} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} />}
           {type === "meso" && selectedMeso && <MesoContent team={team} sessions={sessions} meso={selectedMeso} mesocycles={mesocycles} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} />}
+          {type === "session" && <SessionContent team={team} session={sessions.find((s) => s.date === sessionDate) || null} date={sessionDate} coachName={coachName} />}
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ function getBlocks(description) {
   return [];
 }
 
-export default function SessionDetailModal({ date, session, onClose, user, refreshData }) {
+export default function SessionDetailModal({ date, session, onClose, user, refreshData, isEquipo = false }) {
   const intensity = session.isRest ? INTENSITY_LEVELS["descanso"] : (INTENSITY_LEVELS[session.intensity] || INTENSITY_LEVELS["amarillo"]);
 
   const existingBlocks = getBlocks(session.description);
@@ -79,6 +79,40 @@ export default function SessionDetailModal({ date, session, onClose, user, refre
                 {b.duration && <div style={{ fontSize: 11, color: COLORS.lime, fontWeight: 600 }}>{b.duration} min</div>}
               </div>
               {b.content && <div style={{ fontSize: 13, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{b.content}</div>}
+              {isEquipo && b.tasks?.length > 0 && (
+                <div style={{ marginTop: 10, overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                    <thead>
+                      <tr style={{ background: COLORS.bg || "#14171c" }}>
+                        {["#", "Nombre", "T. trabajo", "T. descanso", "Espacio", "Área rel."].map((h) => (
+                          <th key={h} style={{ padding: "4px 7px", textAlign: "left", color: COLORS.text, fontWeight: 700, borderBottom: `1px solid ${COLORS.line}` }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {b.tasks.map((t, ti) => (
+                        <>
+                          <tr key={t.id || ti} style={{ borderBottom: `1px solid ${COLORS.line}` }}>
+                            <td style={{ padding: "4px 7px", color: COLORS.lime, fontWeight: 700 }}>T{ti + 1}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{t.name}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{t.workTime}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{t.restTime}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{t.space}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{t.relativeArea}</td>
+                          </tr>
+                          {t.imageBase64 && (
+                            <tr key={`${t.id || ti}-img`} style={{ borderBottom: `1px solid ${COLORS.line}` }}>
+                              <td colSpan={6} style={{ padding: "6px 7px" }}>
+                                <img src={t.imageBase64} alt={`Tarea ${ti + 1}`} style={{ maxWidth: 200, maxHeight: 120, objectFit: "contain", borderRadius: 6 }} />
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           ))}
         </div>
