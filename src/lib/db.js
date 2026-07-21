@@ -742,6 +742,7 @@ function dbTeamToApp(r) {
     customMesoTemplates: raw?.customMesoTemplates || [],
     sjDayMinutes: raw?.sjDayMinutes || null,
     sjPercentages: raw?.sjPercentages || null,
+    allowViewerEditCalendar: raw?.allowViewerEditCalendar || false,
     crestUrl: r.crest_url || null,
   };
 }
@@ -778,6 +779,7 @@ function appTeamToDb(team) {
       customMesoTemplates: team.customMesoTemplates || [],
       sjDayMinutes: team.sjDayMinutes || null,
       sjPercentages: team.sjPercentages || null,
+      allowViewerEditCalendar: team.allowViewerEditCalendar || false,
     },
     crest_url: team.crestUrl || null,
   };

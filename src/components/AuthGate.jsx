@@ -322,7 +322,7 @@ function RegisterStaffForm({ onBack, onLogin }) {
         role: "staff_viewer",
         display_name: displayName.trim(),
         team_id: teamId,
-        team_ids: [],
+        team_ids: [teamId],
       };
       await saveUser(user);
       onLogin(user);

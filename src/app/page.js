@@ -5,6 +5,7 @@ import AuthGate from "@/components/AuthGate";
 import PlayerDashboard from "@/components/PlayerDashboard";
 import CoachTeamPicker from "@/components/CoachTeamPicker";
 import StaffTeamDashboard from "@/components/StaffTeamDashboard";
+import StaffTeamPicker from "@/components/StaffTeamPicker";
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -24,7 +25,10 @@ export default function Home() {
 
   const handleLogin = (u) => {
     setUser(u);
-    const teamId = u.role === "player" || u.role === "staff_viewer" ? (u.team_id || u.teamId) : null;
+    const staffTeamIds = u.team_ids || u.teamIds || [];
+    const teamId = u.role === "player" ? (u.team_id || u.teamId)
+      : u.role === "staff_viewer" ? (staffTeamIds.length === 1 ? staffTeamIds[0] : null)
+      : null;
     setActiveTeamId(teamId);
     try {
       localStorage.setItem("tlr_session", JSON.stringify({ user: u, teamId }));
@@ -62,8 +66,10 @@ export default function Home() {
         <CoachTeamPicker user={user} onUserUpdate={handleUserUpdate} onEnterTeam={handleEnterTeam} onLogout={handleLogout} />
       ) : user.role === "coach" && activeTeamId ? (
         <StaffTeamDashboard user={user} teamId={activeTeamId} onBack={() => { setActiveTeamId(null); handleEnterTeam(null); }} onLogout={handleLogout} />
+      ) : user.role === "staff_viewer" && !activeTeamId ? (
+        <StaffTeamPicker user={user} onUserUpdate={handleUserUpdate} onEnterTeam={handleEnterTeam} onLogout={handleLogout} />
       ) : user.role === "staff_viewer" && activeTeamId ? (
-        <StaffTeamDashboard user={user} teamId={activeTeamId} onBack={handleLogout} onLogout={handleLogout} readOnly />
+        <StaffTeamDashboard user={user} teamId={activeTeamId} onBack={() => { setActiveTeamId(null); handleEnterTeam(null); }} onLogout={handleLogout} readOnly />
       ) : null}
     </div>
   );

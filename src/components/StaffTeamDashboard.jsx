@@ -330,7 +330,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       )}
 
       {tab === "calendario" && (
-        <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} />
+        <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly && !team.allowViewerEditCalendar} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} />
       )}
 
       {tab === "mensajes" && (

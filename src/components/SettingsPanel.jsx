@@ -488,6 +488,21 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
         <NotifSection coachUsername={coachUsername} team={team} teamWithPhotos={teamWithPhotos} />
       </Accordion>
 
+      <Accordion title="Permisos de acceso">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>Permitir edición del calendario al entrenador lector</div>
+            <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7, marginTop: 3 }}>El staff_viewer podrá crear y editar sesiones en la pestaña de planificación</div>
+          </div>
+          <input
+            type="checkbox"
+            checked={!!team.allowViewerEditCalendar}
+            onChange={async (e) => { await save({ allowViewerEditCalendar: e.target.checked }); }}
+            style={{ width: 20, height: 20, accentColor: COLORS.lime, cursor: "pointer", flexShrink: 0, marginLeft: 12 }}
+          />
+        </div>
+      </Accordion>
+
       {saving && <div style={{ fontSize: 12, color: COLORS.lime, textAlign: "center", marginTop: 8 }}>Guardando...</div>}
 
       {/* ── ZONA DE PELIGRO ── */}
