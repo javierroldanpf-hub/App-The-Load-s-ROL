@@ -181,7 +181,7 @@ function WeeklyChart({ days, sessions, dataByDate, mdTypeAvg, colorFn, fallbackC
         <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: COLORS.text }}>
           <span style={{ width: 14, borderTop: `1px dashed ${COLORS.coral}`, display: "inline-block", opacity: 0.8 }} />
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.coral, display: "inline-block" }} />
-          {isEquipo ? "Promedio histórico MD type" : "Nº de Sesión"}
+          {isEquipo ? "Promedio histórico MD type" : "Media histórica por Nº de Sesión"}
         </span>
       </div>
     </div>
