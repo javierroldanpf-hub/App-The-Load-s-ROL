@@ -403,7 +403,7 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
     for (let i = 0; i < 12; i++) {
       const wd = weekDates(mon);
       const num = weekNumberFrom(effectiveFirstMonday, mon);
-      weeks.push({ mon, days: wd, label: `Semana ${num} · ${fmtDateShort(wd[0])} – ${fmtDateShort(wd[6])}` });
+      weeks.push({ mon, days: wd, num, label: `Semana ${num} · ${fmtDateShort(wd[0])} – ${fmtDateShort(wd[6])}` });
       mon = addDays(mon, -7);
     }
     return weeks;
@@ -600,7 +600,7 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
       {/* Resumen total */}
       {(() => {
         const today = todayStr();
-        const joinedAt = player.joinedAt || null;
+        const joinedAt = player.joinedAt || effectiveFirstMonday || null;
         const totalSessions = sessions.filter((s) => s.sessionType && !s.isRest && s.date <= today && (!joinedAt || s.date >= joinedAt)).length;
         const totalW = myWellness.filter((e) => sessionByDate[e.date]).length;
         const totalR = myRpe.length;
@@ -629,6 +629,7 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
       {/* Semana a semana */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {historyWeeks.map((wk) => {
+          if (wk.num < 1) return null;
           const weekSessions = wk.days.map((d) => sessionByDate[d]).filter(Boolean);
           const weekW = wk.days.filter((d) => wellnessByDate[d] && sessionByDate[d]).length;
           const weekR = wk.days.filter((d) => rpeByDateFull[d]).length;
