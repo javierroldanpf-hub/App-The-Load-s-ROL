@@ -10,7 +10,7 @@ const DEFAULT_QUADRANT_COLORS = { tr: COLORS.lime, tl: COLORS.blue, br: COLORS.a
 
 const COLOR_PRESETS = ["#a3e635", "#60a5fa", "#fbbf24", "#f87171", "#c084fc", "#34d399", "#fb923c", "#e879f9", "#38bdf8", "#f472b6"];
 
-function QuadrantChart({ points, xLabel, yLabel, xMid, yMid, colors, onSelectPoint, selectedPoint }) {
+function QuadrantChart({ points, xLabel, yLabel, xMid, yMid, colors, quadrantNames, onSelectPoint, selectedPoint }) {
   const svgSize = 300;
   const pad = 44;
   const plotW = svgSize - pad * 2;
@@ -99,6 +99,15 @@ function QuadrantChart({ points, xLabel, yLabel, xMid, yMid, colors, onSelectPoi
       {/* Dividers */}
       <line x1={midSvgX} y1={pad} x2={midSvgX} y2={svgSize - pad} stroke="#5a6a7a" strokeWidth={1.2} strokeDasharray="5,3" />
       <line x1={pad} y1={midSvgY} x2={svgSize - pad} y2={midSvgY} stroke="#5a6a7a" strokeWidth={1.2} strokeDasharray="5,3" />
+      {/* Quadrant labels */}
+      {[
+        { label: quadrantNames?.tr || `Alto ${xLabel} · Alto ${yLabel}`, x: (midSvgX + svgSize - pad) / 2, y: pad + 12, color: col.tr },
+        { label: quadrantNames?.tl || `Bajo ${xLabel} · Alto ${yLabel}`, x: (pad + midSvgX) / 2,           y: pad + 12, color: col.tl },
+        { label: quadrantNames?.br || `Alto ${xLabel} · Bajo ${yLabel}`, x: (midSvgX + svgSize - pad) / 2, y: midSvgY + 14, color: col.br },
+        { label: quadrantNames?.bl || `Bajo ${xLabel} · Bajo ${yLabel}`, x: (pad + midSvgX) / 2,           y: midSvgY + 14, color: col.bl },
+      ].map(({ label, x, y, color }, i) => (
+        <text key={i} x={x} y={y} textAnchor="middle" fontSize={8} fontFamily="'Oswald', sans-serif" fontWeight="700" fill={color} fillOpacity={0.85}>{label}</text>
+      ))}
       {/* Points */}
       {points.map((p, i) => {
         if (p.x == null || p.y == null) return null;
@@ -387,6 +396,7 @@ export default function PhysicalQuadrantSection({ team, physicalEntries, onTeamU
             xMid={cfg.xMid}
             yMid={cfg.yMid}
             colors={cfg.quadrantColors}
+            quadrantNames={cfg.quadrantNames}
             selectedPoint={selectedPoint}
             onSelectPoint={setSelectedPoint}
           />
