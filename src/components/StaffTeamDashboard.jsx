@@ -239,7 +239,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
           </div>
 
           {resumenSubTab === "medias" && (
-            <TeamAveragesPanel team={team} wellness={wellness} rpe={rpe} sessions={sessions} displayNames={displayNames} />
+            <TeamAveragesPanel team={team} wellness={wellness} rpe={rpe} sessions={sessions} displayNames={displayNames} isEquipo={(team.kind || "equipo") === "equipo"} />
           )}
 
           {resumenSubTab === "individual" && (() => {

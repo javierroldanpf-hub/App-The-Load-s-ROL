@@ -24,7 +24,7 @@ function RingMetric({ label, value, max, color, displayValue, size = 60 }) {
 }
 
 /* ─── Weekly chart (individual) ─────────────────────────────────────── */
-function WeeklyChartPlayer({ days, sessions, dataByDate, mdTypeAvg, colorFn, fallbackColor, max, label, legendBarLabel, legendLineLabel }) {
+function WeeklyChartPlayer({ days, sessions, dataByDate, mdTypeAvg, colorFn, fallbackColor, max, label, legendBarLabel, legendLineLabel, isEquipo = true }) {
   const bars = days.map((date) => {
     const session = sessions.find((s) => s.date === date && s.sessionType && !s.isRest);
     const mdType = session ? session.sessionType : null;
@@ -103,7 +103,7 @@ function WeeklyChartPlayer({ days, sessions, dataByDate, mdTypeAvg, colorFn, fal
         {bars.map((b, i) => (
           <g key={`xlabel-${b.date}`}>
             <text x={cx(i)} y={h - padB + 10} fontSize={8} fill={COLORS.text} textAnchor="middle">{weekdayLabel(b.date).slice(0, 3)}</text>
-            {b.mdType && b.mdType.split(" ").map((word, wi) => (
+            {b.mdType && isEquipo && b.mdType.split(" ").map((word, wi) => (
               <text key={wi} x={cx(i)} y={h - padB + 20 + wi * 8} fontSize={6} fill={b.intensityColor} textAnchor="middle" fontWeight="600">{word}</text>
             ))}
           </g>
@@ -565,7 +565,8 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
           colorFn={(v) => v >= 7.5 ? COLORS.lime : v >= 5 ? "#f2c63c" : COLORS.coral}
           fallbackColor={COLORS.lime} max={10} label="Wellness Score (semana)"
           legendBarLabel="Wellness del día"
-          legendLineLabel="Media histórica por MD type"
+          legendLineLabel={(team.kind || "equipo") === "equipo" ? "Media histórica por MD type" : "Nº de Sesión"}
+          isEquipo={(team.kind || "equipo") === "equipo"}
         />
         <WeeklyChartPlayer
           days={days} sessions={sessions}
@@ -573,7 +574,8 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
           colorFn={(v) => v <= 6 ? COLORS.lime : v <= 7.5 ? "#f2c63c" : COLORS.coral}
           fallbackColor={COLORS.blue} max={10} label="RPE (semana)"
           legendBarLabel="RPE del día"
-          legendLineLabel="Media histórica por MD type"
+          legendLineLabel={(team.kind || "equipo") === "equipo" ? "Media histórica por MD type" : "Nº de Sesión"}
+          isEquipo={(team.kind || "equipo") === "equipo"}
         />
       </div>
 

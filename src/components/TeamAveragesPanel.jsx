@@ -63,7 +63,7 @@ export function ColorLegend() {
   );
 }
 
-function WeeklyChart({ days, sessions, dataByDate, mdTypeAvg, colorFn, fallbackColor, max, label }) {
+function WeeklyChart({ days, sessions, dataByDate, mdTypeAvg, colorFn, fallbackColor, max, label, isEquipo = true }) {
   const bars = days.map((date) => {
     const session = sessions.find((s) => s.date === date);
     const mdType = session && !session.isRest ? session.sessionType : null;
@@ -181,14 +181,14 @@ function WeeklyChart({ days, sessions, dataByDate, mdTypeAvg, colorFn, fallbackC
         <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: COLORS.text }}>
           <span style={{ width: 14, borderTop: `1px dashed ${COLORS.coral}`, display: "inline-block", opacity: 0.8 }} />
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.coral, display: "inline-block" }} />
-          Promedio histórico MD type
+          {isEquipo ? "Promedio histórico MD type" : "Nº de Sesión"}
         </span>
       </div>
     </div>
   );
 }
 
-export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displayNames = {} }) {
+export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displayNames = {}, isEquipo = true }) {
   const today = todayStr();
   const roster = (team.roster || []).map((u) => typeof u === "string" ? u : u.username);
 
@@ -421,6 +421,7 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
           fallbackColor={COLORS.lime}
           max={maxWellness}
           label="Wellness Score medio (0-10)"
+          isEquipo={isEquipo}
         />
 
         {/* Wellness por dimensión — se mueve con el navegador de wellness */}
@@ -461,6 +462,7 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
           fallbackColor={COLORS.blue}
           max={maxRpe}
           label="RPE medio (0-10)"
+          isEquipo={isEquipo}
         />
       </div>
     </div>
