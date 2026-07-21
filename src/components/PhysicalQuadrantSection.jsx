@@ -17,12 +17,12 @@ function QuadrantChart({ points, xLabel, yLabel, xMid, yMid, colors, onSelectPoi
   const plotH = svgSize - pad * 2;
   const allX = points.map((p) => p.x).filter((v) => v != null);
   const allY = points.map((p) => p.y).filter((v) => v != null);
-  const rawMinX = allX.length ? Math.min(...allX) : 0;
-  const rawMaxX = allX.length ? Math.max(...allX) : 10;
-  const rawMinY = allY.length ? Math.min(...allY) : 0;
-  const rawMaxY = allY.length ? Math.max(...allY) : 10;
-  const padX = (rawMaxX - rawMinX) * 0.12 || 1;
-  const padY = (rawMaxY - rawMinY) * 0.12 || 1;
+  const rawMinX = Math.min(...(allX.length ? allX : [0]), ...(xMid != null ? [xMid] : []));
+  const rawMaxX = Math.max(...(allX.length ? allX : [10]), ...(xMid != null ? [xMid] : []));
+  const rawMinY = Math.min(...(allY.length ? allY : [0]), ...(yMid != null ? [yMid] : []));
+  const rawMaxY = Math.max(...(allY.length ? allY : [10]), ...(yMid != null ? [yMid] : []));
+  const padX = (rawMaxX - rawMinX) * 0.18 || 1;
+  const padY = (rawMaxY - rawMinY) * 0.18 || 1;
   const minX = rawMinX - padX, maxX = rawMaxX + padX;
   const minY = rawMinY - padY, maxY = rawMaxY + padY;
   const rangeX = maxX - minX || 1;
