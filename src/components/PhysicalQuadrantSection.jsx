@@ -17,20 +17,23 @@ function QuadrantChart({ points, xLabel, yLabel, xMid, yMid, colors, onSelectPoi
   const plotH = svgSize - pad * 2;
   const allX = points.map((p) => p.x).filter((v) => v != null);
   const allY = points.map((p) => p.y).filter((v) => v != null);
-  const rawMinX = Math.min(...(allX.length ? allX : [0]), ...(xMid != null ? [xMid] : []));
-  const rawMaxX = Math.max(...(allX.length ? allX : [10]), ...(xMid != null ? [xMid] : []));
-  const rawMinY = Math.min(...(allY.length ? allY : [0]), ...(yMid != null ? [yMid] : []));
-  const rawMaxY = Math.max(...(allY.length ? allY : [10]), ...(yMid != null ? [yMid] : []));
-  const padX = (rawMaxX - rawMinX) * 0.18 || 1;
-  const padY = (rawMaxY - rawMinY) * 0.18 || 1;
-  const minX = rawMinX - padX, maxX = rawMaxX + padX;
-  const minY = rawMinY - padY, maxY = rawMaxY + padY;
+  const dataMinX = allX.length ? Math.min(...allX) : 0;
+  const dataMaxX = allX.length ? Math.max(...allX) : 10;
+  const dataMinY = allY.length ? Math.min(...allY) : 0;
+  const dataMaxY = allY.length ? Math.max(...allY) : 10;
+  // Center axis around cut point so the divider always appears in the middle
+  const centerX = xMid != null ? xMid : (dataMinX + dataMaxX) / 2;
+  const centerY = yMid != null ? yMid : (dataMinY + dataMaxY) / 2;
+  const halfX = Math.max(Math.abs(dataMaxX - centerX), Math.abs(dataMinX - centerX)) * 1.25 || 5;
+  const halfY = Math.max(Math.abs(dataMaxY - centerY), Math.abs(dataMinY - centerY)) * 1.25 || 5;
+  const minX = centerX - halfX, maxX = centerX + halfX;
+  const minY = centerY - halfY, maxY = centerY + halfY;
   const rangeX = maxX - minX || 1;
   const rangeY = maxY - minY || 1;
   const toSvgX = (v) => pad + ((v - minX) / rangeX) * plotW;
   const toSvgY = (v) => svgSize - pad - ((v - minY) / rangeY) * plotH;
-  const midX = xMid != null ? xMid : rawMinX + (rawMaxX - rawMinX) / 2;
-  const midY = yMid != null ? yMid : rawMinY + (rawMaxY - rawMinY) / 2;
+  const midX = centerX;
+  const midY = centerY;
   const midSvgX = toSvgX(midX);
   const midSvgY = toSvgY(midY);
   const col = {
@@ -50,8 +53,8 @@ function QuadrantChart({ points, xLabel, yLabel, xMid, yMid, colors, onSelectPoi
 
   // Axis ticks
   const nTicks = 4;
-  const xTicks = Array.from({ length: nTicks + 1 }, (_, i) => rawMinX + (i / nTicks) * (rawMaxX - rawMinX));
-  const yTicks = Array.from({ length: nTicks + 1 }, (_, i) => rawMinY + (i / nTicks) * (rawMaxY - rawMinY));
+  const xTicks = Array.from({ length: nTicks + 1 }, (_, i) => minX + (i / nTicks) * (maxX - minX));
+  const yTicks = Array.from({ length: nTicks + 1 }, (_, i) => minY + (i / nTicks) * (maxY - minY));
   const fmt = (v) => Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10;
 
   return (
