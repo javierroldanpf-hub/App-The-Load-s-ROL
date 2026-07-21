@@ -124,27 +124,16 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                 {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: int.color }}>{b.name}{b.duration ? ` · ${b.duration} min` : ""}</div>}
                 {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{b.content}</div>}
                 {b.tasks?.length > 0 && (
-                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4, fontSize: 9 }}>
-                    <thead>
-                      <tr style={{ borderBottom: `1px solid ${int.border}` }}>
-                        {["#","Nombre","T. trabajo","T. descanso","Espacio","Área rel."].map((h) => (
-                          <td key={h} style={{ padding: "2px 4px", fontWeight: 700, color: int.color }}>{h}</td>
+                  <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
+                    {b.tasks.map((t, ti) => (
+                      <div key={ti} style={{ fontSize: 9, lineHeight: 1.3, flexWrap: "wrap", display: "flex", alignItems: "baseline", gap: 3 }}>
+                        <span style={{ color: D.text, fontWeight: 700, flexShrink: 0 }}>{ti + 1}. {t.name}</span>
+                        {[t.workTime && `⏱ ${t.workTime}`, t.restTime && `↺ ${t.restTime}`, t.space && `📐 ${t.space}`, t.relativeArea && `m² ${t.relativeArea}`].filter(Boolean).map((seg, si) => (
+                          <span key={si} style={{ color: int.color, flexShrink: 0 }}>{seg}</span>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {b.tasks.map((t, ti) => (
-                        <tr key={ti} style={{ borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
-                          <td style={{ padding: "2px 4px", color: D.text }}>{ti + 1}</td>
-                          <td style={{ padding: "2px 4px", color: D.text }}>{t.name}</td>
-                          <td style={{ padding: "2px 4px", color: D.text }}>{t.workTime}</td>
-                          <td style={{ padding: "2px 4px", color: D.text }}>{t.restTime}</td>
-                          <td style={{ padding: "2px 4px", color: D.text }}>{t.space}</td>
-                          <td style={{ padding: "2px 4px", color: D.text }}>{t.relativeArea}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}
