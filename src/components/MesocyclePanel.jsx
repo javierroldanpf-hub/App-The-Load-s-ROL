@@ -251,7 +251,7 @@ const TPL_DAYS = [
   { key: "thu", label: "J" }, { key: "fri", label: "V" }, { key: "sat", label: "S" }, { key: "sun", label: "D" },
 ];
 
-function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false, matchLabel = "MD" }) {
+function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false, matchLabel = "MD", unitShort = "min" }) {
   const initPlan = () => week.customWeekPlan || { days: {}, cells: {} };
   const [plan, setPlan] = useState(initPlan);
   const [dirty, setDirty] = useState(false);
@@ -299,7 +299,7 @@ function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false,
       <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 80, background: COLORS.panelRaised, borderRadius: 8, padding: "6px 10px", textAlign: "center" }}>
           <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 600 }}>Tiempo total</div>
-          <div style={{ fontSize: 14, color: COLORS.lime, fontWeight: 700 }}>{totalUsed} <span style={{ fontSize: 9 }}>min</span></div>
+          <div style={{ fontSize: 14, color: COLORS.lime, fontWeight: 700 }}>{totalUsed} <span style={{ fontSize: 9 }}>{unitShort}</span></div>
         </div>
       </div>
       <div style={{ overflowX: "auto" }}>
@@ -507,7 +507,6 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
   const [menstrualPlayers, setMenstrualPlayers] = useState([]);
   const [isSJ, setIsSJ]               = useState(false);
   const [activeCustomTpl, setActiveCustomTpl] = useState(null); // template id
-  const [unit, setUnit]               = useState("min");
   const [saving, setSaving]           = useState(false);
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
@@ -541,8 +540,8 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
         }
         return { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
       });
-      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null, unit });
-      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null, unit });
+      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
+      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
     } catch (err) {
       const msg = err?.message || err?.error_description || JSON.stringify(err);
       alert("Error al guardar: " + msg);
@@ -575,17 +574,6 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
             {startDate && endDate && <span style={{ color: COLORS.lime, marginLeft: 8 }}>{fmtDateShort(startDate)} → {fmtDateShort(endDate)}</span>}
           </div>
           <RangePicker startDate={startDate} endDate={endDate} onChange={(s, e) => { setStart(s); setEnd(e); }} />
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8 }}>Unidad de distribución</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {MESO_UNITS.map((u) => (
-              <button key={u.id} onClick={() => setUnit(u.id)} style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${unit === u.id ? COLORS.lime : COLORS.line}`, background: unit === u.id ? `${COLORS.lime}22` : "transparent", color: unit === u.id ? COLORS.lime : COLORS.text, fontSize: 12, fontWeight: unit === u.id ? 700 : 400, cursor: "pointer" }}>
-                {u.label} <span style={{ opacity: 0.6 }}>({u.short})</span>
-              </button>
-            ))}
-          </div>
         </div>
 
         {showSJ && (
@@ -911,6 +899,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
   const [editingMeso, setEditingMeso] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sjEdits, setSjEdits] = useState({});
+  const [mesoUnit, setMesoUnit] = useState(meso.unit || "min");
   const today = todayStr();
   const activeTpl = meso.customTemplateId ? customTemplates.find((t) => t.id === meso.customTemplateId) : null;
   const matchLabel = isGrupo ? "COMP" : "MD";
@@ -996,6 +985,23 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
         </div>
       )}
 
+      {(meso.isSituacionesJugadas || meso.customTemplateId) && !readOnly && (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 6, fontWeight: 600 }}>Unidad de distribución</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {MESO_UNITS.map((u) => (
+              <button key={u.id} onClick={async () => {
+                setMesoUnit(u.id);
+                await saveMesocycle({ ...meso, unit: u.id });
+                onUpdate({ ...meso, unit: u.id });
+              }} style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${mesoUnit === u.id ? COLORS.lime : COLORS.line}`, background: mesoUnit === u.id ? `${COLORS.lime}22` : "transparent", color: mesoUnit === u.id ? COLORS.lime : COLORS.text, fontSize: 12, fontWeight: mesoUnit === u.id ? 700 : 400, cursor: "pointer" }}>
+                {u.label} <span style={{ opacity: 0.6 }}>({u.short})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {meso.weeks.map((w, i) => {
           const col  = weekColor(w.type);
@@ -1006,7 +1012,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           if (meso.isSituacionesJugadas) {
             const activePct = (sjPercentages && sjPercentages.length >= 6) ? sjPercentages : SJ_PERCENTAGES;
             const pct = activePct[i] || activePct[activePct.length - 1];
-            const unitShort = MESO_UNITS.find((u) => u.id === (meso.unit || "min"))?.short || "min";
+            const unitShort = MESO_UNITS.find((u) => u.id === mesoUnit)?.short || "min";
             const edit = sjEdits[w.weekStart];
             const curDays = edit ? edit.days : String(w.sjDays ?? 4);
             const curBaseMin = edit ? edit.baseMin : String(w.sjBaseMinutes ?? 100);
@@ -1127,7 +1133,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           if (activeTpl) {
             const tplColor = activeTpl.types?.[0]?.color || COLORS.lime;
             const totalMin = Math.round((Number(w.sjBaseMinutes ?? 100)) * (w.volume ?? 100) / 100);
-            const tplUnitShort = MESO_UNITS.find((u) => u.id === (meso.unit || "min"))?.short || "min";
+            const tplUnitShort = MESO_UNITS.find((u) => u.id === mesoUnit)?.short || "min";
             return (
               <div key={w.weekStart} style={{ background: "#0c1520", border: `1px solid ${isCurrent ? tplColor : COLORS.line}`, borderRadius: 12, padding: "12px 14px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -1213,7 +1219,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                             ))}
                           </tr>
                           <tr>
-                            <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", fontWeight: 600 }}>Min.</td>
+                            <td style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", fontWeight: 600 }}>{tplUnitShort}.</td>
                             {cols.map((c) => (
                               <td key={c.key} style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "4px 2px", borderBottom: `1px solid ${COLORS.line}` }}>
                                 {Math.round(totalMin * (Number(pctRow[c.key]) || 0) / 100)}
@@ -1243,6 +1249,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                   onSave={(plan) => handleCustomPlanSave(w.weekStart, plan)}
                   readOnly={readOnly}
                   matchLabel={matchLabel}
+                  unitShort={tplUnitShort}
                 />
               </div>
             );
