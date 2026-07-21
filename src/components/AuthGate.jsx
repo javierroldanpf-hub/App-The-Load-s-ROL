@@ -132,7 +132,8 @@ function JoinNewTeamForm({ user, onLogin, onBack }) {
       if ((team.kind || "equipo") === "individual" && (team.roster || []).length >= 1) {
         setError("Este perfil de atleta individual ya tiene un atleta asignado."); setBusy(false); return;
       }
-      const updatedUser = { ...user, team_id: teamId };
+      const today = new Date().toISOString().slice(0, 10);
+      const updatedUser = { ...user, team_id: teamId, joinedAt: user.joinedAt || today };
       await saveUser(updatedUser);
       const roster = team.roster || [];
       if (!roster.includes(user.username)) {
@@ -199,6 +200,7 @@ function RegisterPlayerForm({ onBack, onLogin }) {
       const team = await getTeam(teamId);
       if (!team) { setError("No se pudo encontrar el equipo."); setBusy(false); return; }
 
+      const today = new Date().toISOString().slice(0, 10);
       const user = {
         username: normUser(username),
         pass_hash: simpleHash(password),
@@ -206,6 +208,7 @@ function RegisterPlayerForm({ onBack, onLogin }) {
         display_name: displayName.trim(),
         team_id: teamId,
         team_ids: [],
+        joinedAt: today,
       };
       await saveUser(user);
 

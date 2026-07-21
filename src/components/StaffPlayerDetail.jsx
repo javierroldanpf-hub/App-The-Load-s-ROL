@@ -600,7 +600,8 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
       {/* Resumen total */}
       {(() => {
         const today = todayStr();
-        const totalSessions = sessions.filter((s) => s.sessionType && !s.isRest && s.date <= today).length;
+        const joinedAt = player.joinedAt || null;
+        const totalSessions = sessions.filter((s) => s.sessionType && !s.isRest && s.date <= today && (!joinedAt || s.date >= joinedAt)).length;
         const totalW = myWellness.filter((e) => sessionByDate[e.date]).length;
         const totalR = myRpe.length;
         const pctW = totalSessions > 0 ? Math.round((totalW / totalSessions) * 100) : null;

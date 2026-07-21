@@ -105,6 +105,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       photoUrl: prof?.photoUrl || dn?.photoUrl || null,
       position: prof?.position || dn?.position || null,
       sexo: prof?.sexo || null,
+      joinedAt: dn?.joinedAt || null,
     };
   });
   const teamWithPhotos = { ...team, roster: enrichedRosterForTeam };

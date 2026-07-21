@@ -32,9 +32,9 @@ export async function getUsersDisplayNames(usernames, teamId) {
     const map = {};
 
     // Start with global profiles for fallback display names
-    const profilesRes = await sb.from("profiles").select("username, display_name, photo_url").in("username", usernames);
+    const profilesRes = await sb.from("profiles").select("username, display_name, photo_url, joined_at").in("username", usernames);
     (profilesRes.data || []).forEach((r) => {
-      map[r.username] = { displayName: r.display_name || r.username, photoUrl: r.photo_url || null, position: null };
+      map[r.username] = { displayName: r.display_name || r.username, photoUrl: r.photo_url || null, position: null, joinedAt: r.joined_at || null };
     });
 
     // player_profiles is authoritative: has team-specific name, photo, and position
@@ -45,6 +45,7 @@ export async function getUsersDisplayNames(usernames, teamId) {
         if (r.display_name) map[r.username].displayName = r.display_name;
         if (r.photo_url) map[r.username].photoUrl = r.photo_url;
         if (r.position) map[r.username].position = r.position;
+        if (map[r.username].joinedAt === undefined) map[r.username].joinedAt = null;
       });
     }
 
@@ -62,6 +63,7 @@ export async function saveUser(user) {
     team_id: user.teamId || user.team_id || null,
     team_ids: user.teamIds || user.team_ids || [],
     photo_url: user.photoUrl || user.photo_url || null,
+    ...(user.joinedAt ? { joined_at: user.joinedAt } : {}),
   };
   console.log("saveUser → enviando a Supabase:", record);
   const { data, error } = await sb
