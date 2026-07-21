@@ -123,6 +123,29 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
               <div key={i} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${int.border}` }}>
                 {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: int.color }}>{b.name}{b.duration ? ` · ${b.duration} min` : ""}</div>}
                 {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{b.content}</div>}
+                {b.tasks?.length > 0 && (
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4, fontSize: 9 }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${int.border}` }}>
+                        {["#","Nombre","T. trabajo","T. descanso","Espacio","Área rel."].map((h) => (
+                          <td key={h} style={{ padding: "2px 4px", fontWeight: 700, color: int.color }}>{h}</td>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {b.tasks.map((t, ti) => (
+                        <tr key={ti} style={{ borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
+                          <td style={{ padding: "2px 4px", color: D.text }}>{ti + 1}</td>
+                          <td style={{ padding: "2px 4px", color: D.text }}>{t.name}</td>
+                          <td style={{ padding: "2px 4px", color: D.text }}>{t.workTime}</td>
+                          <td style={{ padding: "2px 4px", color: D.text }}>{t.restTime}</td>
+                          <td style={{ padding: "2px 4px", color: D.text }}>{t.space}</td>
+                          <td style={{ padding: "2px 4px", color: D.text }}>{t.relativeArea}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             ))}
           </div>
