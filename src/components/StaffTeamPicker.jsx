@@ -5,6 +5,7 @@ import { inputStyle, primaryBtn, ghostBtn } from "@/lib/utils";
 import { getTeam, saveUser, getTeamIdByCode } from "@/lib/db";
 import TopBar from "./TopBar";
 import Avatar from "./Avatar";
+import ImageUploadButton from "./ImageUploadButton";
 
 export default function StaffTeamPicker({ user, onUserUpdate, onEnterTeam, onLogout }) {
   const [teams, setTeams] = useState([]);
@@ -58,6 +59,11 @@ export default function StaffTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, margin: "18px 0 22px" }}>
         <Avatar name={user.display_name || user.displayName} photoUrl={user.photo_url || user.photoUrl} size={64} />
         <div style={{ fontSize: 14, color: COLORS.text }}>Hola, {user.display_name || user.displayName}</div>
+        <ImageUploadButton label="Cambiar mi foto" onUploaded={async (dataUrl) => {
+          const updated = { ...user, photo_url: dataUrl, photoUrl: dataUrl };
+          await saveUser(updated);
+          onUserUpdate(updated);
+        }} />
       </div>
 
       {loading ? (
