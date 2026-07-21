@@ -29,28 +29,33 @@ function rpeBarColor(v) {
 }
 
 export function ColorLegend() {
+  const row = { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 5 };
+  const label = { fontSize: 10, color: COLORS.text, fontWeight: 600, minWidth: 72 };
+  const dot = (c) => ({ width: 8, height: 8, borderRadius: 2, background: c, display: "inline-block" });
   return (
     <div style={{ background: COLORS.panelRaised, borderRadius: 10, padding: "8px 12px", marginBottom: 16 }}>
       <span style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, display: "block", marginBottom: 6 }}>Rangos de color</span>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, marginRight: 2 }}>WS:</span>
+      <div style={row}>
+        <span style={label}>Wellness:</span>
         {[{ c: COLORS.lime, t: "≥7.5 Óptimo" }, { c: "#f2c63c", t: "5–7.4 Normal" }, { c: COLORS.coral, t: "<5 Alerta" }].map(({ c, t }) => (
           <span key={t} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: COLORS.text }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: c, display: "inline-block" }} />{t}
-          </span>
-        ))}
-        <span style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, marginLeft: 6, marginRight: 2 }}>RPE:</span>
-        {[{ c: COLORS.lime, t: "≤6 Bajo" }, { c: "#f2c63c", t: "6–7.5 Medio" }, { c: COLORS.coral, t: ">7.5 Alto" }].map(({ c, t }) => (
-          <span key={t} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: COLORS.text }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: c, display: "inline-block" }} />{t}
+            <span style={dot(c)} />{t}
           </span>
         ))}
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <span style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, marginRight: 2 }}>Intensidad MD:</span>
-        {[{ c: "#f2c63c", t: "Amarillo · Media-Baja" }, { c: "#ff9f40", t: "Naranja · Media-Alta" }, { c: "#ff5a5f", t: "Rojo · Alta" }].map(({ c, t }) => (
+      <div style={row}>
+        <span style={label}>RPE:</span>
+        {[{ c: COLORS.lime, t: "≤6 Bajo" }, { c: "#f2c63c", t: "6–7.5 Medio" }, { c: COLORS.coral, t: ">7.5 Alto" }].map(({ c, t }) => (
           <span key={t} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: COLORS.text }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: c, display: "inline-block" }} />{t}
+            <span style={dot(c)} />{t}
+          </span>
+        ))}
+      </div>
+      <div style={{ ...row, marginBottom: 0 }}>
+        <span style={label}>Intensidad MD:</span>
+        {[{ c: "#f2c63c", t: "Media-Baja" }, { c: "#ff9f40", t: "Media-Alta" }, { c: "#ff5a5f", t: "Alta" }].map(({ c, t }) => (
+          <span key={t} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: COLORS.text }}>
+            <span style={dot(c)} />{t}
           </span>
         ))}
       </div>
