@@ -565,7 +565,7 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
           colorFn={(v) => v >= 7.5 ? COLORS.lime : v >= 5 ? "#f2c63c" : COLORS.coral}
           fallbackColor={COLORS.lime} max={10} label="Wellness Score (semana)"
           legendBarLabel="Wellness del día"
-          legendLineLabel={(team.kind || "equipo") === "equipo" ? "Media histórica por MD type" : "Media histórica por Nº de Sesión"}
+          legendLineLabel={(team.kind || "equipo") === "equipo" ? "Promedio histórico por MD type" : "Promedio histórico por Nº de Sesión"}
           isEquipo={(team.kind || "equipo") === "equipo"}
         />
         <WeeklyChartPlayer
@@ -574,7 +574,7 @@ export default function StaffPlayerDetail({ player, wellness, rpe, sessions, tea
           colorFn={(v) => v <= 6 ? COLORS.lime : v <= 7.5 ? "#f2c63c" : COLORS.coral}
           fallbackColor={COLORS.blue} max={10} label="RPE (semana)"
           legendBarLabel="RPE del día"
-          legendLineLabel={(team.kind || "equipo") === "equipo" ? "Media histórica por MD type" : "Media histórica por Nº de Sesión"}
+          legendLineLabel={(team.kind || "equipo") === "equipo" ? "Promedio histórico por MD type" : "Promedio histórico por Nº de Sesión"}
           isEquipo={(team.kind || "equipo") === "equipo"}
         />
       </div>
