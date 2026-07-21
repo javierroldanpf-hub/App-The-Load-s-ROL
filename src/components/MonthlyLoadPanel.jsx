@@ -4,6 +4,14 @@ import { COLORS } from "@/lib/constants";
 
 const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
+function fmtTime(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h === 0) return `${min} min`;
+  if (m === 0) return `${min} min · ${h}h`;
+  return `${min} min · ${h}h ${m}min`;
+}
+
 function monthKey(date) { return date.slice(0, 7); }
 function monthLabel(key) {
   const [y, m] = key.split("-");
@@ -65,7 +73,7 @@ export default function MonthlyLoadPanel({ sessions }) {
               <span style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: COLORS.text }}>{monthLabel(key)}</span>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 12, color: count > 0 ? COLORS.lime : COLORS.text, fontWeight: 600 }}>{count} sesión{count !== 1 ? "es" : ""}</span>
-                <span style={{ fontSize: 12, color: COLORS.text }}>{totalMin} min</span>
+                <span style={{ fontSize: 12, color: COLORS.text }}>{fmtTime(totalMin)}</span>
                 <span style={{ fontSize: 11, color: COLORS.lime, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", display: "inline-block", transition: "transform 0.15s" }}>▼</span>
               </div>
             </button>
@@ -88,7 +96,7 @@ export default function MonthlyLoadPanel({ sessions }) {
                 {count > 0 && (
                   <div style={{ display: "flex", justifyContent: "flex-end", gap: 16, marginTop: 4, paddingTop: 6, borderTop: `1px solid ${COLORS.line}` }}>
                     <span style={{ fontSize: 11, color: COLORS.text }}>Total: <strong style={{ color: COLORS.lime }}>{count} sesiones</strong></span>
-                    <span style={{ fontSize: 11, color: COLORS.text }}>Minutos: <strong style={{ color: COLORS.lime }}>{totalMin} min</strong></span>
+                    <span style={{ fontSize: 11, color: COLORS.text }}>Tiempo: <strong style={{ color: COLORS.lime }}>{fmtTime(totalMin)}</strong></span>
                   </div>
                 )}
               </div>
