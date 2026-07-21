@@ -379,13 +379,13 @@ export async function loadMesocycles(teamId) {
       .eq("team_id", teamId)
       .order("start_date", { ascending: true });
     if (error || !data) return [];
-    return data.map((m) => ({ id: m.id, teamId: m.team_id, name: m.name || "", startDate: m.start_date, endDate: m.end_date, weeks: m.weeks || [], color: m.color || null, contenidos: m.contenidos || "", isMenstrual: m.is_menstrual || false, menstrualPlayers: m.menstrual_players || [], isSituacionesJugadas: m.is_situaciones_jugadas || false, customTemplateId: m.custom_template_id || null, createdAt: m.created_at }));
+    return data.map((m) => ({ id: m.id, teamId: m.team_id, name: m.name || "", startDate: m.start_date, endDate: m.end_date, weeks: m.weeks || [], color: m.color || null, contenidos: m.contenidos || "", isMenstrual: m.is_menstrual || false, menstrualPlayers: m.menstrual_players || [], isSituacionesJugadas: m.is_situaciones_jugadas || false, customTemplateId: m.custom_template_id || null, unit: m.unit || 'min', createdAt: m.created_at }));
   } catch { return []; }
 }
 
 export async function saveMesocycle(meso) {
   const sb = getSupabase();
-  const record = { team_id: meso.teamId, name: meso.name || null, start_date: meso.startDate, end_date: meso.endDate, weeks: meso.weeks || [], color: meso.color || null, contenidos: meso.contenidos || null, is_menstrual: meso.isMenstrual || false, menstrual_players: meso.menstrualPlayers || [], is_situaciones_jugadas: meso.isSituacionesJugadas || false, custom_template_id: meso.customTemplateId || null, created_at: meso.createdAt || Date.now() };
+  const record = { team_id: meso.teamId, name: meso.name || null, start_date: meso.startDate, end_date: meso.endDate, weeks: meso.weeks || [], color: meso.color || null, contenidos: meso.contenidos || null, is_menstrual: meso.isMenstrual || false, menstrual_players: meso.menstrualPlayers || [], is_situaciones_jugadas: meso.isSituacionesJugadas || false, custom_template_id: meso.customTemplateId || null, unit: meso.unit || 'min', created_at: meso.createdAt || Date.now() };
   if (meso.id) {
     const { error } = await sb.from("mesocycles").update(record).eq("id", meso.id);
     if (error) throw error;
@@ -738,6 +738,8 @@ function dbTeamToApp(r) {
     defaultMatchDuration: raw?.defaultMatchDuration ?? null,
     sexo: raw?.sexo || null,
     customMesoTemplates: raw?.customMesoTemplates || [],
+    sjDayMinutes: raw?.sjDayMinutes || null,
+    sjPercentages: raw?.sjPercentages || null,
     crestUrl: r.crest_url || null,
   };
 }
@@ -772,6 +774,8 @@ function appTeamToDb(team) {
       defaultMatchDuration: team.defaultMatchDuration ?? null,
       sexo: team.sexo || null,
       customMesoTemplates: team.customMesoTemplates || [],
+      sjDayMinutes: team.sjDayMinutes || null,
+      sjPercentages: team.sjPercentages || null,
     },
     crest_url: team.crestUrl || null,
   };

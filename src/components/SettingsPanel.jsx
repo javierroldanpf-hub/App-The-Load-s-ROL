@@ -932,9 +932,63 @@ function TemplateEditor({ template, onSave, onCancel }) {
   );
 }
 
+const DEFAULT_SJ_DAY_MINUTES = { "1": 60, "2": 75, "3": 90, "4": 100, "5": 110, "6": 120, "7": 130 };
+const SJ_PERCENTAGES_DEFAULT = [
+  { sgj_eg: 15, sgj_em: 25, sgj_ep: 10, smj_eg: 10, smj_em: 10, smj_ep: 15, srj_eg: 5,  srj_em: 5,  srj_ep: 5,  micro: 0 },
+  { sgj_eg: 20, sgj_em: 30, sgj_ep: 0,  smj_eg: 15, smj_em: 15, smj_ep: 5,  srj_eg: 0,  srj_em: 5,  srj_ep: 10, micro: 0 },
+  { sgj_eg: 15, sgj_em: 0,  sgj_ep: 0,  smj_eg: 25, smj_em: 10, smj_ep: 15, srj_eg: 0,  srj_em: 20, srj_ep: 15, micro: 0 },
+  { sgj_eg: 15, sgj_em: 0,  sgj_ep: 0,  smj_eg: 30, smj_em: 5,  smj_ep: 15, srj_eg: 5,  srj_em: 10, srj_ep: 20, micro: 0 },
+  { sgj_eg: 15, sgj_em: 5,  sgj_ep: 15, smj_eg: 10, smj_em: 5,  smj_ep: 0,  srj_eg: 5,  srj_em: 20, srj_ep: 25, micro: 5 },
+  { sgj_eg: 10, sgj_em: 15, sgj_ep: 10, smj_eg: 0,  smj_em: 5,  smj_ep: 10, srj_eg: 5,  srj_em: 15, srj_ep: 30, micro: 10 },
+];
+const SJ_PCT_COLS = [
+  { key: "sgj_eg", label: "EG", group: "SGJ", color: "#38bdf8" },
+  { key: "sgj_em", label: "EM", group: "SGJ", color: "#38bdf8" },
+  { key: "sgj_ep", label: "EP", group: "SGJ", color: "#38bdf8" },
+  { key: "smj_eg", label: "EG", group: "SMJ", color: "#a78bfa" },
+  { key: "smj_em", label: "EM", group: "SMJ", color: "#a78bfa" },
+  { key: "smj_ep", label: "EP", group: "SMJ", color: "#a78bfa" },
+  { key: "srj_eg", label: "EG", group: "SRJ", color: "#fb923c" },
+  { key: "srj_em", label: "EM", group: "SRJ", color: "#fb923c" },
+  { key: "srj_ep", label: "EP*", group: "SRJ", color: "#fb923c" },
+  { key: "micro",  label: "1x1", group: "Micro", color: "#ff5a5f" },
+];
+
 function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
   const templates = team.customMesoTemplates || [];
   const [editing, setEditing] = useState(null); // null | "new" | template object
+  const [showDayMinutes, setShowDayMinutes] = useState(false);
+  const [showPctEditor, setShowPctEditor] = useState(false);
+  const [dayMinEdits, setDayMinEdits] = useState(null); // null = not yet opened
+  const [pctEdits, setPctEdits] = useState(null); // null = not yet opened
+  const [savingDm, setSavingDm] = useState(false);
+  const [savingPct, setSavingPct] = useState(false);
+
+  const openDayMinutes = () => {
+    if (!showDayMinutes) {
+      const cur = team.sjDayMinutes || DEFAULT_SJ_DAY_MINUTES;
+      setDayMinEdits({ ...DEFAULT_SJ_DAY_MINUTES, ...cur });
+    }
+    setShowDayMinutes((v) => !v);
+  };
+
+  const openPctEditor = () => {
+    if (!showPctEditor) {
+      const cur = (team.sjPercentages && team.sjPercentages.length >= 6) ? team.sjPercentages : SJ_PERCENTAGES_DEFAULT;
+      setPctEdits(cur.map((row) => ({ ...row })));
+    }
+    setShowPctEditor((v) => !v);
+  };
+
+  const handleSaveDayMinutes = async () => {
+    setSavingDm(true);
+    try { await save({ sjDayMinutes: dayMinEdits }); } finally { setSavingDm(false); }
+  };
+
+  const handleSavePct = async () => {
+    setSavingPct(true);
+    try { await save({ sjPercentages: pctEdits }); } finally { setSavingPct(false); }
+  };
 
   const handleSave = (tpl) => {
     const existing = templates.find((t) => t.id === tpl.id);
@@ -948,17 +1002,99 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
     save({ customMesoTemplates: templates.filter((t) => t.id !== id) });
   };
 
+  const inputNumStyle = { width: 52, padding: "4px 6px", borderRadius: 6, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 12, outline: "none", textAlign: "center", boxSizing: "border-box" };
+
   return (
     <div>
       {/* Built-in template */}
-      {showBuiltIn && <div style={{ background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 10, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 16 }}>⚽</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>Situaciones Jugadas (Fútbol)</div>
-          <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Predeterminada · 6 semanas · SGJ / SMJ / SRJ</div>
+      {showBuiltIn && (
+        <div style={{ background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 10, padding: "10px 14px", marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 16 }}>⚽</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>Situaciones Jugadas (Fútbol)</div>
+              <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Predeterminada · 6 semanas · SGJ / SMJ / SRJ</div>
+            </div>
+            <span style={{ fontSize: 10, color: "#38bdf8", background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 6, padding: "2px 8px", fontWeight: 700 }}>BUILT-IN</span>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <button onClick={openDayMinutes} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid #38bdf844`, background: showDayMinutes ? "#38bdf822" : "transparent", color: "#38bdf8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+              {showDayMinutes ? "▲" : "▼"} Minutos por días de entreno
+            </button>
+            <button onClick={openPctEditor} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid #38bdf844`, background: showPctEditor ? "#38bdf822" : "transparent", color: "#38bdf8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+              {showPctEditor ? "▲" : "▼"} Editar porcentajes
+            </button>
+          </div>
+
+          {showDayMinutes && dayMinEdits && (
+            <div style={{ marginTop: 10, background: "#0a1820", borderRadius: 8, padding: "10px 12px", border: "1px solid #38bdf822" }}>
+              <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Minutos por defecto según días de entreno</div>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ fontSize: 10, color: COLORS.text, textAlign: "left", padding: "3px 6px" }}>Días</th>
+                    <th style={{ fontSize: 10, color: COLORS.text, textAlign: "center", padding: "3px 6px" }}>Minutos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {["1","2","3","4","5","6","7"].map((d) => (
+                    <tr key={d} style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
+                      <td style={{ fontSize: 11, color: "#38bdf8", padding: "4px 6px", fontWeight: 600 }}>{d} día{d !== "1" ? "s" : ""}</td>
+                      <td style={{ padding: "4px 6px", textAlign: "center" }}>
+                        <input type="number" className="no-arrows" min={0} value={dayMinEdits[d] ?? DEFAULT_SJ_DAY_MINUTES[d]} onChange={(e) => setDayMinEdits((prev) => ({ ...prev, [d]: Number(e.target.value) || 0 }))} style={inputNumStyle} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button onClick={() => setDayMinEdits({ ...DEFAULT_SJ_DAY_MINUTES })} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 11, cursor: "pointer" }}>Restablecer</button>
+                <button onClick={handleSaveDayMinutes} disabled={savingDm} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savingDm ? "..." : "Guardar"}</button>
+              </div>
+            </div>
+          )}
+
+          {showPctEditor && pctEdits && (
+            <div style={{ marginTop: 10, background: "#0a1820", borderRadius: 8, padding: "10px 12px", border: "1px solid #38bdf822", overflowX: "auto" }}>
+              <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Tabla de porcentajes (6 semanas × columnas)</div>
+              <table style={{ borderCollapse: "collapse", minWidth: 500 }}>
+                <thead>
+                  <tr>
+                    <th style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", textAlign: "left" }}>Sem.</th>
+                    {SJ_PCT_COLS.map((c) => (
+                      <th key={c.key} style={{ fontSize: 9, color: c.color, padding: "3px 3px", textAlign: "center", fontWeight: 700 }}>{c.group}<br/>{c.label}</th>
+                    ))}
+                    <th style={{ fontSize: 9, color: COLORS.text, padding: "3px 4px", textAlign: "center" }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pctEdits.map((row, i) => {
+                    const total = SJ_PCT_COLS.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
+                    const totalColor = total === 100 ? COLORS.lime : total > 100 ? "#ff5a5f" : COLORS.text;
+                    return (
+                      <tr key={i} style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
+                        <td style={{ fontSize: 10, color: COLORS.text, padding: "3px 4px", fontWeight: 700, whiteSpace: "nowrap" }}>M{i + 1}</td>
+                        {SJ_PCT_COLS.map((c) => (
+                          <td key={c.key} style={{ padding: "2px 2px", textAlign: "center" }}>
+                            <input type="number" className="no-arrows" min={0} max={100} value={row[c.key] ?? 0}
+                              onChange={(e) => setPctEdits((prev) => prev.map((r, ri) => ri === i ? { ...r, [c.key]: Number(e.target.value) || 0 } : r))}
+                              style={{ ...inputNumStyle, width: 38, borderColor: c.color + "44" }} />
+                          </td>
+                        ))}
+                        <td style={{ fontSize: 11, color: totalColor, padding: "3px 6px", textAlign: "center", fontWeight: 700 }}>{total}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button onClick={() => setPctEdits(SJ_PERCENTAGES_DEFAULT.map((r) => ({ ...r })))} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 11, cursor: "pointer" }}>Restablecer</button>
+                <button onClick={handleSavePct} disabled={savingPct} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savingPct ? "..." : "Guardar"}</button>
+              </div>
+            </div>
+          )}
         </div>
-        <span style={{ fontSize: 10, color: "#38bdf8", background: "#0c1e2a", border: "1px solid #38bdf844", borderRadius: 6, padding: "2px 8px", fontWeight: 700 }}>BUILT-IN</span>
-      </div>}
+      )}
 
       {/* Custom templates */}
       {templates.map((t) => (

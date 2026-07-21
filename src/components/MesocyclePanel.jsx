@@ -42,6 +42,16 @@ const MENSTRUAL_PHASES = [
   },
 ];
 
+const DEFAULT_SJ_DAY_MINUTES = { "1": 60, "2": 75, "3": 90, "4": 100, "5": 110, "6": 120, "7": 130 };
+
+const MESO_UNITS = [
+  { id: "min", label: "Minutos", short: "min" },
+  { id: "rep", label: "Repeticiones", short: "rep" },
+  { id: "m",   label: "Metros", short: "m" },
+  { id: "km",  label: "Kilómetros", short: "km" },
+  { id: "h",   label: "Horas", short: "h" },
+];
+
 const SJ_PERCENTAGES = [
   { sgj_eg: 15, sgj_em: 25, sgj_ep: 10, smj_eg: 10, smj_em: 10, smj_ep: 15, srj_eg: 5,  srj_em: 5,  srj_ep: 5,  micro: 0 },
   { sgj_eg: 20, sgj_em: 30, sgj_ep: 0,  smj_eg: 15, smj_em: 15, smj_ep: 5,  srj_eg: 0,  srj_em: 5,  srj_ep: 10, micro: 0 },
@@ -88,7 +98,7 @@ const SJ_ROWS = [
 ];
 
 /* ── Planificador semanal SJ ─────────────────────────────────────────── */
-function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false, matchLabel = "MD" }) {
+function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false, matchLabel = "MD", unitShort = "min" }) {
   const initPlan = () => week.sjWeekPlan || { days: {}, cells: {} };
   const [plan, setPlan] = useState(initPlan);
   const [dirty, setDirty] = useState(false);
@@ -149,7 +159,7 @@ function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false, matchLab
         ].map(({ label, val, color }) => (
           <div key={label} style={{ flex: 1, minWidth: 80, background: COLORS.panelRaised, borderRadius: 8, padding: "6px 10px", textAlign: "center" }}>
             <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 600 }}>{label}</div>
-            <div style={{ fontSize: 14, color, fontWeight: 700 }}>{val} <span style={{ fontSize: 9 }}>min</span></div>
+            <div style={{ fontSize: 14, color, fontWeight: 700 }}>{val} <span style={{ fontSize: 9 }}>{unitShort}</span></div>
           </div>
         ))}
       </div>
@@ -497,6 +507,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
   const [menstrualPlayers, setMenstrualPlayers] = useState([]);
   const [isSJ, setIsSJ]               = useState(false);
   const [activeCustomTpl, setActiveCustomTpl] = useState(null); // template id
+  const [unit, setUnit]               = useState("min");
   const [saving, setSaving]           = useState(false);
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
@@ -530,8 +541,8 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
         }
         return { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
       });
-      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
-      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
+      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null, unit });
+      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null, unit });
     } catch (err) {
       const msg = err?.message || err?.error_description || JSON.stringify(err);
       alert("Error al guardar: " + msg);
@@ -564,6 +575,17 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
             {startDate && endDate && <span style={{ color: COLORS.lime, marginLeft: 8 }}>{fmtDateShort(startDate)} → {fmtDateShort(endDate)}</span>}
           </div>
           <RangePicker startDate={startDate} endDate={endDate} onChange={(s, e) => { setStart(s); setEnd(e); }} />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8 }}>Unidad de distribución</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {MESO_UNITS.map((u) => (
+              <button key={u.id} onClick={() => setUnit(u.id)} style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${unit === u.id ? COLORS.lime : COLORS.line}`, background: unit === u.id ? `${COLORS.lime}22` : "transparent", color: unit === u.id ? COLORS.lime : COLORS.text, fontSize: 12, fontWeight: unit === u.id ? 700 : 400, cursor: "pointer" }}>
+                {u.label} <span style={{ opacity: 0.6 }}>({u.short})</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {showSJ && (
@@ -884,7 +906,7 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
 }
 
 /* ── Vista de un mesociclo ───────────────────────────────────────────── */
-function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {}, showSJ = false, showMenstrual = false, customTemplates = [], isGrupo = false }) {
+function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {}, showSJ = false, showMenstrual = false, customTemplates = [], isGrupo = false, sjDayMinutes = null, sjPercentages = null }) {
   const [editingWeek, setEditingWeek] = useState(null);
   const [editingMeso, setEditingMeso] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -982,7 +1004,9 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           const phase = meso.isMenstrual ? MENSTRUAL_PHASES[i] || MENSTRUAL_PHASES[MENSTRUAL_PHASES.length - 1] : null;
 
           if (meso.isSituacionesJugadas) {
-            const pct = SJ_PERCENTAGES[i] || SJ_PERCENTAGES[SJ_PERCENTAGES.length - 1];
+            const activePct = (sjPercentages && sjPercentages.length >= 6) ? sjPercentages : SJ_PERCENTAGES;
+            const pct = activePct[i] || activePct[activePct.length - 1];
+            const unitShort = MESO_UNITS.find((u) => u.id === (meso.unit || "min"))?.short || "min";
             const edit = sjEdits[w.weekStart];
             const curDays = edit ? edit.days : String(w.sjDays ?? 4);
             const curBaseMin = edit ? edit.baseMin : String(w.sjBaseMinutes ?? 100);
@@ -1002,12 +1026,12 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Días semana tipo</div>
                     <input type="number" inputMode="numeric" min={1} max={7} value={curDays}
-                      onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { days: e.target.value, baseMin: curBaseMin } }))}
+                      onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { days: e.target.value, baseMin: String((sjDayMinutes || DEFAULT_SJ_DAY_MINUTES)[e.target.value] ?? prev[w.weekStart]?.baseMin ?? curBaseMin) } }))}
                       style={{ width: "100%", padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" }}
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Min. semana tipo</div>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>{unitShort}. semana tipo</div>
                     <input type="number" inputMode="numeric" min={0} value={curBaseMin}
                       onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { days: curDays, baseMin: e.target.value } }))}
                       style={{ width: "100%", padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" }}
@@ -1018,8 +1042,8 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                     <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: COLORS.lime }}>{w.volume ?? 100}%</div>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Min. totales</div>
-                    <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>{totalMin} min</div>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>{unitShort}. totales</div>
+                    <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: "#38bdf8", fontWeight: 700 }}>{totalMin} {unitShort}</div>
                   </div>
                   {!readOnly && edit && (
                     <button onClick={() => handleSJWeekSave(w.weekStart)} style={{ padding: "7px 12px", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
@@ -1094,6 +1118,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                   onSave={(plan) => handleSJPlanSave(w.weekStart, plan)}
                   readOnly={readOnly}
                   matchLabel={matchLabel}
+                  unitShort={unitShort}
                 />
               </div>
             );
@@ -1102,6 +1127,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           if (activeTpl) {
             const tplColor = activeTpl.types?.[0]?.color || COLORS.lime;
             const totalMin = Math.round((Number(w.sjBaseMinutes ?? 100)) * (w.volume ?? 100) / 100);
+            const tplUnitShort = MESO_UNITS.find((u) => u.id === (meso.unit || "min"))?.short || "min";
             return (
               <div key={w.weekStart} style={{ background: "#0c1520", border: `1px solid ${isCurrent ? tplColor : COLORS.line}`, borderRadius: 12, padding: "12px 14px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -1114,7 +1140,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "flex-end" }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Min. semana tipo</div>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>{tplUnitShort}. semana tipo</div>
                     <input type="number" inputMode="numeric" min={0} value={sjEdits[w.weekStart]?.baseMin ?? String(w.sjBaseMinutes ?? 100)}
                       onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { ...prev[w.weekStart], baseMin: e.target.value } }))}
                       style={{ width: "100%", padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" }}
@@ -1125,8 +1151,8 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                     <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: COLORS.lime }}>{w.volume ?? 100}%</div>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Min. totales</div>
-                    <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: tplColor, fontWeight: 700 }}>{totalMin} min</div>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>{tplUnitShort}. totales</div>
+                    <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: tplColor, fontWeight: 700 }}>{totalMin} {tplUnitShort}</div>
                   </div>
                   {!readOnly && sjEdits[w.weekStart]?.baseMin !== undefined && (
                     <button onClick={async () => {
@@ -1341,6 +1367,8 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
         showMenstrual={showMenstrual}
         customTemplates={customTemplates}
         isGrupo={isGrupo}
+        sjDayMinutes={team.sjDayMinutes || null}
+        sjPercentages={team.sjPercentages || null}
       />
     );
   }
