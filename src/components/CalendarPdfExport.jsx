@@ -157,12 +157,29 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
           </div>
         )
       )}
-      {showInd && (session.individualSessions || []).filter((s) => s.title).map((s, i) => (
-        <div key={i} style={{ background: D.blueDark, border: `1px solid ${D.blue}`, borderRadius: 5, padding: compact ? "3px 7px" : "5px 8px" }}>
-          <div style={{ fontSize: compact ? 10 : 12, fontWeight: 700, color: D.blue }}>{s.title}</div>
-          {!compact && s.players?.length > 0 && <div style={{ fontSize: 9, color: D.textMuted, marginTop: 1 }}>{s.players.map((u) => resolveDisplayName(displayNames, u)).join(", ")}</div>}
-        </div>
-      ))}
+      {showInd && (session.individualSessions || []).filter((s) => s.title).map((s, i) => {
+        const indBlocks = (s.blocks || []).filter((b) => (b.name || b.content) && b.name !== ATHLETE_NOTE_NAME);
+        const indNote = (s.blocks || []).find((b) => b.name === ATHLETE_NOTE_NAME) || null;
+        const indInt = INT[s.intensity] || INT.amarillo;
+        return (
+          <div key={i} style={{ background: D.blueDark, border: `1px solid ${D.blue}`, borderRadius: 5, padding: compact ? "3px 7px" : "5px 8px" }}>
+            <div style={{ fontSize: compact ? 10 : 12, fontWeight: 700, color: D.blue }}>{s.title}{!compact && s.duration > 0 ? <span style={{ fontWeight: 400, fontSize: 10, color: D.textMuted, marginLeft: 6 }}>{s.duration} min</span> : ""}</div>
+            {!compact && s.players?.length > 0 && <div style={{ fontSize: 9, color: D.textMuted, marginTop: 1 }}>{s.players.map((u) => resolveDisplayName(displayNames, u)).join(", ")}</div>}
+            {!compact && indBlocks.map((b, bi) => (
+              <div key={bi} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${D.blue}` }}>
+                {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: indInt.color }}>{b.name.toUpperCase()}{b.duration ? ` · ${b.duration} min` : ""}</div>}
+                {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{b.content}</div>}
+              </div>
+            ))}
+            {!compact && indNote?.content && (
+              <div style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${D.lime}` }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: D.lime, marginBottom: 1 }}>NOTA DEL ATLETA</div>
+                <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{indNote.content}</div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
