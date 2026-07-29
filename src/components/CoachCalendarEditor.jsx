@@ -8,10 +8,24 @@ import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
 
+const BLOCK_TYPES = ["Campo", "Pista", "Fuerza", "Carrera", "Metabólico", "HIIT", "EMOM", "AMRAP", "Calentamiento", "Movement Prep", "Otro"];
+
+function getBlockType(b) {
+  if (b.blockType) return b.blockType;
+  if (BLOCK_TYPES.includes(b.name)) return b.name;
+  if (b.name) return "Otro";
+  return "Campo";
+}
+
 function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
-  const addBlock = () => setBlocks((prev) => [...prev, { name: "", duration: "", content: "", tasks: [] }]);
+  const addBlock = () => setBlocks((prev) => [...prev, { name: "Campo", blockType: "Campo", duration: "", content: "", tasks: [] }]);
   const updateBlock = (i, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === i ? { ...b, [field]: val } : b));
   const removeBlock = (i) => setBlocks((prev) => prev.filter((_, idx) => idx !== i));
+
+  const handleBlockType = (i, type) => setBlocks((prev) => prev.map((b, idx) => {
+    if (idx !== i) return b;
+    return { ...b, blockType: type, name: type === "Otro" ? (b.name && !BLOCK_TYPES.includes(b.name) ? b.name : "") : type };
+  }));
 
   const addTask = (bi) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: [...(b.tasks || []), { id: Date.now(), name: "", workTime: "", restTime: "", space: "", relativeArea: "", imageBase64: "" }] } : b));
   const updateTask = (bi, ti, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: (b.tasks || []).map((t, tidx) => tidx === ti ? { ...t, [field]: val } : t) } : b));
@@ -31,9 +45,18 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {blocks.map((b, i) => (
           <div key={i} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 10, padding: "10px 12px" }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-              <input value={b.name} onChange={(e) => updateBlock(i, "name", e.target.value)} placeholder="Nombre del bloque..." style={{ ...inputStyle, flex: 2, padding: "8px 10px", fontSize: 13 }} />
-              <input type="number" value={b.duration} onChange={(e) => updateBlock(i, "duration", e.target.value)} placeholder="Min" style={{ ...inputStyle, flex: 1, padding: "8px 10px", fontSize: 13 }} />
+            <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+              <select
+                value={getBlockType(b)}
+                onChange={(e) => handleBlockType(i, e.target.value)}
+                style={{ ...inputStyle, flex: 2, padding: "8px 10px", fontSize: 13, minWidth: 120 }}
+              >
+                {BLOCK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              {getBlockType(b) === "Otro" && (
+                <input value={b.name} onChange={(e) => updateBlock(i, "name", e.target.value)} placeholder="Escribe el nombre..." style={{ ...inputStyle, flex: 2, padding: "8px 10px", fontSize: 13 }} />
+              )}
+              <input type="number" value={b.duration} onChange={(e) => updateBlock(i, "duration", e.target.value)} placeholder="Min" style={{ ...inputStyle, flex: 1, minWidth: 60, padding: "8px 10px", fontSize: 13 }} />
               <button onClick={() => removeBlock(i)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
             </div>
             <textarea value={b.content} onChange={(e) => updateBlock(i, "content", e.target.value)} placeholder="Contenido del bloque..." rows={3} style={{ ...inputStyle, resize: "vertical", fontSize: 13, padding: "8px 10px", lineHeight: 1.5, width: "100%", boxSizing: "border-box" }} />
