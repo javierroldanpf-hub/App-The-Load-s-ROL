@@ -229,6 +229,15 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
     return periodRpe.reduce((s, e) => s + e.rpe, 0) / periodRpe.length;
   }, [periodRpe]);
 
+  const avgSrpe = useMemo(() => {
+    if (!periodRpe.length) return null;
+    const loads = periodRpe.map((e) => {
+      const sess = sessions.find((s) => s.date === e.date && s.sessionType === e.sessionType);
+      return e.rpe * (Number(sess?.duration) || 0);
+    });
+    return loads.reduce((s, v) => s + v, 0) / loads.length;
+  }, [periodRpe, sessions]);
+
   // Jugadores que han completado AMBOS formularios hoy
   const completedBothToday = useMemo(() => {
     if (!todaySession) return 0;
@@ -363,7 +372,7 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
           </select>
           <span style={{ fontSize: 12, color: COLORS.text }}>· {periodSubtitle}</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
           <MetricCard
             label="Wellness Score"
             value={avgWellness}
@@ -374,6 +383,12 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
             label="RPE medio"
             value={avgRpe}
             color={rpeColor}
+            subtitle={`${periodRpe.length} registros`}
+          />
+          <MetricCard
+            label="sRPE medio"
+            value={avgSrpe !== null ? Math.round(avgSrpe) : "–"}
+            color={COLORS.text}
             subtitle={`${periodRpe.length} registros`}
           />
           <MetricCard

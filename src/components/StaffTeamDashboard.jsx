@@ -59,6 +59,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const [playerProfiles, setPlayerProfiles] = useState({});
   const [playerSort, setPlayerSort] = useState("nombre");
   const [showSessionDetail, setShowSessionDetail] = useState(false);
+  const [checkinModal, setCheckinModal] = useState(null);
 
   const refreshData = useCallback(async () => {
     const [t, w, r, s] = await Promise.all([getTeam(teamId), loadTeamWellness(teamId), loadTeamRpe(teamId), loadTeamSessions(teamId)]);
@@ -229,8 +230,66 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         <div style={{ height: 3, background: COLORS.panelRaised, borderRadius: 2, margin: "4px 30% 0" }} />
       </div>
 
-      {tab === "resumen" && (
+      {tab === "resumen" && (() => {
+        const today = todayStr();
+        const todaySessionForBoxes = sessions.find((s) => s.date === today && !s.isRest);
+        const todayW = wellness.filter((e) => e.date === today);
+        const todayR = todaySessionForBoxes ? rpe.filter((e) => e.date === today && e.sessionType === todaySessionForBoxes.sessionType) : [];
+        const totalPlayers = roster.length;
+        const wDone = roster.filter((u) => todayW.some((e) => e.username === u));
+        const rDone = roster.filter((u) => todayR.some((e) => e.username === u));
+        const bothDone = roster.filter((u) => todayW.some((e) => e.username === u) && todayR.some((e) => e.username === u));
+        const wMissing = roster.filter((u) => !todayW.some((e) => e.username === u));
+        const rMissing = roster.filter((u) => !todayR.some((e) => e.username === u));
+        const bothMissing = roster.filter((u) => !todayW.some((e) => e.username === u) || !todayR.some((e) => e.username === u));
+        const getName = (u) => displayNames[u]?.displayName || u;
+        const modalConfig = {
+          wellness: { title: "Check-in Wellness hoy", done: wDone, missing: wMissing },
+          rpe: { title: "Check-in RPE hoy", done: rDone, missing: rMissing },
+          ambos: { title: "Check-in completo hoy", done: bothDone, missing: bothMissing },
+        };
+        return (
         <>
+          {todaySessionForBoxes && (
+            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+              {[
+                { key: "wellness", label: "Wellness", done: wDone.length },
+                { key: "rpe", label: "RPE", done: rDone.length },
+                { key: "ambos", label: "Ambos", done: bothDone.length },
+              ].map(({ key, label, done }) => (
+                <div key={key} onClick={() => setCheckinModal(key)} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: "10px 12px", cursor: "pointer", flex: 1 }}>
+                  <div style={{ fontSize: 11, color: COLORS.text, fontWeight: 600, marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
+                    <span style={{ color: COLORS.lime }}>{done}</span>
+                    <span style={{ color: COLORS.text, fontSize: 14 }}>/{totalPlayers}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {checkinModal && (() => {
+            const cfg = modalConfig[checkinModal];
+            return (
+              <div onClick={() => setCheckinModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div onClick={(e) => e.stopPropagation()} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: 20, width: 300, maxHeight: "80vh", overflowY: "auto" }}>
+                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 16, color: COLORS.text, marginBottom: 16 }}>{cfg.title}</div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: COLORS.lime, fontWeight: 600, marginBottom: 6 }}>✓ Completado ({cfg.done.length})</div>
+                    {cfg.done.map((u) => (
+                      <div key={u} style={{ fontSize: 13, color: COLORS.text, padding: "3px 0" }}>{getName(u)}</div>
+                    ))}
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: COLORS.coral, fontWeight: 600, marginBottom: 6 }}>✗ Pendiente ({cfg.missing.length})</div>
+                    {cfg.missing.map((u) => (
+                      <div key={u} style={{ fontSize: 13, color: COLORS.text, padding: "3px 0" }}>{getName(u)}</div>
+                    ))}
+                  </div>
+                  <button onClick={() => setCheckinModal(null)} style={{ width: "100%", background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 0", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Cerrar</button>
+                </div>
+              </div>
+            );
+          })()}
           {/* Sub-tabs de Resumen */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", gap: 4, background: COLORS.panelRaised, borderRadius: 10, padding: 4, overflowX: "scroll", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}>
@@ -337,7 +396,8 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
             <MonthlyLoadPanel sessions={sessions} />
           )}
         </>
-      )}
+        );
+      })()}
 
       {tab === "calendario" && (
         <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly && !team.allowViewerEditCalendar} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} />
