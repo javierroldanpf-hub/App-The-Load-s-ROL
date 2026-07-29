@@ -151,10 +151,10 @@ export default function MonthlyLoadPanel({ sessions }) {
                               <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>{s.sessionType}</span>
                               <span style={{ fontSize: 11, color: COLORS.text, opacity: 0.7 }}>{s.date.slice(8, 10)}/{s.date.slice(5, 7)}</span>
                               {blocks.length > 0 && (
-                                <div style={{ display: "flex", gap: 4 }}>
+                                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                                   {blocks.map((b, bi) => (
                                     <span key={bi} style={{ fontSize: 10, background: `${blockColor(blockDisplayName(b))}33`, color: blockColor(blockDisplayName(b)), borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>
-                                      {blockDisplayName(b)}
+                                      {blockDisplayName(b)}{b.duration ? ` ${b.duration}min` : ""}
                                     </span>
                                   ))}
                                 </div>
