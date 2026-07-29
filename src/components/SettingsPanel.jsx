@@ -595,7 +595,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
               >
                 <option value="">— Seleccionar partido —</option>
                 {matchSessions.map((s) => (
-                  <option key={s.date} value={s.date}>{fmtDate(s.date)} · {s.sessionType}{s.description ? ` · ${s.description}` : ""}</option>
+                  <option key={s.date} value={s.date}>{fmtDate(s.date)} · {s.sessionType}{(() => { try { const p = JSON.parse(s.description || "{}"); return p.rivalText ? ` · ${p.rivalText}` : ""; } catch { return s.description ? ` · ${s.description}` : ""; } })()}</option>
                 ))}
               </select>
             </div>
