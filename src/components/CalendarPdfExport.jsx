@@ -121,7 +121,7 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
             )}
             {!compact && !match && blocks.map((b, i) => (
               <div key={i} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${int.border}` }}>
-                {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: int.color }}>{b.name}{b.duration ? ` · ${b.duration} min` : ""}</div>}
+                {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: int.color }}>{b.name.toUpperCase()}{b.duration ? ` · ${b.duration} min` : ""}</div>}
                 {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{b.content}</div>}
                 {b.tasks?.length > 0 && (
                   <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -387,7 +387,7 @@ function SessionContent({ team, session, date, coachName }) {
         {blocks.map((b, i) => (
           <div key={i} style={{ border: `1px solid ${D.line}`, borderRadius: 10, overflow: "hidden" }}>
             <div style={{ background: D.panelRaised, padding: "8px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontWeight: 700, fontSize: 14, color: D.text }}>{b.name || `Bloque ${i + 1}`}</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: D.text }}>{(b.name || `Bloque ${i + 1}`).toUpperCase()}</div>
               {b.duration && <div style={{ fontSize: 12, color: D.lime, fontWeight: 600 }}>{b.duration} min</div>}
             </div>
             {b.content && (
