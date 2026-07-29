@@ -129,7 +129,7 @@ export default function MonthlyLoadPanel({ sessions }) {
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                           {Object.entries(blockMins).map(([name, mins]) => (
                             <span key={name} style={{ display: "flex", alignItems: "center", gap: 4, background: `${blockColor(name)}22`, border: `1px solid ${blockColor(name)}55`, borderRadius: 6, padding: "2px 8px", fontSize: 11, color: blockColor(name), fontWeight: 600 }}>
-                              {name} <span style={{ opacity: 0.8, fontWeight: 400 }}>{mins > 0 ? `${mins} min` : "–"}</span>
+                              {name} <span style={{ opacity: 0.8, fontWeight: 400 }}>{mins > 0 ? fmtTime(mins) : "–"}</span>
                             </span>
                           ))}
                         </div>
