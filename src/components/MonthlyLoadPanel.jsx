@@ -92,15 +92,15 @@ export default function MonthlyLoadPanel({ sessions }) {
         const isOpen = !!openMonths[key];
         const count = ms.length;
 
-        // Aggregate block type counts for this month
-        const blockCounts = {};
+        // Aggregate block type total minutes for this month
+        const blockMins = {};
         ms.forEach((s) => {
           (s.parsedBlocks || []).forEach((b) => {
             const name = blockDisplayName(b);
-            blockCounts[name] = (blockCounts[name] || 0) + 1;
+            blockMins[name] = (blockMins[name] || 0) + (Number(b.duration) || 0);
           });
         });
-        const hasBlocks = Object.keys(blockCounts).length > 0;
+        const hasBlocks = Object.keys(blockMins).length > 0;
 
         return (
           <div key={key} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 12, overflow: "hidden" }}>
@@ -127,9 +127,9 @@ export default function MonthlyLoadPanel({ sessions }) {
                       <div style={{ background: COLORS.panelRaised, borderRadius: 8, padding: "8px 10px", marginBottom: 4 }}>
                         <div style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, marginBottom: 6 }}>Tipos de bloque este mes</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          {Object.entries(blockCounts).map(([name, cnt]) => (
+                          {Object.entries(blockMins).map(([name, mins]) => (
                             <span key={name} style={{ display: "flex", alignItems: "center", gap: 4, background: `${blockColor(name)}22`, border: `1px solid ${blockColor(name)}55`, borderRadius: 6, padding: "2px 8px", fontSize: 11, color: blockColor(name), fontWeight: 600 }}>
-                              {name} <span style={{ opacity: 0.8, fontWeight: 400 }}>×{cnt}</span>
+                              {name} <span style={{ opacity: 0.8, fontWeight: 400 }}>{mins > 0 ? `${mins} min` : "–"}</span>
                             </span>
                           ))}
                         </div>
