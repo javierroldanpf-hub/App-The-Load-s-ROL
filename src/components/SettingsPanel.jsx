@@ -159,12 +159,15 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
   const [transferring, setTransferring] = useState(false);
 
   // Injury form state
-  const [injuryFormFor, setInjuryFormFor] = useState(null);
+  const [injuryFormFor, setInjuryFormFor] = useState(null); // username or null
+  const [injuryFormMode, setInjuryFormMode] = useState("new"); // "new" | "edit" | "alta"
   const [injuryType, setInjuryType] = useState(INJURY_TYPES[0]);
   const [injuryZone, setInjuryZone] = useState("");
   const [injuryZoneCustom, setInjuryZoneCustom] = useState("");
   const [injuryLaterality, setInjuryLaterality] = useState(LATERALITY[0]);
   const [injuryStartDate, setInjuryStartDate] = useState(todayStr());
+  const [injuryEndDate, setInjuryEndDate] = useState(todayStr());
+  const [editingInjuryId, setEditingInjuryId] = useState(null);
 
   useEffect(() => {
     setIsTrainingGroup(team.isTrainingGroup || false);
@@ -205,11 +208,33 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
   // ── Open injury form ─────────────────────────────────────────────────────
   const startMarkInjured = (username) => {
     setInjuryFormFor(username);
+    setInjuryFormMode("new");
     setInjuryType(INJURY_TYPES[0]);
     setInjuryZone(INJURY_ZONES[INJURY_TYPES[0]][0]);
     setInjuryZoneCustom("");
     setInjuryLaterality(LATERALITY[0]);
     setInjuryStartDate(todayStr());
+    setEditingInjuryId(null);
+  };
+
+  const startEditInjury = (username, activeInjury) => {
+    setInjuryFormFor(username);
+    setInjuryFormMode("edit");
+    setInjuryType(activeInjury.type || INJURY_TYPES[0]);
+    const zones = INJURY_ZONES[activeInjury.type] || [];
+    const knownZone = zones.find((z) => z === activeInjury.zone);
+    setInjuryZone(knownZone || (zones.includes("Otra") ? "Otra" : zones.includes("Otro") ? "Otro" : zones[0] || ""));
+    setInjuryZoneCustom(knownZone ? "" : activeInjury.zone || "");
+    setInjuryLaterality(activeInjury.laterality || LATERALITY[0]);
+    setInjuryStartDate(activeInjury.startDate || todayStr());
+    setEditingInjuryId(activeInjury.id);
+  };
+
+  const startAltaInjury = (username, activeInjury) => {
+    setInjuryFormFor(username);
+    setInjuryFormMode("alta");
+    setInjuryEndDate(todayStr());
+    setEditingInjuryId(activeInjury.id);
   };
 
   const cancelInjuryForm = () => setInjuryFormFor(null);
@@ -234,15 +259,39 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     await save({ injuredPlayers: next, playerInjuries: injuries });
   };
 
-  // ── Close active injury ──────────────────────────────────────────────────
-  const unmarkInjured = async (username) => {
+  const confirmEditInjury = async (username) => {
+    const list = (team.playerInjuries || {})[username] || [];
+    const updated = list.map((inj) => inj.id === editingInjuryId
+      ? { ...inj, type: injuryType, zone: resolvedZone, laterality: injuryLaterality, startDate: injuryStartDate }
+      : inj
+    );
+    const injuries = { ...(team.playerInjuries || {}), [username]: updated };
+    setInjuryFormFor(null);
+    await save({ playerInjuries: injuries });
+  };
+
+  const confirmAlta = async (username) => {
     const next = injuredPlayers.filter((u) => u !== username);
     setInjuredPlayers(next);
-    const today = todayStr();
     const list = (team.playerInjuries || {})[username] || [];
-    const closed = list.map((inj) => inj.endDate ? inj : { ...inj, endDate: today });
+    const closed = list.map((inj) => inj.id === editingInjuryId ? { ...inj, endDate: injuryEndDate } : inj);
     const injuries = { ...(team.playerInjuries || {}), [username]: closed };
+    setInjuryFormFor(null);
     await save({ injuredPlayers: next, playerInjuries: injuries });
+  };
+
+  // ── Close active injury (quick, kept for back-compat) ───────────────────
+  const unmarkInjured = async (username, activeInjury) => {
+    if (activeInjury) {
+      startAltaInjury(username, activeInjury);
+    } else {
+      const next = injuredPlayers.filter((u) => u !== username);
+      setInjuredPlayers(next);
+      const list = (team.playerInjuries || {})[username] || [];
+      const closed = list.map((inj) => inj.endDate ? inj : { ...inj, endDate: todayStr() });
+      const injuries = { ...(team.playerInjuries || {}), [username]: closed };
+      await save({ injuredPlayers: next, playerInjuries: injuries });
+    }
   };
 
   // ── Remove from team ─────────────────────────────────────────────────────
@@ -388,8 +437,15 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                       </div>
                     )}
                   </div>
+                  {isInjured && activeInjury && (
+                    <button
+                      onClick={() => startEditInjury(username, activeInjury)}
+                      style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                      Editar
+                    </button>
+                  )}
                   <button
-                    onClick={() => isInjured ? unmarkInjured(username) : startMarkInjured(username)}
+                    onClick={() => isInjured ? unmarkInjured(username, activeInjury) : startMarkInjured(username)}
                     style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${isInjured ? COLORS.coral : COLORS.line}`, background: isInjured ? COLORS.coralDark : "transparent", color: isInjured ? COLORS.coral : COLORS.text, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                     {isInjured ? "🤕 Alta" : "Marcar lesión"}
                   </button>
@@ -400,9 +456,25 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                   </button>
                 </div>
 
-                {showForm && (
+                {showForm && injuryFormMode === "alta" && (
                   <div style={{ background: "#1c1216", border: `1px solid ${COLORS.coral}`, borderTop: "none", borderRadius: "0 0 10px 10px", padding: "12px 14px" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.coral, marginBottom: 12 }}>Nueva lesión — {name}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.coral, marginBottom: 12 }}>Dar de alta — {name}</div>
+                    <div>
+                      <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 4 }}>Fecha de alta</div>
+                      <input type="date" value={injuryEndDate} onChange={(e) => setInjuryEndDate(e.target.value)} style={{ ...inp, width: "100%", colorScheme: "dark" }} />
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <button onClick={cancelInjuryForm} style={{ flex: 1, padding: "8px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancelar</button>
+                      <button onClick={() => confirmAlta(username)} disabled={saving} style={{ flex: 2, padding: "8px 0", borderRadius: 9, border: "none", background: COLORS.coral, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Confirmar alta</button>
+                    </div>
+                  </div>
+                )}
+
+                {showForm && (injuryFormMode === "new" || injuryFormMode === "edit") && (
+                  <div style={{ background: "#1c1216", border: `1px solid ${COLORS.coral}`, borderTop: "none", borderRadius: "0 0 10px 10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.coral, marginBottom: 12 }}>
+                      {injuryFormMode === "edit" ? `Editar lesión — ${name}` : `Nueva lesión — ${name}`}
+                    </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                       <div>
                         <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 4 }}>Tipo de lesión</div>
@@ -438,7 +510,12 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                     </div>
                     <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                       <button onClick={cancelInjuryForm} style={{ flex: 1, padding: "8px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancelar</button>
-                      <button onClick={() => confirmInjury(username)} disabled={saving} style={{ flex: 2, padding: "8px 0", borderRadius: 9, border: "none", background: COLORS.coral, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Confirmar lesión</button>
+                      <button
+                        onClick={() => injuryFormMode === "edit" ? confirmEditInjury(username) : confirmInjury(username)}
+                        disabled={saving}
+                        style={{ flex: 2, padding: "8px 0", borderRadius: 9, border: "none", background: COLORS.coral, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                        {injuryFormMode === "edit" ? "Guardar cambios" : "Confirmar lesión"}
+                      </button>
                     </div>
                   </div>
                 )}
