@@ -122,7 +122,8 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
     } catch { return { blocks: [], rivalText: raw || "", rivalPhoto: "" }; }
   };
   const parsed = parseDesc(existing?.description);
-  const [blocks, setBlocks] = useState(parsed.blocks.length > 0 ? parsed.blocks : []);
+  const existingAthleteNote = parsed.blocks.find((b) => b.name === "Nota del atleta") || null;
+  const [blocks, setBlocks] = useState(parsed.blocks.filter((b) => b.name !== "Nota del atleta").length > 0 ? parsed.blocks.filter((b) => b.name !== "Nota del atleta") : []);
   const [description, setDescription] = useState(parsed.rivalText);
   const [rivalPhoto, setRivalPhoto] = useState(parsed.rivalPhoto || "");
   const [isRest, setIsRest] = useState(existing ? !!existing.isRest : false);
@@ -170,7 +171,8 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   const handleSaveGroup = async () => {
     setSaving(true);
     try {
-      const finalDesc = isMatch ? JSON.stringify({ rivalText: description, rivalPhoto }) : JSON.stringify({ blocks });
+      const allBlocks = existingAthleteNote ? [...blocks, existingAthleteNote] : blocks;
+      const finalDesc = isMatch ? JSON.stringify({ rivalText: description, rivalPhoto }) : JSON.stringify({ blocks: allBlocks });
       await onSaveGroup({ sessionType, intensity, duration: parseInt(duration) || 0, description: finalDesc, isRest, isMatch, allowPlayerNote }, extraDates);
     } finally { setSaving(false); }
   };

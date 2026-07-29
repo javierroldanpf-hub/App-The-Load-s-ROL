@@ -111,6 +111,7 @@ function parseMatchDesc(description) {
 function SessionCard({ session, showGroup, showInd, compact = false, displayNames }) {
   if (!session) return null;
   const blocks = parseBlocks(session.description);
+  const athleteNote = parseAthleteNote(session.description);
   const int = INT[session.intensity] || INT.amarillo;
   const match = session.isMatch ? parseMatchDesc(session.description) : null;
   return (
@@ -147,6 +148,12 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                 )}
               </div>
             ))}
+            {!compact && athleteNote?.content && (
+              <div style={{ marginTop: 5, paddingLeft: 7, borderLeft: `2px solid ${D.lime}` }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: D.lime, marginBottom: 1 }}>NOTA DEL ATLETA</div>
+                <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{athleteNote.content}</div>
+              </div>
+            )}
           </div>
         )
       )}
