@@ -78,7 +78,7 @@ function ChangePasswordSection({ user }) {
   );
 }
 
-export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sessions = [], rpe = [], coachTeamIds = [], coachUsername = "", onTeamDeleted, user = null }) {
+export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sessions = [], rpe = [], coachTeamIds = [], coachUsername = "", onTeamDeleted, user = null, readOnly = false }) {
   const roster = teamWithPhotos?.roster || [];
   const [saving, setSaving] = useState(false);
   const [coachTeams, setCoachTeams] = useState([]);
@@ -263,6 +263,23 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
   };
 
   const zoneOptions = INJURY_ZONES[injuryType] || [];
+
+  if (readOnly) {
+    return (
+      <div>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.text, marginBottom: 20 }}>Ajustes</div>
+        <Accordion title="Exportar PDF — Ajustes de informe">
+          <PdfSettingsSection team={team} save={save} />
+        </Accordion>
+        <Accordion title="Notificaciones">
+          <NotifSection coachUsername={user?.username || ""} team={team} teamWithPhotos={teamWithPhotos} />
+        </Accordion>
+        <Accordion title="Cambiar contraseña">
+          <ChangePasswordSection user={user} />
+        </Accordion>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -538,15 +555,27 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       </Accordion>
 
       <Accordion title="Permisos de acceso">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${COLORS.line}` }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>Permitir edición del calendario al entrenador lector</div>
-            <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7, marginTop: 3 }}>El staff_viewer podrá crear y editar sesiones en la pestaña de planificación</div>
+            <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7, marginTop: 3 }}>El entrenador lector podrá crear y editar sesiones en la pestaña de planificación</div>
           </div>
           <input
             type="checkbox"
             checked={!!team.allowViewerEditCalendar}
             onChange={async (e) => { await save({ allowViewerEditCalendar: e.target.checked }); }}
+            style={{ width: 20, height: 20, accentColor: COLORS.lime, cursor: "pointer", flexShrink: 0, marginLeft: 12 }}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>Permitir ver los avisos al entrenador lector</div>
+            <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7, marginTop: 3 }}>El entrenador lector podrá ver los avisos de los jugadores, pero no podrá enviarlos</div>
+          </div>
+          <input
+            type="checkbox"
+            checked={!!team.allowViewerSeeMessages}
+            onChange={async (e) => { await save({ allowViewerSeeMessages: e.target.checked }); }}
             style={{ width: 20, height: 20, accentColor: COLORS.lime, cursor: "pointer", flexShrink: 0, marginLeft: 12 }}
           />
         </div>

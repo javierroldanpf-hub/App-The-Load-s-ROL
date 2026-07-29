@@ -126,12 +126,13 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
     return "masculino";
   })();
 
+  const viewerCanSeeMessages = readOnly && team.allowViewerSeeMessages;
   const mainTabs = [
     { id: "resumen", label: "Datos de Carga" },
     { id: "calendario", label: "Planificación" },
-    ...(!readOnly ? [{ id: "mensajes", label: unreadCount > 0 ? `Avisos (${unreadCount})` : "Avisos" }] : []),
+    ...(!readOnly || viewerCanSeeMessages ? [{ id: "mensajes", label: unreadCount > 0 ? `Avisos (${unreadCount})` : "Avisos" }] : []),
     { id: "fisicos", label: "Datos Físicos" },
-    ...(!readOnly ? [{ id: "ajustes", label: "Ajustes" }] : []),
+    { id: "ajustes", label: "Ajustes" },
   ];
 
   const resumenSubTabs = [
@@ -181,9 +182,13 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         <div style={{ background: COLORS.amberDark, border: `1px solid ${COLORS.amber}`, borderRadius: 10, padding: "8px 14px", marginBottom: 14, marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 14 }}>{team.allowViewerEditCalendar ? "✏️" : "👁️"}</span>
           <span style={{ fontSize: 12, color: COLORS.amber, fontWeight: 600 }}>
-            {team.allowViewerEditCalendar
-              ? "Modo lectura · El entrenador principal te ha dado permiso para editar la planificación"
-              : "Modo solo lectura — no puedes editar ni enviar cambios"}
+            {(() => {
+              const perms = [];
+              if (team.allowViewerEditCalendar) perms.push("editar la planificación");
+              if (team.allowViewerSeeMessages) perms.push("ver los avisos");
+              if (perms.length > 0) return `Modo lectura · El entrenador principal te ha dado permiso para ${perms.join(" y ")}`;
+              return "Modo solo lectura — no puedes editar ni enviar cambios";
+            })()}
           </span>
         </div>
       )}
@@ -402,7 +407,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       )}
 
       {tab === "mensajes" && (
-        <MessagesTab team={teamWithPhotos} wellness={wellness} rpe={rpe} onDataRefresh={refreshData} />
+        <MessagesTab team={teamWithPhotos} wellness={wellness} rpe={rpe} onDataRefresh={refreshData} readOnly={viewerCanSeeMessages} />
       )}
 
       {tab === "fisicos" && (
@@ -410,7 +415,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       )}
 
       {tab === "ajustes" && (
-        <SettingsPanel team={team} teamWithPhotos={teamWithPhotos} onTeamUpdate={handleTeamUpdate} sessions={sessions} rpe={rpe} coachTeamIds={user?.teamIds || user?.team_ids || []} coachUsername={user?.username || ""} onTeamDeleted={onBack} user={user} />
+        <SettingsPanel team={team} teamWithPhotos={teamWithPhotos} onTeamUpdate={handleTeamUpdate} sessions={sessions} rpe={rpe} coachTeamIds={user?.teamIds || user?.team_ids || []} coachUsername={user?.username || ""} onTeamDeleted={onBack} user={user} readOnly={readOnly} />
       )}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} readOnly={readOnly} />}

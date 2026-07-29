@@ -187,8 +187,8 @@ function SentAlertsList({ team }) {
 }
 
 // ── Main tab ──────────────────────────────────────────────────────────────────
-export default function MessagesTab({ team, wellness, rpe, onDataRefresh }) {
-  const [filter, setFilter] = useState("avisos");
+export default function MessagesTab({ team, wellness, rpe, onDataRefresh, readOnly = false }) {
+  const [filter, setFilter] = useState(readOnly ? "avisos" : "avisos");
   const [activeComment, setActiveComment] = useState(null);
   const [localRead, setLocalRead] = useState(new Set());
   const [sentKey, setSentKey] = useState(0);
@@ -226,7 +226,7 @@ export default function MessagesTab({ team, wellness, rpe, onDataRefresh }) {
   const unreadComments = useMemo(() => wellness.filter((e) => e.comment && !e.commentRead).length + rpe.filter((e) => e.comment && !e.commentRead).length, [wellness, rpe]);
 
   const TABS = [
-    { id: "enviar",             label: "Enviar aviso" },
+    ...(!readOnly ? [{ id: "enviar", label: "Enviar aviso" }] : []),
     { id: "avisos",             label: "Avisos enviados" },
     { id: "comentarios_unread", label: `Sin leer${unreadComments > 0 ? ` (${unreadComments})` : ""}` },
     { id: "comentarios_all",    label: "Todos" },

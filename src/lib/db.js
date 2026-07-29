@@ -743,6 +743,7 @@ function dbTeamToApp(r) {
     sjDayMinutes: raw?.sjDayMinutes || null,
     sjPercentages: raw?.sjPercentages || null,
     allowViewerEditCalendar: raw?.allowViewerEditCalendar || false,
+    allowViewerSeeMessages: raw?.allowViewerSeeMessages || false,
     crestUrl: r.crest_url || null,
   };
 }
@@ -780,6 +781,7 @@ function appTeamToDb(team) {
       sjDayMinutes: team.sjDayMinutes || null,
       sjPercentages: team.sjPercentages || null,
       allowViewerEditCalendar: team.allowViewerEditCalendar || false,
+      allowViewerSeeMessages: team.allowViewerSeeMessages || false,
     },
     crest_url: team.crestUrl || null,
   };
