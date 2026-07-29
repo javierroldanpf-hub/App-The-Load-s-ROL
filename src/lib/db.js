@@ -25,6 +25,16 @@ export async function getUser(username) {
   } catch { return null; }
 }
 
+export async function getTeamViewers(teamId) {
+  try {
+    const sb = getSupabase();
+    const { data } = await sb.from("profiles").select("username, display_name, photo_url, team_ids").eq("role", "staff_viewer");
+    return (data || [])
+      .filter((r) => Array.isArray(r.team_ids) && r.team_ids.includes(teamId))
+      .map((r) => ({ username: r.username, displayName: r.display_name || r.username, photoUrl: r.photo_url || null }));
+  } catch { return []; }
+}
+
 export async function getUsersDisplayNames(usernames, teamId) {
   if (!usernames || usernames.length === 0) return {};
   try {
@@ -744,6 +754,7 @@ function dbTeamToApp(r) {
     sjPercentages: raw?.sjPercentages || null,
     allowViewerEditCalendar: raw?.allowViewerEditCalendar || false,
     allowViewerSeeMessages: raw?.allowViewerSeeMessages || false,
+    viewerPermissions: raw?.viewerPermissions || {},
     crestUrl: r.crest_url || null,
   };
 }
@@ -782,6 +793,7 @@ function appTeamToDb(team) {
       sjPercentages: team.sjPercentages || null,
       allowViewerEditCalendar: team.allowViewerEditCalendar || false,
       allowViewerSeeMessages: team.allowViewerSeeMessages || false,
+      viewerPermissions: team.viewerPermissions || {},
     },
     crest_url: team.crestUrl || null,
   };

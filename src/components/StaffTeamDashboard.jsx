@@ -126,7 +126,12 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
     return "masculino";
   })();
 
-  const viewerCanSeeMessages = readOnly && team.allowViewerSeeMessages;
+  const viewerUsername = user?.username || "";
+  const viewerPerms = readOnly ? ((team.viewerPermissions || {})[viewerUsername] || {}) : {};
+  // Per-viewer permissions (fall back to legacy team-wide flags for backward compat)
+  const viewerCanEditCalendar = readOnly && (viewerPerms.canEditCalendar ?? team.allowViewerEditCalendar ?? false);
+  const viewerCanSeeMessages = readOnly && (viewerPerms.canSeeMessages ?? team.allowViewerSeeMessages ?? false);
+
   const mainTabs = [
     { id: "resumen", label: "Datos de Carga" },
     { id: "calendario", label: "Planificación" },
@@ -183,10 +188,10 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
           <span style={{ fontSize: 14 }}>{team.allowViewerEditCalendar ? "✏️" : "👁️"}</span>
           <span style={{ fontSize: 12, color: COLORS.amber, fontWeight: 600 }}>
             {(() => {
-              const perms = [];
-              if (team.allowViewerEditCalendar) perms.push("editar la planificación");
-              if (team.allowViewerSeeMessages) perms.push("ver los avisos");
-              if (perms.length > 0) return `Modo lectura · El entrenador principal te ha dado permiso para ${perms.join(" y ")}`;
+              const ps = [];
+              if (viewerCanEditCalendar) ps.push("editar la planificación");
+              if (viewerCanSeeMessages) ps.push("ver los avisos");
+              if (ps.length > 0) return `Modo lectura · El entrenador principal te ha dado permiso para ${ps.join(" y ")}`;
               return "Modo solo lectura — no puedes editar ni enviar cambios";
             })()}
           </span>
@@ -403,7 +408,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       })()}
 
       {tab === "calendario" && (
-        <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly && !team.allowViewerEditCalendar} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} />
+        <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly && !viewerCanEditCalendar} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} />
       )}
 
       {tab === "mensajes" && (

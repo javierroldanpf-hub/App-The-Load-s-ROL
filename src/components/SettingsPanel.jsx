@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/constants";
-import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam, getUser, saveUser } from "@/lib/db";
+import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam, getUser, saveUser, getTeamViewers } from "@/lib/db";
 import { simpleHash } from "@/lib/utils";
 import Avatar from "./Avatar";
 
@@ -75,6 +75,68 @@ function ChangePasswordSection({ user }) {
         {busy ? "Guardando..." : "Cambiar contraseña"}
       </button>
     </div>
+  );
+}
+
+function ViewerPermissionsSection({ team, save }) {
+  const [viewers, setViewers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getTeamViewers(team.teamId).then((v) => { setViewers(v); setLoading(false); });
+  }, [team.teamId]);
+
+  const perms = team.viewerPermissions || {};
+
+  const toggle = async (username, field) => {
+    const current = perms[username] || {};
+    const updated = { ...perms, [username]: { ...current, [field]: !current[field] } };
+    await save({ viewerPermissions: updated });
+  };
+
+  const Toggle = ({ checked, onChange }) => (
+    <button onClick={onChange} style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", position: "relative", background: checked ? COLORS.lime : COLORS.panelRaised, flexShrink: 0, transition: "background 0.2s" }}>
+      <span style={{ position: "absolute", top: 2, left: checked ? 22 : 2, width: 20, height: 20, borderRadius: "50%", background: checked ? "#14171c" : COLORS.textFaint, transition: "left 0.2s" }} />
+    </button>
+  );
+
+  return (
+    <Accordion title="Permisos de acceso Staff">
+      {loading ? (
+        <div style={{ fontSize: 13, color: COLORS.text, padding: "8px 0" }}>Cargando entrenadores lectores...</div>
+      ) : viewers.length === 0 ? (
+        <div style={{ fontSize: 13, color: COLORS.text, opacity: 0.6, padding: "8px 0" }}>No hay entrenadores lectores vinculados a este equipo.</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingTop: 6 }}>
+          {viewers.map((v, idx) => {
+            const p = perms[v.username] || {};
+            return (
+              <div key={v.username} style={{ background: COLORS.panelRaised, borderRadius: 10, padding: "12px 14px", borderBottom: idx < viewers.length - 1 ? `1px solid ${COLORS.line}` : "none" }}>
+                <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: COLORS.text, marginBottom: 10 }}>
+                  {v.displayName}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>Editar planificación</div>
+                      <div style={{ fontSize: 11, color: COLORS.text, opacity: 0.65, marginTop: 2 }}>Puede crear y editar sesiones en el calendario</div>
+                    </div>
+                    <Toggle checked={!!p.canEditCalendar} onChange={() => toggle(v.username, "canEditCalendar")} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>Ver avisos</div>
+                      <div style={{ fontSize: 11, color: COLORS.text, opacity: 0.65, marginTop: 2 }}>Puede ver los avisos de los jugadores (no enviar)</div>
+                    </div>
+                    <Toggle checked={!!p.canSeeMessages} onChange={() => toggle(v.username, "canSeeMessages")} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Accordion>
   );
 }
 
@@ -554,32 +616,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
         <NotifSection coachUsername={coachUsername} team={team} teamWithPhotos={teamWithPhotos} />
       </Accordion>
 
-      <Accordion title="Permisos de acceso">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${COLORS.line}` }}>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>Permitir edición del calendario al entrenador lector</div>
-            <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7, marginTop: 3 }}>El entrenador lector podrá crear y editar sesiones en la pestaña de planificación</div>
-          </div>
-          <input
-            type="checkbox"
-            checked={!!team.allowViewerEditCalendar}
-            onChange={async (e) => { await save({ allowViewerEditCalendar: e.target.checked }); }}
-            style={{ width: 20, height: 20, accentColor: COLORS.lime, cursor: "pointer", flexShrink: 0, marginLeft: 12 }}
-          />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>Permitir ver los avisos al entrenador lector</div>
-            <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7, marginTop: 3 }}>El entrenador lector podrá ver los avisos de los jugadores, pero no podrá enviarlos</div>
-          </div>
-          <input
-            type="checkbox"
-            checked={!!team.allowViewerSeeMessages}
-            onChange={async (e) => { await save({ allowViewerSeeMessages: e.target.checked }); }}
-            style={{ width: 20, height: 20, accentColor: COLORS.lime, cursor: "pointer", flexShrink: 0, marginLeft: 12 }}
-          />
-        </div>
-      </Accordion>
+      <ViewerPermissionsSection team={team} save={save} />
 
       {saving && <div style={{ fontSize: 12, color: COLORS.lime, textAlign: "center", marginTop: 8 }}>Guardando...</div>}
 
