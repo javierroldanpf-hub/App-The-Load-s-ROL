@@ -1161,7 +1161,7 @@ function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose })
           <div
             key={pageIdx}
             ref={(el) => { pageRefs.current[pageIdx] = el; }}
-            style={{ background: "#14171c", borderRadius: 16, padding: "1.5rem", width: 640, flexShrink: 0 }}
+            style={{ background: "#14171c", borderRadius: 16, padding: "1.5rem", width: 640, flexShrink: 0, boxSizing: "border-box", display: "flex", flexDirection: "column", minHeight: 900 }}
           >
             {/* Cabecera del equipo en cada página */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, paddingBottom: 12, borderBottom: `2px solid ${COLORS.lime}` }}>
@@ -1175,7 +1175,12 @@ function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose })
               <div style={{ fontSize: 11, color: COLORS.text }}>Pág. {pageIdx + 1} / {pages.length}</div>
             </div>
 
-            {pagePlayers.map((player, idx) => {
+            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            {Array.from({ length: PLAYERS_PER_PAGE }).map((_, idx) => {
+              const player = pagePlayers[idx];
+              if (!player) {
+                return <div key={`empty-${idx}`} style={{ flex: 1, borderTop: idx > 0 ? `1px solid ${COLORS.line}` : "none" }} />;
+              }
               const prof = playerProfiles[player.username] || {};
               const entry = latestEntryFor(player.username) || {};
               const bw = entry.bodyWeight ?? entry.weight ?? null;
@@ -1188,7 +1193,7 @@ function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose })
               const isInjured = (team.injuredPlayers || []).includes(player.username);
 
               return (
-                <div key={player.username} style={{ marginBottom: idx < pagePlayers.length - 1 ? 18 : 0, paddingBottom: idx < pagePlayers.length - 1 ? 16 : 0, borderBottom: idx < pagePlayers.length - 1 ? `1px solid ${COLORS.line}` : "none" }}>
+                <div key={player.username} style={{ flex: 1, paddingBottom: 12, paddingTop: idx > 0 ? 12 : 0, borderTop: idx > 0 ? `1px solid ${COLORS.line}` : "none", overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8, background: COLORS.panel, borderRadius: 10, padding: "8px 12px" }}>
                     <Avatar name={player.displayName || player.username} photoUrl={player.photoUrl} size={38} isInjured={isInjured} />
                     <div style={{ flex: 1 }}>
@@ -1236,6 +1241,7 @@ function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose })
                 </div>
               );
             })}
+            </div>
           </div>
         ))}
       </div>
