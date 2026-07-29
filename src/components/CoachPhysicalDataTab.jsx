@@ -1067,8 +1067,182 @@ export function CustomMetricEditor({ team, onSave }) {
   );
 }
 
+function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose }) {
+  const reportRef = useRef();
+  const [downloading, setDownloading] = useState(false);
+  const [exportingXlsx, setExportingXlsx] = useState(false);
+
+  const fmtDate = (d) => { if (!d) return null; const [y, m, day] = d.split("-"); return `${day}/${m}/${y}`; };
+  const age = (bdate) => bdate ? Math.floor((Date.now() - new Date(bdate)) / (1000 * 60 * 60 * 24 * 365.25)) : null;
+
+  const roster = (team.roster || []).map((u) => typeof u === "string" ? { username: u, displayName: u } : u);
+
+  const latestEntryFor = (username) => {
+    const entries = allPhysical.filter((e) => e.username === username);
+    return entries.reduce((best, e) => (!best || e.date > best.date) ? e : best, null);
+  };
+
+  const handlePdf = async () => {
+    setDownloading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).jsPDF;
+      const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: "#14171c", useCORS: true, allowTaint: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width / 2, canvas.height / 2] });
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`datos-fisicos-equipo-${team.name}-${todayStr()}.pdf`);
+    } catch (e) { console.error(e); }
+    finally { setDownloading(false); }
+  };
+
+  const handleXlsx = async () => {
+    setExportingXlsx(true);
+    try {
+      const XLSX = (await import("xlsx")).default || (await import("xlsx"));
+      const rows = roster.map((player) => {
+        const prof = playerProfiles[player.username] || {};
+        const entry = latestEntryFor(player.username) || {};
+        const injuries = (team.playerInjuries || {})[player.username] || [];
+        const active = injuries.filter((i) => !i.endDate).map((i) => `${i.type} · ${i.zone} (${i.laterality}, desde ${fmtDate(i.startDate) || "–"})`).join(" | ");
+        const closed = injuries.filter((i) => i.endDate).map((i) => `${i.type} · ${i.zone} (${fmtDate(i.startDate) || "–"} → ${fmtDate(i.endDate) || "–"})`).join(" | ");
+        const freeText = (team.playerInjuryHistories || {})[player.username] || "";
+        const bw = entry.bodyWeight ?? entry.weight ?? null;
+        const a = age(prof.birthDate);
+        return {
+          "Nombre": player.displayName || player.username,
+          "Posición": player.position || prof.position || "",
+          "Fecha nacimiento": prof.birthDate ? fmtDate(prof.birthDate) : "",
+          "Edad": a != null ? a : "",
+          "Altura (cm)": prof.height || "",
+          "Peso (kg)": bw || "",
+          "Pierna dominante": prof.dominantLeg || "",
+          "Brazo dominante": prof.dominantArm || "",
+          "Lesiones activas": active,
+          "Lesiones anteriores": closed,
+          "Historial lesivo": freeText,
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Datos físicos");
+      XLSX.writeFile(wb, `datos-fisicos-${team.name}-${todayStr()}.xlsx`);
+    } catch (e) { console.error(e); }
+    finally { setExportingXlsx(false); }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", flexDirection: "column", zIndex: 100 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.8rem 1.5rem", background: COLORS.panel, borderBottom: `1px solid ${COLORS.line}`, flexShrink: 0 }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 17, color: COLORS.text }}>Informe físico del equipo · {team.name}</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={handleXlsx} disabled={exportingXlsx} style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: exportingXlsx ? "#2a5a2a" : "#217346", color: "#fff", fontWeight: 700, fontSize: 13, cursor: exportingXlsx ? "default" : "pointer" }}>
+            {exportingXlsx ? "Generando..." : "📊 Exportar Excel"}
+          </button>
+          <button onClick={handlePdf} disabled={downloading} style={{ padding: "8px 18px", borderRadius: 10, border: "none", background: downloading ? "#5a8a1a" : COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: downloading ? "default" : "pointer" }}>
+            {downloading ? "Generando..." : "Descargar PDF"}
+          </button>
+          <button onClick={onClose} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cerrar</button>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem" }}>
+        <div ref={reportRef} style={{ background: "#14171c", borderRadius: 16, padding: "1.5rem", maxWidth: 640, margin: "0 auto" }}>
+          {/* Cabecera del equipo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24, paddingBottom: 14, borderBottom: `2px solid ${COLORS.lime}` }}>
+            <Avatar name={team.name} photoUrl={team.crestUrl} size={48} square />
+            <div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 22, color: COLORS.text }}>{team.name}</div>
+              <div style={{ fontSize: 12, color: COLORS.text, marginTop: 2 }}>Informe físico completo · {fmtDate(todayStr())}</div>
+            </div>
+          </div>
+
+          {roster.map((player, idx) => {
+            const prof = playerProfiles[player.username] || {};
+            const entry = latestEntryFor(player.username) || {};
+            const bw = entry.bodyWeight ?? entry.weight ?? null;
+            const a = age(prof.birthDate);
+            const injuries = (team.playerInjuries || {})[player.username] || [];
+            const active = injuries.filter((i) => !i.endDate);
+            const closed = injuries.filter((i) => i.endDate);
+            const freeText = (team.playerInjuryHistories || {})[player.username] || "";
+            const hasInjuries = injuries.length > 0 || freeText;
+            const isInjured = (team.injuredPlayers || []).includes(player.username);
+
+            return (
+              <div key={player.username} style={{ marginBottom: 24, paddingBottom: 20, borderBottom: idx < roster.length - 1 ? `1px solid ${COLORS.line}` : "none" }}>
+                {/* Header jugador */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, background: COLORS.panel, borderRadius: 12, padding: "10px 14px" }}>
+                  <Avatar name={player.displayName || player.username} photoUrl={player.photoUrl} size={44} isInjured={isInjured} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: COLORS.text }}>{player.displayName || player.username}</div>
+                    <div style={{ fontSize: 12, color: COLORS.text, marginTop: 2 }}>
+                      {team.isTrainingGroup ? ((team.playerSpecificTests || {})[player.username] || "Sin modalidad") : (player.position || prof.position || "Sin posición")}
+                      {isInjured && <span style={{ marginLeft: 8, color: COLORS.coral, fontWeight: 600 }}>🤕 Lesionado</span>}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: COLORS.text, textAlign: "right" }}>
+                    {entry.date && <div>Última medición: <span style={{ color: COLORS.lime, fontWeight: 600 }}>{fmtDate(entry.date)}</span></div>}
+                  </div>
+                </div>
+
+                {/* Datos personales */}
+                {(prof.birthDate || prof.height || bw || prof.dominantLeg || prof.dominantArm) && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 10 }}>
+                    {[
+                      prof.birthDate && `Nac. ${fmtDate(prof.birthDate)}${a != null ? ` (${a}a)` : ""}`,
+                      prof.height && `Altura: ${prof.height} cm`,
+                      bw && `Peso: ${bw} kg`,
+                      prof.dominantLeg && `Pierna: ${prof.dominantLeg}`,
+                      prof.dominantArm && `Brazo: ${prof.dominantArm}`,
+                    ].filter(Boolean).map((item) => (
+                      <span key={item} style={{ background: COLORS.panelRaised, borderRadius: 7, padding: "5px 10px", fontSize: 11, color: COLORS.text }}>{item}</span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Historial lesivo */}
+                {hasInjuries && (
+                  <div style={{ marginTop: 4 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.coral, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Lesiones</div>
+                    {active.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 6 }}>
+                        {active.map((inj) => (
+                          <div key={inj.id} style={{ background: COLORS.coralDark, border: `1px solid ${COLORS.coral}`, borderRadius: 7, padding: "5px 10px", fontSize: 11, color: COLORS.coral, fontWeight: 600 }}>
+                            🤕 {inj.type} · {inj.zone} · {inj.laterality} · desde {fmtDate(inj.startDate) || "–"}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {closed.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 6 }}>
+                        {closed.map((inj) => (
+                          <div key={inj.id} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 7, padding: "5px 10px", fontSize: 11, color: COLORS.text }}>
+                            {inj.type} · {inj.zone} · {inj.laterality} · {fmtDate(inj.startDate) || "–"} → {fmtDate(inj.endDate) || "–"}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {freeText && (
+                      <div style={{ background: COLORS.panelRaised, borderRadius: 7, padding: "7px 10px", fontSize: 11, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{freeText}</div>
+                    )}
+                  </div>
+                )}
+
+                {!hasInjuries && (
+                  <div style={{ fontSize: 11, color: COLORS.text, opacity: 0.5 }}>Sin historial lesivo registrado</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CoachPhysicalDataTab({ team, onTeamUpdate, playerProfiles = {}, selectedPlayer = null, onSelectPlayer, allPhysical = [], readOnly = false }) {
   const setSelectedPlayer = onSelectPlayer || (() => {});
+  const [showTeamExport, setShowTeamExport] = useState(false);
 
   const roster = team.roster || [];
 
@@ -1083,7 +1257,23 @@ export default function CoachPhysicalDataTab({ team, onTeamUpdate, playerProfile
 
   return (
     <div>
-      <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 17, marginBottom: 18, color: COLORS.text }}>Datos físicos</div>
+      {showTeamExport && (
+        <TeamPhysicalExportModal
+          team={team}
+          playerProfiles={playerProfiles}
+          allPhysical={allPhysical}
+          onClose={() => setShowTeamExport(false)}
+        />
+      )}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 17, color: COLORS.text }}>Datos físicos</div>
+        {roster.length > 0 && (
+          <button onClick={() => setShowTeamExport(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <svg width="13" height="13" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round"><path d="M320 48H80a32 32 0 0 0-32 32v352a32 32 0 0 0 32 32h352a32 32 0 0 0 32-32V192z"/><path d="M320 48v144h144"/><line x1="176" y1="320" x2="336" y2="320"/><polyline points="272,256 336,320 272,384"/></svg>
+            Exportar equipo
+          </button>
+        )}
+      </div>
       {roster.length === 0 ? (
         <div style={{ color: COLORS.text, fontSize: 14, textAlign: "center", padding: "2rem 0" }}>El equipo no tiene jugadores registrados.</div>
       ) : (
