@@ -8,23 +8,24 @@ import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
 
-const BLOCK_TYPES = ["Campo", "Pista", "Fuerza", "Carrera", "Metabólico", "HIIT", "EMOM", "AMRAP", "Calentamiento", "Movement Prep", "Otro"];
+const BLOCK_TYPES = ["CAMPO", "PISTA", "FUERZA", "CARRERA", "METABÓLICO", "HIIT", "EMOM", "AMRAP", "CALENTAMIENTO", "MOVEMENT PREP", "OTRO"];
 
 function getBlockType(b) {
   if (b.blockType) return b.blockType;
-  if (BLOCK_TYPES.includes(b.name)) return b.name;
-  if (b.name) return "Otro";
-  return "Campo";
+  const upper = b.name?.toUpperCase();
+  if (BLOCK_TYPES.includes(upper)) return upper;
+  if (b.name) return "OTRO";
+  return "CAMPO";
 }
 
 function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
-  const addBlock = () => setBlocks((prev) => [...prev, { name: "Campo", blockType: "Campo", duration: "", content: "", tasks: [] }]);
+  const addBlock = () => setBlocks((prev) => [...prev, { name: "CAMPO", blockType: "CAMPO", duration: "", content: "", tasks: [] }]);
   const updateBlock = (i, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === i ? { ...b, [field]: val } : b));
   const removeBlock = (i) => setBlocks((prev) => prev.filter((_, idx) => idx !== i));
 
   const handleBlockType = (i, type) => setBlocks((prev) => prev.map((b, idx) => {
     if (idx !== i) return b;
-    return { ...b, blockType: type, name: type === "Otro" ? (b.name && !BLOCK_TYPES.includes(b.name) ? b.name : "") : type };
+    return { ...b, blockType: type, name: type === "OTRO" ? (b.name && !BLOCK_TYPES.includes(b.name) ? b.name : "") : type };
   }));
 
   const addTask = (bi) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: [...(b.tasks || []), { id: Date.now(), name: "", workTime: "", restTime: "", space: "", relativeArea: "", imageBase64: "" }] } : b));
@@ -53,7 +54,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
               >
                 {BLOCK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
-              {getBlockType(b) === "Otro" && (
+              {getBlockType(b) === "OTRO" && (
                 <input value={b.name} onChange={(e) => updateBlock(i, "name", e.target.value)} placeholder="Escribe el nombre..." style={{ ...inputStyle, flex: 2, padding: "8px 10px", fontSize: 13 }} />
               )}
               <input type="number" value={b.duration} onChange={(e) => updateBlock(i, "duration", e.target.value)} placeholder="Min" style={{ ...inputStyle, flex: 1, minWidth: 60, padding: "8px 10px", fontSize: 13 }} />

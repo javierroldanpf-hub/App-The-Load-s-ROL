@@ -5,16 +5,16 @@ import { COLORS } from "@/lib/constants";
 const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 const BLOCK_TYPE_COLORS = {
-  "Campo": "#4caf8a",
-  "Pista": "#4a9fd4",
-  "Fuerza": "#e07b54",
-  "Carrera": "#f2c63c",
-  "Metabólico": "#c97dd4",
+  "CAMPO": "#4caf8a",
+  "PISTA": "#4a9fd4",
+  "FUERZA": "#e07b54",
+  "CARRERA": "#f2c63c",
+  "METABÓLICO": "#c97dd4",
   "HIIT": "#e05c5c",
   "EMOM": "#5c9ee0",
   "AMRAP": "#e0a05c",
-  "Calentamiento": "#8ab87a",
-  "Movement Prep": "#a0c4b8",
+  "CALENTAMIENTO": "#8ab87a",
+  "MOVEMENT PREP": "#a0c4b8",
 };
 function blockColor(name) { return BLOCK_TYPE_COLORS[name] || COLORS.lime; }
 
@@ -40,8 +40,8 @@ function parseBlocks(description) {
 }
 
 function blockDisplayName(b) {
-  if (b.blockType && b.blockType !== "Otro") return b.blockType;
-  return b.name || "Bloque";
+  if (b.blockType && b.blockType !== "OTRO") return b.blockType;
+  return (b.name || "BLOQUE").toUpperCase();
 }
 
 export default function MonthlyLoadPanel({ sessions }) {
