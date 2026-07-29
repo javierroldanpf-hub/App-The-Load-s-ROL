@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/constants";
-import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam } from "@/lib/db";
+import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam, getUser, saveUser } from "@/lib/db";
+import { simpleHash } from "@/lib/utils";
 import Avatar from "./Avatar";
 
 const inp = { padding: "9px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
@@ -29,7 +30,55 @@ function fmtDate(d) {
   return `${day}/${m}/${y}`;
 }
 
-export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sessions = [], rpe = [], coachTeamIds = [], coachUsername = "", onTeamDeleted }) {
+function ChangePasswordSection({ user }) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [msg, setMsg] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  if (!user) return null;
+
+  const handle = async () => {
+    setMsg(null);
+    if (!current || !next || !confirm) { setMsg({ ok: false, text: "Rellena todos los campos." }); return; }
+    if (next.length < 6) { setMsg({ ok: false, text: "La nueva contraseña debe tener al menos 6 caracteres." }); return; }
+    if (next !== confirm) { setMsg({ ok: false, text: "Las contraseñas nuevas no coinciden." }); return; }
+    setBusy(true);
+    try {
+      const profile = await getUser(user.username);
+      if (!profile || profile.pass_hash !== simpleHash(current)) {
+        setMsg({ ok: false, text: "La contraseña actual no es correcta." });
+        setBusy(false); return;
+      }
+      await saveUser({ ...profile, pass_hash: simpleHash(next), passHash: simpleHash(next) });
+      setMsg({ ok: true, text: "Contraseña actualizada correctamente." });
+      setCurrent(""); setNext(""); setConfirm("");
+    } catch { setMsg({ ok: false, text: "Error al guardar. Inténtalo de nuevo." }); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {[
+        { label: "Contraseña actual", value: current, set: setCurrent },
+        { label: "Nueva contraseña", value: next, set: setNext },
+        { label: "Confirmar nueva contraseña", value: confirm, set: setConfirm },
+      ].map(({ label, value, set }) => (
+        <div key={label}>
+          <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 4 }}>{label}</div>
+          <input type="password" value={value} onChange={(e) => set(e.target.value)} style={{ ...inp, width: "100%", boxSizing: "border-box" }} />
+        </div>
+      ))}
+      {msg && <div style={{ fontSize: 12, color: msg.ok ? COLORS.lime : COLORS.coral, fontWeight: 600 }}>{msg.text}</div>}
+      <button onClick={handle} disabled={busy} style={{ padding: "10px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}>
+        {busy ? "Guardando..." : "Cambiar contraseña"}
+      </button>
+    </div>
+  );
+}
+
+export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sessions = [], rpe = [], coachTeamIds = [], coachUsername = "", onTeamDeleted, user = null }) {
   const roster = teamWithPhotos?.roster || [];
   const [saving, setSaving] = useState(false);
   const [coachTeams, setCoachTeams] = useState([]);
@@ -504,6 +553,10 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       </Accordion>
 
       {saving && <div style={{ fontSize: 12, color: COLORS.lime, textAlign: "center", marginTop: 8 }}>Guardando...</div>}
+
+      <Accordion title="Cambiar contraseña">
+        <ChangePasswordSection user={user} />
+      </Accordion>
 
       {/* ── ZONA DE PELIGRO ── */}
       {(() => {

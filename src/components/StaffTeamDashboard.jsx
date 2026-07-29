@@ -352,7 +352,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       )}
 
       {tab === "ajustes" && (
-        <SettingsPanel team={team} teamWithPhotos={teamWithPhotos} onTeamUpdate={handleTeamUpdate} sessions={sessions} rpe={rpe} coachTeamIds={user?.teamIds || user?.team_ids || []} coachUsername={user?.username || ""} onTeamDeleted={onBack} />
+        <SettingsPanel team={team} teamWithPhotos={teamWithPhotos} onTeamUpdate={handleTeamUpdate} sessions={sessions} rpe={rpe} coachTeamIds={user?.teamIds || user?.team_ids || []} coachUsername={user?.username || ""} onTeamDeleted={onBack} user={user} />
       )}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} readOnly={readOnly} />}
