@@ -294,6 +294,17 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     }
   };
 
+  // ── Delete a specific injury ─────────────────────────────────────────────
+  const deleteInjury = async (username, injuryId) => {
+    const list = (team.playerInjuries || {})[username] || [];
+    const updated = list.filter((inj) => inj.id !== injuryId);
+    const wasActive = list.find((inj) => inj.id === injuryId && !inj.endDate);
+    const newInjuredPlayers = wasActive ? injuredPlayers.filter((u) => u !== username) : injuredPlayers;
+    if (wasActive) setInjuredPlayers(newInjuredPlayers);
+    const injuries = { ...(team.playerInjuries || {}), [username]: updated };
+    await save({ injuredPlayers: newInjuredPlayers, playerInjuries: injuries });
+  };
+
   // ── Remove from team ─────────────────────────────────────────────────────
   const removePlayer = async (username, displayName) => {
     const confirmed = confirm(
@@ -517,6 +528,24 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                         {injuryFormMode === "edit" ? "Guardar cambios" : "Confirmar lesión"}
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Historial de lesiones con opción de borrar */}
+                {injuryList.length > 0 && !showForm && (
+                  <div style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderTop: "none", borderRadius: "0 0 10px 10px", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+                    {injuryList.map((inj) => (
+                      <div key={inj.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
+                        <span style={{ color: inj.endDate ? COLORS.text : COLORS.coral, flex: 1 }}>
+                          {inj.type} · {inj.zone} · {inj.laterality} · {inj.startDate}{inj.endDate ? ` → ${inj.endDate}` : " (activa)"}
+                        </span>
+                        <button
+                          onClick={() => { if (confirm("¿Borrar esta lesión?")) deleteInjury(username, inj.id); }}
+                          style={{ padding: "2px 8px", borderRadius: 6, border: `1px solid ${COLORS.coral}44`, background: "transparent", color: COLORS.coral, fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
+                          Borrar
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
