@@ -68,7 +68,7 @@ export default function SessionDetailModal({ date, session, onClose, user, refre
 
     // Nuevo formato con bloques
     if (parsed.blocks) {
-      const blocks = parsed.blocks.filter((b) => b.name || b.content);
+      const blocks = parsed.blocks.filter((b) => (b.name || b.content) && b.name !== ATHLETE_NOTE_BLOCK_NAME);
       if (blocks.length === 0) return null;
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
@@ -164,9 +164,11 @@ export default function SessionDetailModal({ date, session, onClose, user, refre
           <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 14 }}>Duración total: <strong style={{ color: COLORS.text }}>{session.duration} min</strong></div>
         )}
         {renderContent()}
-        {session.allowPlayerNote && (
+
+        {/* Nota del atleta editable (solo para el propio atleta) */}
+        {session.allowPlayerNote && user && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>Nota del entreno</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>Nota del atleta</div>
             <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 8 }}>Tu preparador/a te pide que añadas información sobre esta sesión.</div>
             <textarea
               value={note}
@@ -178,6 +180,14 @@ export default function SessionDetailModal({ date, session, onClose, user, refre
             <button onClick={handleSaveNote} disabled={savingNote} style={{ marginTop: 8, width: "100%", padding: "11px 0", borderRadius: 10, border: "none", background: noteSaved ? COLORS.limeDark : COLORS.lime, color: noteSaved ? COLORS.lime : "#14171c", fontWeight: 700, fontSize: 14, cursor: savingNote ? "default" : "pointer" }}>
               {savingNote ? "Guardando..." : noteSaved ? "✓ Guardado" : "Guardar nota"}
             </button>
+          </div>
+        )}
+
+        {/* Nota del atleta solo lectura (para el entrenador: cuando no hay user = vista coach, o user distinto del atleta) */}
+        {!user && note && (
+          <div style={{ marginBottom: 16, background: COLORS.panelRaised, border: `1px solid ${COLORS.lime}44`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.lime, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Nota del atleta</div>
+            <div style={{ fontSize: 13, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{note}</div>
           </div>
         )}
         <button onClick={onClose} style={primaryBtn(false)}>Cerrar</button>

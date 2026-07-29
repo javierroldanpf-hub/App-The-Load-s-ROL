@@ -277,17 +277,28 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                 )}
               </>
             )}
-            {!isRest && isIndividualAthlete && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, padding: "12px 14px", background: COLORS.panelRaised, borderRadius: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>Nota del atleta</div>
-                  <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>El atleta podrá añadir un texto sobre el entreno en su calendario</div>
-                </div>
-                <button onClick={() => setAllowPlayerNote((v) => !v)} style={{ width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative", background: allowPlayerNote ? COLORS.lime : COLORS.panelRaised, transition: "background 0.2s", flexShrink: 0 }}>
-                  <span style={{ position: "absolute", top: 3, left: allowPlayerNote ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: allowPlayerNote ? "#14171c" : COLORS.textFaint, transition: "left 0.2s" }} />
-                </button>
-              </div>
-            )}
+            {!isRest && isIndividualAthlete && (() => {
+              const athleteNoteBlock = parsed.blocks.find((b) => b.name === "Nota del atleta");
+              return (
+                <>
+                  {athleteNoteBlock?.content && (
+                    <div style={{ marginBottom: 14, background: COLORS.panelRaised, border: `1px solid ${COLORS.lime}44`, borderRadius: 10, padding: "12px 14px" }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.lime, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Nota del atleta</div>
+                      <div style={{ fontSize: 13, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{athleteNoteBlock.content}</div>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, padding: "12px 14px", background: COLORS.panelRaised, borderRadius: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>Nota del atleta</div>
+                      <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>El atleta podrá añadir un texto sobre el entreno en su calendario</div>
+                    </div>
+                    <button onClick={() => setAllowPlayerNote((v) => !v)} style={{ width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative", background: allowPlayerNote ? COLORS.lime : COLORS.panelRaised, transition: "background 0.2s", flexShrink: 0 }}>
+                      <span style={{ position: "absolute", top: 3, left: allowPlayerNote ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: allowPlayerNote ? "#14171c" : COLORS.textFaint, transition: "left 0.2s" }} />
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
             <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
               {existing && (
                 <button onClick={onDelete} style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${COLORS.coral}`, background: "transparent", color: COLORS.coral, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Eliminar</button>

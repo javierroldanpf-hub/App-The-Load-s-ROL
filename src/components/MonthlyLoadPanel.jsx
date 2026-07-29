@@ -39,9 +39,15 @@ function parseBlocks(description) {
   } catch { return []; }
 }
 
+const ATHLETE_NOTE_NAME = "Nota del atleta";
+
 function blockDisplayName(b) {
   if (b.blockType && b.blockType !== "OTRO") return b.blockType;
   return (b.name || "BLOQUE").toUpperCase();
+}
+
+function isAthleteNote(b) {
+  return b.name === ATHLETE_NOTE_NAME;
 }
 
 export default function MonthlyLoadPanel({ sessions }) {
@@ -58,7 +64,7 @@ export default function MonthlyLoadPanel({ sessions }) {
         const mk = monthKey(s.date);
         if (mk > currentMonth) return;
         if (!map[mk]) map[mk] = { sessions: [], totalMin: 0 };
-        const blocks = parseBlocks(s.description);
+        const blocks = parseBlocks(s.description).filter((b) => !isAthleteNote(b));
         map[mk].sessions.push({ ...s, parsedBlocks: blocks });
         map[mk].totalMin += Number(s.duration) || 0;
       });

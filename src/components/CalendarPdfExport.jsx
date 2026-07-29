@@ -14,14 +14,24 @@ function dayIdx(dateStr) {
   const d = new Date(dateStr + "T00:00:00").getDay();
   return d === 0 ? 6 : d - 1;
 }
+const ATHLETE_NOTE_NAME = "Nota del atleta";
+
 function parseBlocks(description) {
   if (!description) return [];
   try {
     const p = JSON.parse(description);
-    if (p.blocks) return p.blocks.filter((b) => b.name || b.content);
+    if (p.blocks) return p.blocks.filter((b) => (b.name || b.content) && b.name !== ATHLETE_NOTE_NAME);
     if (p.g || p.c) return [p.g && { name: "Gimnasio", content: p.g }, p.c && { name: "Campo", content: p.c }].filter(Boolean);
   } catch {}
   return description ? [{ name: "", content: description }] : [];
+}
+
+function parseAthleteNote(description) {
+  try {
+    const p = JSON.parse(description || "{}");
+    if (p.blocks) return p.blocks.find((b) => b.name === ATHLETE_NOTE_NAME) || null;
+  } catch {}
+  return null;
 }
 
 const D = {
@@ -356,8 +366,9 @@ function SessionContent({ team, session, date, coachName }) {
   let blocks = [];
   try {
     const p = JSON.parse(session.description || "{}");
-    if (p.blocks) blocks = p.blocks.filter((b) => b.name || b.content);
+    if (p.blocks) blocks = p.blocks.filter((b) => (b.name || b.content) && b.name !== ATHLETE_NOTE_NAME);
   } catch {}
+  const athleteNote = parseAthleteNote(session.description);
   const int = INT[session.intensity] || INT.amarillo;
   const fmtDate = new Date(date + "T00:00:00").toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   return (
@@ -430,6 +441,14 @@ function SessionContent({ team, session, date, coachName }) {
           </div>
         ))}
       </div>
+      {athleteNote?.content && (
+        <div style={{ marginTop: 20, border: `1px solid ${D.lime}55`, borderRadius: 10, overflow: "hidden" }}>
+          <div style={{ background: D.panelRaised, padding: "8px 14px" }}>
+            <div style={{ fontWeight: 700, fontSize: 12, color: D.lime, textTransform: "uppercase", letterSpacing: 0.5 }}>Nota del atleta</div>
+          </div>
+          <div style={{ padding: "10px 14px", fontSize: 13, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{athleteNote.content}</div>
+        </div>
+      )}
     </div>
   );
 }
