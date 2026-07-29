@@ -2,6 +2,7 @@
 import { COLORS } from "@/lib/constants";
 
 export default function SliderField({ field, value, onChange }) {
+  const tip = field.tips?.[value - 1];
   return (
     <div style={{ marginBottom: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
@@ -14,6 +15,11 @@ export default function SliderField({ field, value, onChange }) {
         <span style={{ fontSize: 11, color: COLORS.text }}>{field.lowText}</span>
         <span style={{ fontSize: 11, color: COLORS.text }}>{field.highText}</span>
       </div>
+      {tip && (
+        <div style={{ marginTop: 6, fontSize: 12, color: COLORS.text, background: COLORS.panelRaised, borderRadius: 7, padding: "5px 10px", lineHeight: 1.4 }}>
+          {tip}
+        </div>
+      )}
     </div>
   );
 }

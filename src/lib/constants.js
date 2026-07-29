@@ -1,9 +1,54 @@
 export const WELLNESS_FIELDS = [
-  { key: "fatiga", label: "Fatiga", lowText: "Exhausto", highText: "Muy fresco" },
-  { key: "sueno", label: "Calidad del sueño", shortLabel: "Sueño", lowText: "Muy mala", highText: "Excelente" },
-  { key: "estres", label: "Estrés", lowText: "Muy estresado", highText: "Muy relajado" },
-  { key: "animo", label: "Estado de ánimo", shortLabel: "Ánimo", lowText: "Muy bajo", highText: "Muy positivo" },
-  { key: "dolor", label: "Dolor muscular", lowText: "Mucho dolor", highText: "Sin dolor" },
+  {
+    key: "fatiga", label: "Fatiga", lowText: "Exhausto", highText: "Muy fresco",
+    tips: [
+      "Muy cansado/a — las piernas no responden y el cuerpo pide descanso",
+      "Cansado/a — noto fatiga acumulada pero puedo entrenar con esfuerzo",
+      "Normal — energía justa para el entrenamiento habitual",
+      "Descansado/a — me siento bien y con ganas de trabajar",
+      "Muy fresco/a — lleno/a de energía, sin ningún signo de fatiga",
+    ],
+  },
+  {
+    key: "sueno", label: "Calidad del sueño", shortLabel: "Sueño", lowText: "Muy mala", highText: "Excelente",
+    tips: [
+      "Muy mala — dormí muy poco o con muchas interrupciones, me levanto agotado/a",
+      "Mala — sueño irregular o insuficiente, sigo cansado/a al despertar",
+      "Normal — dormí lo justo, descanso aceptable",
+      "Buena — sueño reparador, me levanté bien",
+      "Excelente — sueño profundo y continuo, me siento completamente recuperado/a",
+    ],
+  },
+  {
+    key: "estres", label: "Estrés", lowText: "Muy estresado", highText: "Muy relajado",
+    tips: [
+      "Muy estresado/a — sensación de agobio constante, difícil concentrarme",
+      "Estresado/a — noto tensión y preocupación que afecta a mi día",
+      "Normal — algo de estrés pero manejable",
+      "Tranquilo/a — me siento calmado/a y con la mente despejada",
+      "Muy relajado/a — sin tensión, totalmente centrado/a y en calma",
+    ],
+  },
+  {
+    key: "animo", label: "Estado de ánimo", shortLabel: "Ánimo", lowText: "Muy bajo", highText: "Muy positivo",
+    tips: [
+      "Muy bajo — sin motivación, me cuesta hasta empezar",
+      "Bajo — poca gana de entrenar o interactuar con el equipo",
+      "Normal — ánimo neutro, sin nada especial",
+      "Bueno — con actitud positiva y ganas de trabajar",
+      "Excelente — muy motivado/a, con energía y buen humor",
+    ],
+  },
+  {
+    key: "dolor", label: "Dolor muscular", lowText: "Mucho dolor", highText: "Sin dolor",
+    tips: [
+      "Mucho dolor — agujetas o molestias intensas que limitan el movimiento",
+      "Dolor notable — noto molestias claras al moverme o en reposo",
+      "Leve — algo de tensión o molestia, pero no limita",
+      "Casi nada — mínimas molestias residuales",
+      "Sin dolor — músculos completamente recuperados, sin molestias",
+    ],
+  },
 ];
 
 export const RPE_ANCHORS = [
