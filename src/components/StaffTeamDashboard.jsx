@@ -250,23 +250,21 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         };
         return (
         <>
-          {todaySessionForBoxes && (
-            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-              {[
-                { key: "wellness", label: "Wellness", done: wDone.length },
-                { key: "rpe", label: "RPE", done: rDone.length },
-                { key: "ambos", label: "Ambos", done: bothDone.length },
-              ].map(({ key, label, done }) => (
-                <div key={key} onClick={() => setCheckinModal(key)} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: "10px 12px", cursor: "pointer", flex: 1 }}>
-                  <div style={{ fontSize: 11, color: COLORS.text, fontWeight: 600, marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
-                    <span style={{ color: COLORS.lime }}>{done}</span>
-                    <span style={{ color: COLORS.text, fontSize: 14 }}>/{totalPlayers}</span>
-                  </div>
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            {[
+              { key: "wellness", label: "Check-in Wellness", done: wDone.length },
+              { key: "rpe", label: "Check-in RPE", done: rDone.length },
+              { key: "ambos", label: "Check-in Ambos", done: bothDone.length },
+            ].map(({ key, label, done }) => (
+              <div key={key} onClick={() => setCheckinModal(key)} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: "10px 12px", cursor: "pointer", flex: 1 }}>
+                <div style={{ fontSize: 10, color: COLORS.text, fontWeight: 600, marginBottom: 4, lineHeight: 1.2 }}>{label}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
+                  <span style={{ color: COLORS.lime }}>{done}</span>
+                  <span style={{ color: COLORS.text, fontSize: 14 }}>/{totalPlayers}</span>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
           {checkinModal && (() => {
             const cfg = modalConfig[checkinModal];
             return (
