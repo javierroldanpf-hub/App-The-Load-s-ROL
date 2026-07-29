@@ -1067,8 +1067,10 @@ export function CustomMetricEditor({ team, onSave }) {
   );
 }
 
+const PLAYERS_PER_PAGE = 5;
+
 function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose }) {
-  const reportRef = useRef();
+  const pageRefs = useRef([]);
   const [downloading, setDownloading] = useState(false);
   const [exportingXlsx, setExportingXlsx] = useState(false);
 
@@ -1076,6 +1078,8 @@ function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose })
   const age = (bdate) => bdate ? Math.floor((Date.now() - new Date(bdate)) / (1000 * 60 * 60 * 24 * 365.25)) : null;
 
   const roster = (team.roster || []).map((u) => typeof u === "string" ? { username: u, displayName: u } : u);
+  const pages = [];
+  for (let i = 0; i < roster.length; i += PLAYERS_PER_PAGE) pages.push(roster.slice(i, i + PLAYERS_PER_PAGE));
 
   const latestEntryFor = (username) => {
     const entries = allPhysical.filter((e) => e.username === username);
@@ -1087,10 +1091,17 @@ function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose })
     try {
       const html2canvas = (await import("html2canvas")).default;
       const jsPDF = (await import("jspdf")).jsPDF;
-      const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: "#14171c", useCORS: true, allowTaint: true });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width / 2, canvas.height / 2] });
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      // Use first page to determine dimensions
+      const firstCanvas = await html2canvas(pageRefs.current[0], { scale: 2, backgroundColor: "#14171c", useCORS: true, allowTaint: true });
+      const pageW = firstCanvas.width / 2;
+      const pageH = firstCanvas.height / 2;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [pageW, pageH] });
+      pdf.addImage(firstCanvas.toDataURL("image/png"), "PNG", 0, 0, pageW, pageH);
+      for (let i = 1; i < pageRefs.current.length; i++) {
+        const c = await html2canvas(pageRefs.current[i], { scale: 2, backgroundColor: "#14171c", useCORS: true, allowTaint: true });
+        pdf.addPage([pageW, pageH]);
+        pdf.addImage(c.toDataURL("image/png"), "PNG", 0, 0, pageW, pageH);
+      }
       pdf.save(`datos-fisicos-equipo-${team.name}-${todayStr()}.pdf`);
     } catch (e) { console.error(e); }
     finally { setDownloading(false); }
@@ -1145,96 +1156,88 @@ function TeamPhysicalExportModal({ team, playerProfiles, allPhysical, onClose })
           <button onClick={onClose} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cerrar</button>
         </div>
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem" }}>
-        <div ref={reportRef} style={{ background: "#14171c", borderRadius: 16, padding: "1.5rem", maxWidth: 640, margin: "0 auto" }}>
-          {/* Cabecera del equipo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24, paddingBottom: 14, borderBottom: `2px solid ${COLORS.lime}` }}>
-            <Avatar name={team.name} photoUrl={team.crestUrl} size={48} square />
-            <div>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 22, color: COLORS.text }}>{team.name}</div>
-              <div style={{ fontSize: 12, color: COLORS.text, marginTop: 2 }}>Informe físico completo · {fmtDate(todayStr())}</div>
-            </div>
-          </div>
-
-          {roster.map((player, idx) => {
-            const prof = playerProfiles[player.username] || {};
-            const entry = latestEntryFor(player.username) || {};
-            const bw = entry.bodyWeight ?? entry.weight ?? null;
-            const a = age(prof.birthDate);
-            const injuries = (team.playerInjuries || {})[player.username] || [];
-            const active = injuries.filter((i) => !i.endDate);
-            const closed = injuries.filter((i) => i.endDate);
-            const freeText = (team.playerInjuryHistories || {})[player.username] || "";
-            const hasInjuries = injuries.length > 0 || freeText;
-            const isInjured = (team.injuredPlayers || []).includes(player.username);
-
-            return (
-              <div key={player.username} style={{ marginBottom: 24, paddingBottom: 20, borderBottom: idx < roster.length - 1 ? `1px solid ${COLORS.line}` : "none" }}>
-                {/* Header jugador */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, background: COLORS.panel, borderRadius: 12, padding: "10px 14px" }}>
-                  <Avatar name={player.displayName || player.username} photoUrl={player.photoUrl} size={44} isInjured={isInjured} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: COLORS.text }}>{player.displayName || player.username}</div>
-                    <div style={{ fontSize: 12, color: COLORS.text, marginTop: 2 }}>
-                      {team.isTrainingGroup ? ((team.playerSpecificTests || {})[player.username] || "Sin modalidad") : (player.position || prof.position || "Sin posición")}
-                      {isInjured && <span style={{ marginLeft: 8, color: COLORS.coral, fontWeight: 600 }}>🤕 Lesionado</span>}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 11, color: COLORS.text, textAlign: "right" }}>
-                    {entry.date && <div>Última medición: <span style={{ color: COLORS.lime, fontWeight: 600 }}>{fmtDate(entry.date)}</span></div>}
-                  </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
+        {pages.map((pagePlayers, pageIdx) => (
+          <div
+            key={pageIdx}
+            ref={(el) => { pageRefs.current[pageIdx] = el; }}
+            style={{ background: "#14171c", borderRadius: 16, padding: "1.5rem", width: 640, flexShrink: 0 }}
+          >
+            {/* Cabecera del equipo en cada página */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, paddingBottom: 12, borderBottom: `2px solid ${COLORS.lime}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Avatar name={team.name} photoUrl={team.crestUrl} size={36} square />
+                <div>
+                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: COLORS.text }}>{team.name}</div>
+                  <div style={{ fontSize: 11, color: COLORS.text }}>Informe físico · {fmtDate(todayStr())}</div>
                 </div>
-
-                {/* Datos personales */}
-                {(prof.birthDate || prof.height || bw || prof.dominantLeg || prof.dominantArm) && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 10 }}>
-                    {[
-                      prof.birthDate && `Nac. ${fmtDate(prof.birthDate)}${a != null ? ` (${a}a)` : ""}`,
-                      prof.height && `Altura: ${prof.height} cm`,
-                      bw && `Peso: ${bw} kg`,
-                      prof.dominantLeg && `Pierna: ${prof.dominantLeg}`,
-                      prof.dominantArm && `Brazo: ${prof.dominantArm}`,
-                    ].filter(Boolean).map((item) => (
-                      <span key={item} style={{ background: COLORS.panelRaised, borderRadius: 7, padding: "5px 10px", fontSize: 11, color: COLORS.text }}>{item}</span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Historial lesivo */}
-                {hasInjuries && (
-                  <div style={{ marginTop: 4 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.coral, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Lesiones</div>
-                    {active.length > 0 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 6 }}>
-                        {active.map((inj) => (
-                          <div key={inj.id} style={{ background: COLORS.coralDark, border: `1px solid ${COLORS.coral}`, borderRadius: 7, padding: "5px 10px", fontSize: 11, color: COLORS.coral, fontWeight: 600 }}>
-                            🤕 {inj.type} · {inj.zone} · {inj.laterality} · desde {fmtDate(inj.startDate) || "–"}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {closed.length > 0 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 6 }}>
-                        {closed.map((inj) => (
-                          <div key={inj.id} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 7, padding: "5px 10px", fontSize: 11, color: COLORS.text }}>
-                            {inj.type} · {inj.zone} · {inj.laterality} · {fmtDate(inj.startDate) || "–"} → {fmtDate(inj.endDate) || "–"}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {freeText && (
-                      <div style={{ background: COLORS.panelRaised, borderRadius: 7, padding: "7px 10px", fontSize: 11, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{freeText}</div>
-                    )}
-                  </div>
-                )}
-
-                {!hasInjuries && (
-                  <div style={{ fontSize: 11, color: COLORS.text, opacity: 0.5 }}>Sin historial lesivo registrado</div>
-                )}
               </div>
-            );
-          })}
-        </div>
+              <div style={{ fontSize: 11, color: COLORS.text }}>Pág. {pageIdx + 1} / {pages.length}</div>
+            </div>
+
+            {pagePlayers.map((player, idx) => {
+              const prof = playerProfiles[player.username] || {};
+              const entry = latestEntryFor(player.username) || {};
+              const bw = entry.bodyWeight ?? entry.weight ?? null;
+              const a = age(prof.birthDate);
+              const injuries = (team.playerInjuries || {})[player.username] || [];
+              const active = injuries.filter((i) => !i.endDate);
+              const closed = injuries.filter((i) => i.endDate);
+              const freeText = (team.playerInjuryHistories || {})[player.username] || "";
+              const hasInjuries = injuries.length > 0 || freeText;
+              const isInjured = (team.injuredPlayers || []).includes(player.username);
+
+              return (
+                <div key={player.username} style={{ marginBottom: idx < pagePlayers.length - 1 ? 18 : 0, paddingBottom: idx < pagePlayers.length - 1 ? 16 : 0, borderBottom: idx < pagePlayers.length - 1 ? `1px solid ${COLORS.line}` : "none" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8, background: COLORS.panel, borderRadius: 10, padding: "8px 12px" }}>
+                    <Avatar name={player.displayName || player.username} photoUrl={player.photoUrl} size={38} isInjured={isInjured} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 16, color: COLORS.text }}>{player.displayName || player.username}</div>
+                      <div style={{ fontSize: 11, color: COLORS.text }}>
+                        {team.isTrainingGroup ? ((team.playerSpecificTests || {})[player.username] || "Sin modalidad") : (player.position || prof.position || "Sin posición")}
+                        {isInjured && <span style={{ marginLeft: 8, color: COLORS.coral, fontWeight: 600 }}>🤕 Lesionado</span>}
+                      </div>
+                    </div>
+                    {entry.date && <div style={{ fontSize: 10, color: COLORS.text, textAlign: "right" }}>Medición: <span style={{ color: COLORS.lime }}>{fmtDate(entry.date)}</span></div>}
+                  </div>
+
+                  {(prof.birthDate || prof.height || bw || prof.dominantLeg || prof.dominantArm) && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                      {[
+                        prof.birthDate && `Nac. ${fmtDate(prof.birthDate)}${a != null ? ` (${a}a)` : ""}`,
+                        prof.height && `Altura: ${prof.height} cm`,
+                        bw && `Peso: ${bw} kg`,
+                        prof.dominantLeg && `Pierna: ${prof.dominantLeg}`,
+                        prof.dominantArm && `Brazo: ${prof.dominantArm}`,
+                      ].filter(Boolean).map((item) => (
+                        <span key={item} style={{ background: COLORS.panelRaised, borderRadius: 6, padding: "4px 9px", fontSize: 11, color: COLORS.text }}>{item}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {hasInjuries ? (
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.coral, marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Lesiones</div>
+                      {active.map((inj) => (
+                        <div key={inj.id} style={{ background: COLORS.coralDark, border: `1px solid ${COLORS.coral}`, borderRadius: 6, padding: "4px 9px", fontSize: 11, color: COLORS.coral, fontWeight: 600, marginBottom: 3 }}>
+                          🤕 {inj.type} · {inj.zone} · {inj.laterality} · desde {fmtDate(inj.startDate) || "–"}
+                        </div>
+                      ))}
+                      {closed.map((inj) => (
+                        <div key={inj.id} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 6, padding: "4px 9px", fontSize: 11, color: COLORS.text, marginBottom: 3 }}>
+                          {inj.type} · {inj.zone} · {inj.laterality} · {fmtDate(inj.startDate) || "–"} → {fmtDate(inj.endDate) || "–"}
+                        </div>
+                      ))}
+                      {freeText && <div style={{ background: COLORS.panelRaised, borderRadius: 6, padding: "5px 9px", fontSize: 11, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.4, marginTop: 3 }}>{freeText}</div>}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: COLORS.text, opacity: 0.45 }}>Sin historial lesivo registrado</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );
