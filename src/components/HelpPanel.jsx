@@ -9,7 +9,7 @@ const SECTIONS_ALL = [
   },
   {
     title: "Datos de Carga",
-    content: `Muestra el estado general del equipo o grupo en base a los registros de RPE y wellness.\n\n• Datos medios del equipo/grupo: gráficas y medias de carga, fatiga y bienestar del conjunto. Puedes filtrar por fecha.\n• Estado individual: tabla con el estado de cada jugador/a hoy. Pulsa sobre un jugador/a para ver su detalle completo con gráficas de evolución.\n• Control de carga: vista de la carga acumulada y ACWR (ratio carga aguda/crónica) para detectar riesgo de lesión.`,
+    content: `Muestra el estado general del equipo o grupo en base a los registros de RPE y wellness.\n\nRecuadros de check-in (entre las dos barras de pestañas):\n• Check-in Wellness: muestra cuántos jugadores/as han enviado el formulario de wellness hoy. Pulsa para ver quién lo ha hecho y quién falta.\n• Check-in RPE: muestra cuántos jugadores/as han enviado el RPE de la sesión de hoy. Pulsa para ver el desglose.\n• Check-in Ambos: muestra cuántos jugadores/as han completado tanto wellness como RPE hoy. Pulsa para ver el desglose completo.\n\n• Datos medios del equipo/grupo: gráficas y medias de carga, fatiga y bienestar del conjunto. Las tres tarjetas superiores muestran el Wellness Score Medio, RPE medio y sRPE medio del período seleccionado. El sRPE (carga subjetiva = RPE × minutos de sesión) se colorea en verde si está por debajo de la media de los últimos 28 días, en amarillo si supera la media de la última semana, y en rojo si supera la media de los últimos 28 días.\n• Estado individual: tabla con el estado de cada jugador/a hoy. Pulsa sobre un jugador/a para ver su detalle completo con gráficas de evolución.\n• Control de carga: vista de la carga acumulada y ACWR (ratio carga aguda/crónica) para detectar riesgo de lesión.\n• Resumen mensual: desglose mes a mes de sesiones completadas y minutos/horas de entrenamiento.`,
   },
   {
     title: "Planificación",
@@ -33,7 +33,7 @@ const SECTIONS_ALL = [
   },
   {
     title: "Perfil de entrenador/a lector/a",
-    content: `El entrenador/a lector/a tiene acceso de solo lectura al dashboard. No puede editar sesiones, ajustes ni datos. Solo puede consultar el calendario, los datos de carga, el estado individual y los datos físicos del equipo. Aparece un banner naranja en la parte superior indicando que está en modo lectura.`,
+    content: `El entrenador/a lector/a tiene acceso de solo lectura al dashboard. No puede editar sesiones, ajustes ni datos. Solo puede consultar el calendario, los datos de carga (incluyendo los recuadros de check-in y las métricas de equipo), el estado individual y los datos físicos del equipo. Aparece un banner naranja en la parte superior indicando que está en modo lectura. Si el entrenador/a principal lo habilita desde Ajustes, puede tener permiso de edición en la planificación.`,
   },
 ];
 

@@ -51,6 +51,14 @@ export function ColorLegend() {
           </span>
         ))}
       </div>
+      <div style={row}>
+        <span style={label}>sRPE:</span>
+        {[{ c: COLORS.lime, t: "< media 28d" }, { c: "#f2c63c", t: "> media 7d" }, { c: COLORS.coral, t: "> media 28d" }].map(({ c, t }) => (
+          <span key={t} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: COLORS.text }}>
+            <span style={dot(c)} />{t}
+          </span>
+        ))}
+      </div>
       <div style={{ ...row, marginBottom: 0 }}>
         <span style={label}>Intensidad MD:</span>
         {[{ c: "#f2c63c", t: "Media-Baja" }, { c: "#ff9f40", t: "Media-Alta" }, { c: "#ff5a5f", t: "Alta" }].map(({ c, t }) => (
@@ -238,29 +246,28 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
     return loads.reduce((s, v) => s + v, 0) / loads.length;
   }, [periodRpe, sessions]);
 
-  // Jugadores que han completado AMBOS formularios hoy
-  const completedBothToday = useMemo(() => {
-    if (!todaySession) return 0;
-    return roster.filter((username) => {
-      const hasW = todayWellness.some((e) => e.username === username);
-      const hasR = todayRpe.some((e) => e.username === username);
-      return hasW && hasR;
-    }).length;
-  }, [roster, todayWellness, todayRpe, todaySession]);
+  // sRPE histórico para umbrales de color (28d y 7d, fijos)
+  const srpe28 = useMemo(() => {
+    const start28 = addDays(today, -27);
+    const entries = rpe.filter((e) => e.date >= start28 && e.date <= today);
+    if (!entries.length) return null;
+    const loads = entries.map((e) => {
+      const sess = sessions.find((s) => s.date === e.date && s.sessionType === e.sessionType);
+      return e.rpe * (Number(sess?.duration) || 0);
+    });
+    return loads.reduce((s, v) => s + v, 0) / loads.length;
+  }, [rpe, sessions, today]);
 
-  // Jugadores que NO han hecho check-in completo hoy
-  const pendingCheckin = useMemo(() => {
-    return roster
-      .filter((username) => {
-        const hasW = todayWellness.some((e) => e.username === username);
-        const hasR = todaySession ? todayRpe.some((e) => e.username === username) : true;
-        return !hasW || !hasR;
-      })
-      .map((username) => {
-        const displayName = displayNames[username]?.displayName || wellness.find((e) => e.username === username)?.displayName || rpe.find((e) => e.username === username)?.displayName || username;
-        return { username, displayName };
-      });
-  }, [roster, todayWellness, todayRpe, todaySession, wellness]);
+  const srpe7 = useMemo(() => {
+    const start7 = addDays(today, -6);
+    const entries = rpe.filter((e) => e.date >= start7 && e.date <= today);
+    if (!entries.length) return null;
+    const loads = entries.map((e) => {
+      const sess = sessions.find((s) => s.date === e.date && s.sessionType === e.sessionType);
+      return e.rpe * (Number(sess?.duration) || 0);
+    });
+    return loads.reduce((s, v) => s + v, 0) / loads.length;
+  }, [rpe, sessions, today]);
 
   // --- Datos por día para cada semana ---
   const wellnessByDate = useMemo(() => {
@@ -335,6 +342,13 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
     ? (avgRpe <= 6 ? COLORS.lime : avgRpe <= 7.5 ? "#f2c63c" : COLORS.coral)
     : COLORS.textFaint;
 
+  const srpeColor = (() => {
+    if (avgSrpe === null) return COLORS.text;
+    if (srpe28 !== null && avgSrpe > srpe28) return COLORS.coral;
+    if (srpe7 !== null && avgSrpe > srpe7) return "#f2c63c";
+    return COLORS.lime;
+  })();
+
   const PERIOD_LABELS = { today: "Hoy", week: "Última semana", month: "Últimos 28 días" };
 
   const currentWeekMonday = mondayOf(today);
@@ -372,9 +386,9 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
           </select>
           <span style={{ fontSize: 12, color: COLORS.text }}>· {periodSubtitle}</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           <MetricCard
-            label="Wellness Score"
+            label="Wellness Score Medio"
             value={avgWellness}
             color={wellnessColor}
             subtitle={`${periodWellness.length} registros`}
@@ -388,33 +402,12 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
           <MetricCard
             label="sRPE medio"
             value={avgSrpe !== null ? Math.round(avgSrpe) : "–"}
-            color={COLORS.text}
+            color={srpeColor}
             subtitle={`${periodRpe.length} registros`}
-          />
-          <MetricCard
-            label="Check-in hoy"
-            value={`${completedBothToday}/${roster.length}`}
-            color={COLORS.text}
-            subtitle="wellness + RPE"
           />
         </div>
       </div>
 
-      {/* Jugadores pendientes de check-in */}
-      {pendingCheckin.length > 0 && (
-        <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: "0.75rem 1rem" }}>
-          <div style={{ fontSize: 11, color: COLORS.coral, fontWeight: 600, marginBottom: 8 }}>
-            Sin check-in hoy ({pendingCheckin.length})
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {pendingCheckin.map(({ username, displayName }) => (
-              <span key={username} style={{ fontSize: 11, color: COLORS.text, background: COLORS.panelRaised, borderRadius: 6, padding: "3px 8px" }}>
-                {displayName}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Gráfica Wellness con su navegador */}
       <div>
