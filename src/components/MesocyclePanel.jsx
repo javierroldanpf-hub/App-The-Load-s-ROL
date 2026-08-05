@@ -4,6 +4,7 @@ import { COLORS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateShort, fmtDateLong, monthLabel, firstOfMonth, addMonths, monthGridDates } from "@/lib/utils";
 import { loadMesocycles, saveMesocycle, deleteMesocycle } from "@/lib/db";
 import SpacesCalculatorModal from "./SpacesCalculatorModal";
+import HiitPrescriptorModal from "./HiitPrescriptorModal";
 
 const MESO_COLORS = [
   "#a3e635", "#60a5fa", "#f472b6", "#fb923c", "#a78bfa", "#34d399", "#fbbf24", "#f87171", "#38bdf8", "#e879f9",
@@ -1451,6 +1452,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
 /* ── Inline planner para vistas semanal/mensual/mesociclo ────────────── */
 export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, readOnly = false, sjPercentages = null }) {
   const [showSpaces, setShowSpaces] = useState(false);
+  const [showHiit, setShowHiit] = useState(false);
   if (!mesocycles || mesocycles.length === 0) return null;
 
   const weekEnd = addDays(weekMonday, 6);
@@ -1491,13 +1493,19 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
         <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>
           {meso.name} · {week.name || `Microciclo ${(meso.weeks || []).indexOf(week) + 1}`}
         </div>
-        {isSJ && <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>📐 Calc. espacios</button>}
+        {isSJ && (
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => setShowHiit(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>⚡ Prescriptor HIIT</button>
+            <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>📐 Calc. espacios</button>
+          </div>
+        )}
       </div>
       {isSJ
         ? <SJWeekPlanner week={week} pct={pct} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
         : <CustomWeekPlanner week={week} template={template} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
       }
       {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
+      {showHiit && <HiitPrescriptorModal onClose={() => setShowHiit(false)} />}
     </div>
   ));
 }
