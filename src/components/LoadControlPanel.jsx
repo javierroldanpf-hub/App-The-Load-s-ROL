@@ -318,8 +318,9 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
     <div>
       {/* ── Botón PDF ───────────────────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
-        <button onClick={() => setShowPdf(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "6px 14px", fontSize: 12, color: COLORS.text, cursor: "pointer", fontWeight: 600 }}>
-          Exportar PDF
+        <button onClick={() => setShowPdf(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "7px 13px", fontSize: 12, color: COLORS.text, cursor: "pointer", fontWeight: 600 }}>
+          <svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round"><path d="M320 48H80a32 32 0 0 0-32 32v352a32 32 0 0 0 32 32h352a32 32 0 0 0 32-32V192z"/><path d="M320 48v144h144"/><line x1="176" y1="320" x2="400" y2="320"/><polyline points="336,256 400,320 336,384"/></svg>
+          Exportar informe
         </button>
       </div>
 
