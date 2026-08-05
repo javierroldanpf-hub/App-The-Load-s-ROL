@@ -143,7 +143,10 @@ function ViewerPermissionsSection({ team, save }) {
 export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sessions = [], rpe = [], coachTeamIds = [], coachUsername = "", onTeamDeleted, user = null, readOnly = false }) {
   const roster = teamWithPhotos?.roster || [];
   const [saving, setSaving] = useState(false);
+  const [savedKey, setSavedKey] = useState(null);
   const [coachTeams, setCoachTeams] = useState([]);
+
+  const flashSaved = (key) => { setSavedKey(key); setTimeout(() => setSavedKey((k) => k === key ? null : k), 2000); };
 
   const [isTrainingGroup, setIsTrainingGroup] = useState(team.isTrainingGroup || false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -189,12 +192,13 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     }
   }, [team.coachUsername, team.teamId]);
 
-  const save = useCallback(async (patch) => {
+  const save = useCallback(async (patch, key = null) => {
     setSaving(true);
     try {
       const updated = { ...team, ...patch };
       await saveTeam(updated);
       onTeamUpdate(updated);
+      if (key) flashSaved(key);
     } finally { setSaving(false); }
   }, [team, onTeamUpdate]);
 
@@ -256,7 +260,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     const existing = (team.playerInjuries || {})[username] || [];
     const injuries = { ...(team.playerInjuries || {}), [username]: [...existing, newInjury] };
     setInjuryFormFor(null);
-    await save({ injuredPlayers: next, playerInjuries: injuries });
+    await save({ injuredPlayers: next, playerInjuries: injuries }, `injury-${username}`);
   };
 
   const confirmEditInjury = async (username) => {
@@ -267,7 +271,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     );
     const injuries = { ...(team.playerInjuries || {}), [username]: updated };
     setInjuryFormFor(null);
-    await save({ playerInjuries: injuries });
+    await save({ playerInjuries: injuries }, `injury-${username}`);
   };
 
   const confirmAlta = async (username) => {
@@ -277,7 +281,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     const closed = list.map((inj) => inj.id === editingInjuryId ? { ...inj, endDate: injuryEndDate } : inj);
     const injuries = { ...(team.playerInjuries || {}), [username]: closed };
     setInjuryFormFor(null);
-    await save({ injuredPlayers: next, playerInjuries: injuries });
+    await save({ injuredPlayers: next, playerInjuries: injuries }, `alta-${username}`);
   };
 
   // ── Close active injury (quick, kept for back-compat) ───────────────────
@@ -342,8 +346,8 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     } finally { setTransferring(false); }
   };
 
-  const saveMatchDuration = () => save({ defaultMatchDuration: Number(defaultMatchDuration) || 90 });
-  const saveFormDeadlines = () => save({ formDeadlineWellness: formDeadlineWellness || null, formDeadlineRpe: formDeadlineRpe || null, formDeadlineRpeDay: formDeadlineRpeDay });
+  const saveMatchDuration = () => save({ defaultMatchDuration: Number(defaultMatchDuration) || 90 }, "matchDuration");
+  const saveFormDeadlines = () => save({ formDeadlineWellness: formDeadlineWellness || null, formDeadlineRpe: formDeadlineRpe || null, formDeadlineRpeDay: formDeadlineRpeDay }, "formDeadlines");
 
   // ── Convocatoria ─────────────────────────────────────────────────────────
   const matchSessions = sessions.filter((s) => !s.isRest && (s.isMatch || s.sessionType === "MD(H)" || s.sessionType === "MD(A)")).sort((a, b) => b.date.localeCompare(a.date));
@@ -381,6 +385,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
         if (d.convocado && d.minutesPlayed !== "" && d.minutesPlayed != null) playerMinutes[u] = Number(d.minutesPlayed);
       });
       if (Object.keys(playerMinutes).length) await updateRpeDurationForMatch(team.teamId, squadDate, playerMinutes);
+      flashSaved("squad");
     } finally { setSquadSaving(false); }
   };
 
@@ -476,7 +481,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                     </div>
                     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                       <button onClick={cancelInjuryForm} style={{ flex: 1, padding: "8px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancelar</button>
-                      <button onClick={() => confirmAlta(username)} disabled={saving} style={{ flex: 2, padding: "8px 0", borderRadius: 9, border: "none", background: COLORS.coral, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Confirmar alta</button>
+                      <button onClick={() => confirmAlta(username)} disabled={saving} style={{ flex: 2, padding: "8px 0", borderRadius: 9, border: "none", background: savedKey === `alta-${username}` ? COLORS.lime : COLORS.coral, color: savedKey === `alta-${username}` ? "#14171c" : "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{savedKey === `alta-${username}` ? "✓ Guardado" : "Confirmar alta"}</button>
                     </div>
                   </div>
                 )}
@@ -525,7 +530,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                         onClick={() => injuryFormMode === "edit" ? confirmEditInjury(username) : confirmInjury(username)}
                         disabled={saving}
                         style={{ flex: 2, padding: "8px 0", borderRadius: 9, border: "none", background: COLORS.coral, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                        {injuryFormMode === "edit" ? "Guardar cambios" : "Confirmar lesión"}
+                        {savedKey === `injury-${username}` ? "✓ Guardado" : injuryFormMode === "edit" ? "Guardar cambios" : "Confirmar lesión"}
                       </button>
                     </div>
                   </div>
@@ -641,7 +646,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
                   onClick={saveSquad}
                   disabled={squadSaving}
                   style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer", opacity: squadSaving ? 0.7 : 1 }}>
-                  {squadSaving ? "Guardando..." : "Guardar convocatoria"}
+                  {savedKey === "squad" ? "✓ Guardado" : squadSaving ? "Guardando..." : "Guardar convocatoria"}
                 </button>
               </>
             )}
@@ -657,7 +662,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
             <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 5 }}>Duración (minutos)</div>
             <input type="number" min={1} max={300} value={defaultMatchDuration} onChange={(e) => setDefaultMatchDuration(e.target.value)} style={{ ...inp, width: "100%" }} />
           </div>
-          <button onClick={saveMatchDuration} disabled={saving} style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar</button>
+          <button onClick={saveMatchDuration} disabled={saving} style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{savedKey === "matchDuration" ? "✓ Guardado" : "Guardar"}</button>
         </div>
       </Accordion>}
 
@@ -672,7 +677,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
               </button>
             ))}
           </div>
-          <button onClick={() => save({ sexo: teamSexo || null })} disabled={saving} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar</button>
+          <button onClick={() => save({ sexo: teamSexo || null }, "sexo")} disabled={saving} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{savedKey === "sexo" ? "✓ Guardado" : "Guardar"}</button>
         </Accordion>
       )}
 
@@ -697,7 +702,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
             </div>
           </div>
         </div>
-        <button onClick={saveFormDeadlines} disabled={saving} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Guardar</button>
+        <button onClick={saveFormDeadlines} disabled={saving} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{savedKey === "formDeadlines" ? "✓ Guardado" : "Guardar"}</button>
       </Accordion>
 
       {/* ── SEMANA 1 DE TEMPORADA ── */}
@@ -912,6 +917,8 @@ function PdfSettingsSection({ team, save }) {
   const current = team.pdfSettings || {};
   const loadPdf = current.load || {};
   const physPdf = current.physical || {};
+  const [pdfSaved, setPdfSaved] = useState(false);
+  const flashPdfSaved = () => { setPdfSaved(true); setTimeout(() => setPdfSaved(false), 2000); };
 
   // Build dynamic physical sections including one entry per quadrant config
   const quadConfigs = team.quadrantConfigs || [];
@@ -927,6 +934,7 @@ function PdfSettingsSection({ team, save }) {
     const group = pdfType === "load" ? { ...loadPdf } : { ...physPdf };
     group[key] = !isOn(group, key);
     await save({ pdfSettings: { ...current, [pdfType]: group } });
+    flashPdfSaved();
   };
 
   const move = async (pdfType, idx, dir, totalLen) => {
@@ -938,6 +946,7 @@ function PdfSettingsSection({ team, save }) {
     [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
     group.order = order;
     await save({ pdfSettings: { ...current, [pdfType]: group } });
+    flashPdfSaved();
   };
 
   const SectionList = ({ pdfType }) => {
@@ -988,6 +997,11 @@ function PdfSettingsSection({ team, save }) {
       </div>
       <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>PDF Datos Físicos del jugador</div>
       <SectionList pdfType="physical" />
+      {pdfSaved && (
+        <div style={{ marginTop: 10, width: "100%", padding: "9px 0", borderRadius: 10, background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, textAlign: "center" }}>
+          ✓ Guardado
+        </div>
+      )}
     </div>
   );
 }
@@ -1222,12 +1236,12 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
 
   const handleSaveDayMinutes = async () => {
     setSavingDm(true);
-    try { await save({ sjDayMinutes: dayMinEdits }); } finally { setSavingDm(false); }
+    try { await save({ sjDayMinutes: dayMinEdits }, "sjDayMin"); } finally { setSavingDm(false); }
   };
 
   const handleSavePct = async () => {
     setSavingPct(true);
-    try { await save({ sjPercentages: pctEdits }); } finally { setSavingPct(false); }
+    try { await save({ sjPercentages: pctEdits }, "sjPct"); } finally { setSavingPct(false); }
   };
 
   const handleSave = (tpl) => {
@@ -1289,7 +1303,7 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
               </table>
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <button onClick={() => setDayMinEdits({ ...DEFAULT_SJ_DAY_MINUTES })} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 11, cursor: "pointer" }}>Restablecer</button>
-                <button onClick={handleSaveDayMinutes} disabled={savingDm} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savingDm ? "..." : "Guardar"}</button>
+                <button onClick={handleSaveDayMinutes} disabled={savingDm} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savedKey === "sjDayMin" ? "✓ Guardado" : savingDm ? "..." : "Guardar"}</button>
               </div>
             </div>
           )}
@@ -1329,7 +1343,7 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
               </table>
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <button onClick={() => setPctEdits(SJ_PERCENTAGES_DEFAULT.map((r) => ({ ...r })))} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 11, cursor: "pointer" }}>Restablecer</button>
-                <button onClick={handleSavePct} disabled={savingPct} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savingPct ? "..." : "Guardar"}</button>
+                <button onClick={handleSavePct} disabled={savingPct} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savedKey === "sjPct" ? "✓ Guardado" : savingPct ? "..." : "Guardar"}</button>
               </div>
             </div>
           )}
