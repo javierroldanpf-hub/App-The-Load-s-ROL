@@ -98,7 +98,7 @@ const SJ_ROWS = [
 ];
 
 /* ── Planificador semanal SJ ─────────────────────────────────────────── */
-function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false, matchLabel = "MD", unitShort = "min" }) {
+export function SJWeekPlanner({ week, pct, totalMin, onSave, readOnly = false, matchLabel = "MD", unitShort = "min" }) {
   const initPlan = () => week.sjWeekPlan || { days: {}, cells: {} };
   const [plan, setPlan] = useState(initPlan);
   const [dirty, setDirty] = useState(false);
@@ -251,7 +251,7 @@ const TPL_DAYS = [
   { key: "thu", label: "J" }, { key: "fri", label: "V" }, { key: "sat", label: "S" }, { key: "sun", label: "D" },
 ];
 
-function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false, matchLabel = "MD", unitShort = "min" }) {
+export function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly = false, matchLabel = "MD", unitShort = "min" }) {
   const initPlan = () => week.customWeekPlan || { days: {}, cells: {} };
   const [plan, setPlan] = useState(initPlan);
   const [dirty, setDirty] = useState(false);
@@ -1385,9 +1385,6 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 16, color: COLORS.text }}>Mesociclos</div>
         <div style={{ display: "flex", gap: 8 }}>
-          {showSJ && (
-            <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 10, padding: "8px 14px", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>📐 Calc. espacios</button>
-          )}
           {!readOnly && <button onClick={() => setShowCreate(true)} style={{ background: COLORS.lime, border: "none", color: "#14171c", borderRadius: 10, padding: "8px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>+ Nuevo</button>}
         </div>
       </div>
@@ -1446,6 +1443,62 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
       {showCreate && (
         <CreateMesoModal teamId={team.teamId} onSave={handleCreate} onClose={() => setShowCreate(false)} roster={roster} displayNames={displayNames} showMenstrual={showMenstrual} showSJ={showSJ} showCustomTemplates={showCustomTemplates} customTemplates={customTemplates} />
       )}
+      {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
+    </div>
+  );
+}
+
+/* ── Inline planner para vistas semanal/mensual/mesociclo ────────────── */
+export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, readOnly = false }) {
+  const [showSpaces, setShowSpaces] = useState(false);
+  if (!mesocycles || mesocycles.length === 0) return null;
+
+  const weekEnd = addDays(weekMonday, 6);
+  const meso = mesocycles.find((m) => m.startDate <= weekEnd && m.endDate >= weekMonday);
+  if (!meso) return null;
+
+  const week = (meso.weeks || []).find((w) => w.weekStart <= weekEnd && w.weekEnd >= weekMonday);
+  if (!week) return null;
+
+  const isSJ = !!meso.isSituacionesJugadas;
+  const template = !isSJ && meso.templateId ? (meso.customTemplate || null) : null;
+  const unitShort = meso.unit === "repeticiones" ? "rep" : meso.unit === "metros" ? "m" : meso.unit === "km" ? "km" : meso.unit === "horas" ? "h" : "min";
+  const matchLabel = meso.matchLabel || "MD";
+
+  const totalMin = (() => {
+    const base = week.sjBaseMinutes || meso.defaultSjBaseMinutes || 100;
+    const vol = (week.volume ?? 100) / 100;
+    return Math.round(base * vol);
+  })();
+
+  const pct = (() => {
+    if (!isSJ) return {};
+    const SJ_KEYS_DEF = ["sgj_eg","sgj_em","sgj_ep","smj_eg","smj_em","smj_ep","srj_eg","srj_em","srj_ep"];
+    const result = {};
+    SJ_KEYS_DEF.forEach((k) => { result[k] = week[k] ?? meso[k] ?? 0; });
+    return result;
+  })();
+
+  const handleSave = async (data) => {
+    const updated = { ...meso, weeks: (meso.weeks || []).map((w) => w.weekStart === week.weekStart ? { ...w, ...data } : w) };
+    await saveMesocycle(updated);
+    onMesocyclesChange?.(mesocycles.map((m) => m.id === meso.id ? updated : m));
+  };
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>
+          {meso.name} · {week.name || `Microciclo ${(meso.weeks || []).indexOf(week) + 1}`}
+        </div>
+        <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>📐 Calc. espacios</button>
+      </div>
+      {isSJ
+        ? <SJWeekPlanner week={week} pct={pct} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
+        : template
+          ? <CustomWeekPlanner week={week} template={template} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
+          : null
+      }
       {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
     </div>
   );

@@ -5,7 +5,7 @@ import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, w
 import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession } from "@/lib/db";
 import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
-import MesocyclePanel from "./MesocyclePanel";
+import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
 
 const BLOCK_TYPES = ["CAMPO", "PISTA", "FUERZA", "CARRERA", "METABÓLICO", "HIIT", "EMOM", "AMRAP", "CALENTAMIENTO", "MOVEMENT PREP", "OTRO"];
@@ -653,7 +653,12 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         <button onClick={() => setShowPdf(true)} title="Exportar PDF" style={{ padding: "7px 12px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>↓ PDF</button>
       </div>
 
-      {viewMode === "mesociclo" && <MesocyclePanel team={team} roster={team.roster || []} displayNames={displayNames} onMesocyclesChange={setMesocycles} readOnly={readOnly} teamGender={teamGender} />}
+      {viewMode === "mesociclo" && (
+        <>
+          <MesocyclePanel team={team} roster={team.roster || []} displayNames={displayNames} onMesocyclesChange={setMesocycles} readOnly={readOnly} teamGender={teamGender} />
+          <MesoWeekInline mesocycles={mesocycles} weekMonday={weekMonday} onMesocyclesChange={setMesocycles} readOnly={readOnly} />
+        </>
+      )}
 
       {viewMode !== "mesociclo" && viewMode === "week" ? (
         <>
@@ -751,6 +756,16 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             {monthCells.map(({ date, inMonth }) => <DayCell key={date} date={date} inMonth={inMonth} />)}
           </div>
         </>
+      )}
+
+      {/* ── Editor microciclo activo ─────────────────────────────────── */}
+      {viewMode !== "mesociclo" && (
+        <MesoWeekInline
+          mesocycles={mesocycles}
+          weekMonday={weekMonday}
+          onMesocyclesChange={setMesocycles}
+          readOnly={readOnly}
+        />
       )}
 
       {editDate && (
