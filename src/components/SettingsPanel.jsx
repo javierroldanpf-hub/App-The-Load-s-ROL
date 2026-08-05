@@ -914,13 +914,7 @@ function SeasonStartSection({ team, save }) {
 // Quadrant keys are dynamic: quadrant_0, quadrant_1, etc.
 
 function PdfSettingsSection({ team, save }) {
-  const current = team.pdfSettings || {};
-  const loadPdf = current.load || {};
-  const physPdf = current.physical || {};
-  const [pdfSaved, setPdfSaved] = useState(false);
-  const flashPdfSaved = () => { setPdfSaved(true); setTimeout(() => setPdfSaved(false), 2000); };
-
-  // Build dynamic physical sections including one entry per quadrant config
+  const stored = team.pdfSettings || {};
   const quadConfigs = team.quadrantConfigs || [];
   const ALL_PHYS_SECTIONS = [
     ...BASE_PHYS_SECTIONS,
@@ -928,40 +922,63 @@ function PdfSettingsSection({ team, save }) {
   ];
   const DEFAULT_PHYS_ORDER = ALL_PHYS_SECTIONS.map((s) => s.key);
 
+  const buildInitial = () => ({
+    load: { ...(stored.load || {}) },
+    physical: { ...(stored.physical || {}) },
+  });
+
+  const [local, setLocal] = useState(buildInitial);
+  const [pdfSaved, setPdfSaved] = useState(false);
+  const [pdfSaving, setPdfSaving] = useState(false);
+
+  useEffect(() => { setLocal(buildInitial()); }, [team]);
+
   const isOn = (obj, key) => obj[key] !== false;
 
-  const toggle = async (pdfType, key) => {
-    const group = pdfType === "load" ? { ...loadPdf } : { ...physPdf };
-    group[key] = !isOn(group, key);
-    await save({ pdfSettings: { ...current, [pdfType]: group } });
-    flashPdfSaved();
+  const toggle = (pdfType, key) => {
+    setLocal((prev) => {
+      const group = { ...prev[pdfType] };
+      group[key] = !isOn(group, key);
+      return { ...prev, [pdfType]: group };
+    });
+    setPdfSaved(false);
   };
 
-  const move = async (pdfType, idx, dir, totalLen) => {
-    const group = pdfType === "load" ? { ...loadPdf } : { ...physPdf };
-    const defOrder = pdfType === "load" ? DEFAULT_LOAD_ORDER : DEFAULT_PHYS_ORDER;
-    const order = [...(group.order || defOrder)];
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= totalLen) return;
-    [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
-    group.order = order;
-    await save({ pdfSettings: { ...current, [pdfType]: group } });
-    flashPdfSaved();
+  const move = (pdfType, idx, dir, totalLen) => {
+    setLocal((prev) => {
+      const group = { ...prev[pdfType] };
+      const defOrder = pdfType === "load" ? DEFAULT_LOAD_ORDER : DEFAULT_PHYS_ORDER;
+      const allKeys = (pdfType === "load" ? ALL_LOAD_SECTIONS : ALL_PHYS_SECTIONS).map((s) => s.key);
+      const stored = group.order || defOrder;
+      const order = [...stored.filter((k) => allKeys.includes(k)), ...allKeys.filter((k) => !stored.includes(k))];
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= totalLen) return prev;
+      [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+      group.order = order;
+      return { ...prev, [pdfType]: group };
+    });
+    setPdfSaved(false);
+  };
+
+  const handleSave = async () => {
+    setPdfSaving(true);
+    try {
+      await save({ pdfSettings: local });
+      setPdfSaved(true);
+      setTimeout(() => setPdfSaved(false), 2000);
+    } finally { setPdfSaving(false); }
   };
 
   const SectionList = ({ pdfType }) => {
     const allSects = pdfType === "load" ? ALL_LOAD_SECTIONS : ALL_PHYS_SECTIONS;
     const defOrder = pdfType === "load" ? DEFAULT_LOAD_ORDER : DEFAULT_PHYS_ORDER;
-    const group = pdfType === "load" ? loadPdf : physPdf;
-
-    // Merge stored order with current sections: keep stored order for known keys, append new keys at end
+    const group = local[pdfType];
     const storedOrder = group.order || defOrder;
     const allKeys = allSects.map((s) => s.key);
     const order = [
       ...storedOrder.filter((k) => allKeys.includes(k)),
       ...allKeys.filter((k) => !storedOrder.includes(k)),
     ];
-
     const labelMap = Object.fromEntries(allSects.map((s) => [s.key, s.label]));
     return (
       <div>
@@ -997,11 +1014,13 @@ function PdfSettingsSection({ team, save }) {
       </div>
       <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>PDF Datos Físicos del jugador</div>
       <SectionList pdfType="physical" />
-      {pdfSaved && (
-        <div style={{ marginTop: 10, width: "100%", padding: "9px 0", borderRadius: 10, background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, textAlign: "center" }}>
-          ✓ Guardado
-        </div>
-      )}
+      <button
+        onClick={handleSave}
+        disabled={pdfSaving}
+        style={{ marginTop: 14, width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: pdfSaving ? "default" : "pointer" }}
+      >
+        {pdfSaved ? "✓ Guardado" : pdfSaving ? "Guardando..." : "Guardar"}
+      </button>
     </div>
   );
 }
