@@ -1485,6 +1485,7 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
   };
 
   return (
+    !(isSJ || template) ? null : (
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>
@@ -1494,11 +1495,9 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
       </div>
       {isSJ
         ? <SJWeekPlanner week={week} pct={pct} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
-        : template
-          ? <CustomWeekPlanner week={week} template={template} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
-          : null
+        : <CustomWeekPlanner week={week} template={template} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
       }
       {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
     </div>
-  );
+  ));
 }
