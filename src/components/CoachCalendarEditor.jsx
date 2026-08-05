@@ -764,7 +764,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           mesocycles={mesocycles}
           weekMonday={weekMonday}
           onMesocyclesChange={setMesocycles}
-          readOnly={readOnly}
+          readOnly={true}
         />
       )}
 
