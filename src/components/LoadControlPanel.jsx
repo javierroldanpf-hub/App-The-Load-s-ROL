@@ -211,35 +211,52 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
   const adjLowSing = isFem ? "cargada" : "cargado";
   const [showPdf, setShowPdf] = useState(false);
 
+  // Gabbett/Banister A/C ratio: acute = sum(7d)/7, chronic = sum(28d)/28
+  // Days without data count as 0 — rest is part of the load model
+  function acwrFixed(getDayValue, refDate) {
+    let acute = 0, chronic = 0;
+    for (let i = 0; i < 28; i++) {
+      const d = addDays(refDate, -i);
+      const v = getDayValue(d) ?? 0;
+      if (i < 7) acute += v;
+      chronic += v;
+    }
+    const chronicAvg = chronic / 28;
+    if (chronicAvg === 0) return null;
+    return (acute / 7) / chronicAvg;
+  }
+
   const playerStats = useMemo(() => {
     const d7  = addDays(today, -6);
     const d28 = addDays(today, -27);
-    const d7prior = addDays(today, -27); // 21 days prior start (day -7 to -27)
-    const d7priorEnd = addDays(today, -7);
 
     return roster.map((player) => {
       const myW = wellness.filter((e) => e.username === player.username);
       const myR = rpe.filter((e) => e.username === player.username);
       const allLoads = myR.map((e) => ({ date: e.date, load: sessionLoad(e) }));
 
-      /* WS metrics */
+      /* WS lookup maps */
+      const wsMap = {};
+      myW.forEach((e) => { wsMap[e.date] = weightedWellnessScore(e); });
+      const slMap = {};
+      myR.forEach((e) => { slMap[e.date] = sessionLoad(e); });
+
+      /* WS metrics — A/C uses fixed ÷7/÷28 (Gabbett); mono/stress on recorded values */
       const w7 = myW.filter((e) => e.date >= d7 && e.date <= today).map((e) => weightedWellnessScore(e));
-      const wPrior = myW.filter((e) => e.date >= d7prior && e.date <= d7priorEnd).map((e) => weightedWellnessScore(e));
       const wsMedio = w7.length ? mean(w7) : null;
-      const wsAC    = wsMedio !== null && wPrior.length ? wsMedio / mean(wPrior) : null;
+      const wsAC    = acwrFixed((d) => wsMap[d] ?? null, today);
       const wsMono  = w7.length >= 3 ? monotony(w7) : null;
       const wsStr   = wsMono !== null && wsMedio !== null ? trainingStress(w7) : null;
       const wsVar   = w7.length >= 3 ? variability(w7) : null;
 
       /* RPE metrics */
       const r7 = myR.filter((e) => e.date >= d7 && e.date <= today).map((e) => e.rpe);
-      const rPrior = myR.filter((e) => e.date >= d7prior && e.date <= d7priorEnd).map((e) => e.rpe);
       const rpeMedio = r7.length ? mean(r7) : null;
-      /* sRPE metrics (monotonía/stress/var sobre carga de sesión) */
+
+      /* sRPE metrics — A/C uses fixed ÷7/÷28; mono/stress on recorded values */
       const sl7 = myR.filter((e) => e.date >= d7 && e.date <= today).map((e) => sessionLoad(e));
-      const slPrior = myR.filter((e) => e.date >= d7prior && e.date <= d7priorEnd).map((e) => sessionLoad(e));
       const srpeMedio = sl7.length ? mean(sl7) : null;
-      const rpeAC   = srpeMedio !== null && slPrior.length ? srpeMedio / mean(slPrior) : null;
+      const rpeAC   = acwrFixed((d) => slMap[d] ?? null, today);
       const rpeMono = sl7.length >= 3 ? monotony(sl7) : null;
       const rpeStr  = rpeMono !== null && srpeMedio !== null ? trainingStress(sl7) : null;
       const rpeVar  = sl7.length >= 3 ? variability(sl7) : null;
@@ -254,8 +271,8 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
         isRed.rpeMedio(rpeMedio), isRed.rpeAC(rpeAC), isRed.rpeMono(rpeMono), isRed.rpeStr(rpeStr),
       ].filter(Boolean).length;
 
-      /* ACWR sRPE */
-      const acwrVal = acwr(allLoads, today);
+      /* ACWR sRPE (same as rpeAC now) */
+      const acwrVal = rpeAC;
 
       return { ...player, wsMedio, wsAC, wsMono, wsStr, wsVar, rpeMedio, srpeMedio, rpeAC, rpeMono, rpeStr, rpeVar, avgWS, avgRpe, redCount, acwrVal };
     });
