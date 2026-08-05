@@ -1449,7 +1449,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
 }
 
 /* ── Inline planner para vistas semanal/mensual/mesociclo ────────────── */
-export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, readOnly = false }) {
+export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, readOnly = false, sjPercentages = null }) {
   const [showSpaces, setShowSpaces] = useState(false);
   if (!mesocycles || mesocycles.length === 0) return null;
 
@@ -1457,8 +1457,9 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
   const meso = mesocycles.find((m) => m.startDate <= weekEnd && m.endDate >= weekMonday);
   if (!meso) return null;
 
-  const week = (meso.weeks || []).find((w) => w.weekStart <= weekEnd && w.weekEnd >= weekMonday);
-  if (!week) return null;
+  const weekIdx = (meso.weeks || []).findIndex((w) => w.weekStart <= weekEnd && w.weekEnd >= weekMonday);
+  if (weekIdx === -1) return null;
+  const week = meso.weeks[weekIdx];
 
   const isSJ = !!meso.isSituacionesJugadas;
   const template = !isSJ && meso.templateId ? (meso.customTemplate || null) : null;
@@ -1473,10 +1474,8 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
 
   const pct = (() => {
     if (!isSJ) return {};
-    const SJ_KEYS_DEF = ["sgj_eg","sgj_em","sgj_ep","smj_eg","smj_em","smj_ep","srj_eg","srj_em","srj_ep"];
-    const result = {};
-    SJ_KEYS_DEF.forEach((k) => { result[k] = week[k] ?? meso[k] ?? 0; });
-    return result;
+    const activePct = (sjPercentages && sjPercentages.length >= 6) ? sjPercentages : SJ_PERCENTAGES;
+    return activePct[weekIdx] || activePct[activePct.length - 1];
   })();
 
   const handleSave = async (data) => {

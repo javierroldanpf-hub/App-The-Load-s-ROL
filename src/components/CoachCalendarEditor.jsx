@@ -656,7 +656,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
       {viewMode === "mesociclo" && (
         <>
           <MesocyclePanel team={team} roster={team.roster || []} displayNames={displayNames} onMesocyclesChange={setMesocycles} readOnly={readOnly} teamGender={teamGender} />
-          <MesoWeekInline mesocycles={mesocycles} weekMonday={weekMonday} onMesocyclesChange={setMesocycles} readOnly={true} />
+          <MesoWeekInline mesocycles={mesocycles} weekMonday={weekMonday} onMesocyclesChange={setMesocycles} readOnly={true} sjPercentages={team.sjPercentages || null} />
         </>
       )}
 
@@ -765,6 +765,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           weekMonday={weekMonday}
           onMesocyclesChange={setMesocycles}
           readOnly={true}
+          sjPercentages={team.sjPercentages || null}
         />
       )}
 
