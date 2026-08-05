@@ -132,15 +132,15 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
             )}
             {!compact && !match && blocks.map((b, i) => (
               <div key={i} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${int.border}` }}>
-                {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: int.color }}>{b.name.toUpperCase()}{b.duration ? ` · ${b.duration} min` : ""}</div>}
-                {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{b.content}</div>}
+                {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: int.color, wordBreak: "break-word", overflowWrap: "anywhere" }}>{b.name.toUpperCase()}{b.duration ? ` · ${b.duration} min` : ""}</div>}
+                {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4, wordBreak: "break-word", overflowWrap: "anywhere" }}>{b.content}</div>}
                 {b.tasks?.length > 0 && (
                   <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
                     {b.tasks.map((t, ti) => (
-                      <div key={ti} style={{ fontSize: 9, lineHeight: 1.3, flexWrap: "wrap", display: "flex", alignItems: "baseline", gap: 3 }}>
-                        <span style={{ color: D.text, fontWeight: 700, flexShrink: 0 }}>{ti + 1}. {t.name}</span>
+                      <div key={ti} style={{ fontSize: 9, lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                        <span style={{ color: D.text, fontWeight: 700 }}>{ti + 1}. {t.name}</span>
                         {[t.workTime && `⏱ ${t.workTime}`, t.restTime && `↺ ${t.restTime}`, t.space && `📐 ${t.space}`, t.relativeArea && `m² ${t.relativeArea}`].filter(Boolean).map((seg, si) => (
-                          <span key={si} style={{ color: int.color, flexShrink: 0 }}>{seg}</span>
+                          <span key={si} style={{ color: int.color, marginLeft: 3 }}>{seg}</span>
                         ))}
                       </div>
                     ))}
@@ -167,8 +167,8 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
             {!compact && s.players?.length > 0 && <div style={{ fontSize: 9, color: D.textMuted, marginTop: 1 }}>{s.players.map((u) => resolveDisplayName(displayNames, u)).join(", ")}</div>}
             {!compact && indBlocks.map((b, bi) => (
               <div key={bi} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${D.blue}` }}>
-                {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: indInt.color }}>{b.name.toUpperCase()}{b.duration ? ` · ${b.duration} min` : ""}</div>}
-                {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4 }}>{b.content}</div>}
+                {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: indInt.color, wordBreak: "break-word", overflowWrap: "anywhere" }}>{b.name.toUpperCase()}{b.duration ? ` · ${b.duration} min` : ""}</div>}
+                {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4, wordBreak: "break-word", overflowWrap: "anywhere" }}>{b.content}</div>}
               </div>
             ))}
             {!compact && indNote?.content && (
