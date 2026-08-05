@@ -288,10 +288,10 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
   const [statusModal, setStatusModal] = useState(null); // { title, color, players }
 
   const statusGroups = [
-    { label: `${PersonLabel} cargados (ACWR)`, color: "#ff9f40", players: loadedAcwr, desc: "ACWR > 1.5 o < 0.8" },
-    { label: `${PersonLabel} en alerta`,        color: COLORS.coral, players: alert4, desc: "≥4 factores en rojo" },
-    { label: `${PersonLabel} en duda`,          color: "#f2c63c", players: doubt,   desc: "2–3 factores en rojo" },
-    { label: `${PersonLabel} en buena forma`,   color: COLORS.lime,  players: goodForm, desc: "ACWR 0.8–1.3" },
+    { label: `${PersonLabel} cargados (ACWR)`, color: "#ff9f40",    players: loadedAcwr, desc: "ACWR > 1.5 o < 0.8",    total: totalWithData },
+    { label: `${PersonLabel} en alerta`,        color: COLORS.coral, players: alert4,     desc: "≥4 factores en rojo",   total: roster.length },
+    { label: `${PersonLabel} en duda`,          color: "#f2c63c",    players: doubt,      desc: "2–3 factores en rojo",  total: roster.length },
+    { label: `${PersonLabel} en buena forma`,   color: COLORS.lime,  players: goodForm,   desc: "ACWR 0.8–1.3",          total: totalWithData },
   ];
 
   const thStyle = { fontSize: 8, color: COLORS.text, padding: "4px 4px", textAlign: "center", fontWeight: 600, borderBottom: `1px solid ${COLORS.line}`, whiteSpace: "nowrap" };
@@ -306,38 +306,18 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
         </button>
       </div>
 
-      {/* ── Estado del grupo ────────────────────────────────────────── */}
-      <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, marginBottom: 10 }}>Estado del grupo</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {statusGroups.map((g) => (
-            <button
-              key={g.label}
-              onClick={() => g.players.length > 0 && setStatusModal(g)}
-              style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: "4px 0", cursor: g.players.length > 0 ? "pointer" : "default", textAlign: "left" }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: g.color, flexShrink: 0, display: "inline-block" }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: g.color }}>{g.label} ({g.players.length})</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Alertas ─────────────────────────────────────────────────── */}
+      {/* ── Estado del grupo — 4 recuadros clicables ────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-        <div style={{ background: COLORS.panel, border: `1px solid ${alertPlayers.length > 0 ? COLORS.coral : COLORS.line}`, borderRadius: 12, padding: "10px 12px" }}>
-          <div style={{ fontSize: 9, color: COLORS.text, marginBottom: 4 }}>{isIndividual ? (isFem ? "Atleta en alerta" : "Atleta en alerta") : `${PersonLabel} en alerta`}</div>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 26, color: alertPlayers.length > 0 ? COLORS.coral : COLORS.lime }}>
-            {alertPlayers.length}<span style={{ fontSize: 14, color: COLORS.text, fontWeight: 400 }}>/{roster.length}</span>
-          </div>
-          <div style={{ fontSize: 9, color: COLORS.text, marginTop: 2 }}>≥4 parámetros en rojo</div>
-        </div>
-        <div style={{ background: COLORS.panel, border: `1px solid ${acwrRisk.length > 0 ? COLORS.amber : COLORS.line}`, borderRadius: 12, padding: "10px 12px" }}>
-          <div style={{ fontSize: 9, color: COLORS.text, marginBottom: 4 }}>Riesgo ACWR sRPE</div>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 26, color: acwrRisk.length > 0 ? COLORS.amber : COLORS.lime }}>
-            {acwrRisk.length}<span style={{ fontSize: 14, color: COLORS.text, fontWeight: 400 }}>/{totalWithData}</span>
-          </div>
-          <div style={{ fontSize: 9, color: COLORS.text, marginTop: 2 }}>ACWR {">"} 1.5 o {"<"} 0.8</div>
-        </div>
+        {statusGroups.map((g) => (
+          <button key={g.label} onClick={() => g.players.length > 0 && setStatusModal(g)}
+            style={{ background: COLORS.panel, border: `1px solid ${g.players.length > 0 ? g.color : COLORS.line}`, borderRadius: 12, padding: "10px 12px", cursor: g.players.length > 0 ? "pointer" : "default", textAlign: "left" }}>
+            <div style={{ fontSize: 9, color: COLORS.text, marginBottom: 4 }}>{g.label}</div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 26, color: g.players.length > 0 ? g.color : COLORS.lime }}>
+              {g.players.length}<span style={{ fontSize: 14, color: COLORS.text, fontWeight: 400 }}>/{g.total ?? roster.length}</span>
+            </div>
+            <div style={{ fontSize: 9, color: COLORS.text, marginTop: 2 }}>{g.desc}</div>
+          </button>
+        ))}
       </div>
 
       {/* ── Modal Estado del grupo ───────────────────────────────────── */}
