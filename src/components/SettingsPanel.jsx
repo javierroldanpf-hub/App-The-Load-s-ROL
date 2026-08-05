@@ -716,7 +716,7 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       </Accordion>
 
       {/* ── PLANTILLAS MESOCICLO ── */}
-      {((team.kind || "equipo") === "equipo" || team.kind === "grupo") && (
+      {((team.kind || "equipo") === "equipo" || team.kind === "grupo" || team.kind === "individual") && (
         <Accordion title="Planificación del mesociclo">
           <MesoTemplatesSection team={team} save={save} showBuiltIn={(team.kind || "equipo") === "equipo"} />
         </Accordion>

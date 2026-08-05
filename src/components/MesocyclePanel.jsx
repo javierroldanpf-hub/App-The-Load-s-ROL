@@ -1357,7 +1357,8 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
 
   const showSJ = (team.kind || "equipo") === "equipo";
   const isGrupo = team.kind === "grupo";
-  const showCustomTemplates = showSJ || isGrupo;
+  const isIndividual = team.kind === "individual";
+  const showCustomTemplates = showSJ || isGrupo || isIndividual;
   const showMenstrual = teamGender === "femenino" || teamGender === "mixto";
   const customTemplates = team.customMesoTemplates || [];
 
