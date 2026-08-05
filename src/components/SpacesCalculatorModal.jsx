@@ -117,8 +117,11 @@ function FieldInput({ label, value, onChange }) {
 }
 
 export default function SpacesCalculatorModal({ onClose }) {
-  const [casa,  setCasa]  = useState(DEFAULT_CASA);
-  const [fuera, setFuera] = useState(DEFAULT_FUERA);
+  const [casa,  setCasa]  = useState(() => { try { const s = localStorage.getItem("spaces_casa");  return s ? JSON.parse(s) : DEFAULT_CASA;  } catch { return DEFAULT_CASA;  } });
+  const [fuera, setFuera] = useState(() => { try { const s = localStorage.getItem("spaces_fuera"); return s ? JSON.parse(s) : DEFAULT_FUERA; } catch { return DEFAULT_FUERA; } });
+
+  const updateCasa  = (v) => { setCasa(v);  try { localStorage.setItem("spaces_casa",  JSON.stringify(v)); } catch {} };
+  const updateFuera = (v) => { setFuera(v); try { localStorage.setItem("spaces_fuera", JSON.stringify(v)); } catch {} };
 
   // ── Per-space calculator ──────────────────────────────────────────────
   const [calcM2,      setCalcM2]      = useState("");
@@ -155,8 +158,8 @@ export default function SpacesCalculatorModal({ onClose }) {
 
         {/* Field inputs */}
         <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-          <FieldInput label="🏟 Campo CASA" value={casa} onChange={setCasa} />
-          <FieldInput label="🚌 Campo VISITANTE" value={fuera} onChange={setFuera} />
+          <FieldInput label="🏟 Campo CASA" value={casa} onChange={updateCasa} />
+          <FieldInput label="🚌 Campo VISITANTE" value={fuera} onChange={updateFuera} />
         </div>
 
         {/* Legend */}
