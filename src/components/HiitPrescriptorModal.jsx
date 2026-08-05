@@ -316,6 +316,104 @@ function TablaPrescripcion() {
   );
 }
 
+/* ── Section 4: calculadora espacio / velocidad / tiempo ─────────────────── */
+function Calculadora() {
+  // target: which field is being calculated
+  const [target, setTarget] = useState("tiempo");
+  const [espacio, setEspacio] = useState("30");   // metros
+  const [velocidad, setVelocidad] = useState("18"); // km/h
+  const [tiempo, setTiempo] = useState("6");        // segundos
+
+  const fmt = (n) => isNaN(n) || !isFinite(n) ? "—" : n.toFixed(2).replace(/\.?0+$/, "");
+
+  // live-calculated value
+  const calc = () => {
+    const e = parseFloat(espacio);
+    const v = parseFloat(velocidad);
+    const t = parseFloat(tiempo);
+    if (target === "espacio")   return fmt(v / 3.6 * t);
+    if (target === "velocidad") return fmt(e / t * 3.6);
+    if (target === "tiempo")    return fmt(e / (v / 3.6));
+    return "—";
+  };
+
+  const fields = [
+    { key:"espacio",   label:"Espacio",    unit:"m",    val:espacio,   set:setEspacio   },
+    { key:"velocidad", label:"Velocidad",  unit:"km/h", val:velocidad, set:setVelocidad },
+    { key:"tiempo",    label:"Tiempo",     unit:"seg",  val:tiempo,    set:setTiempo    },
+  ];
+
+  const accent = "#00e5ff";
+
+  return (
+    <Section n={4} title="Calculadora Espacio · Velocidad · Tiempo">
+      <div style={{ background:T.card, border:`1px solid ${accent}33`, borderRadius:12, padding:"14px 14px 16px" }}>
+        <div style={{ fontSize:9, color:T.muted, marginBottom:12, letterSpacing:0.4 }}>
+          Selecciona la variable a calcular — las otras dos son tus entradas.
+        </div>
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+          {fields.map(({ key, label, unit, val, set }) => {
+            const isCalc = target === key;
+            return (
+              <div key={key} style={{ flex:"1 1 140px", display:"flex", flexDirection:"column", gap:6 }}>
+                {/* label + toggle */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:9, fontWeight:700, color: isCalc ? accent : T.muted, letterSpacing:0.5, textTransform:"uppercase" }}>{label}</span>
+                  <button
+                    onClick={() => setTarget(key)}
+                    style={{
+                      fontSize:8, fontWeight:700, padding:"2px 7px", borderRadius:10,
+                      border:`1px solid ${isCalc ? accent : T.line}`,
+                      background: isCalc ? accent + "22" : "transparent",
+                      color: isCalc ? accent : T.muted,
+                      cursor:"pointer", letterSpacing:0.4,
+                    }}
+                  >{isCalc ? "CALCULAR ✓" : "CALCULAR"}</button>
+                </div>
+                {/* field */}
+                <div style={{
+                  display:"flex", alignItems:"center", gap:0,
+                  background: isCalc ? T.panel : "#1a2540",
+                  border:`1.5px solid ${isCalc ? accent + "66" : T.line}`,
+                  borderRadius:8, overflow:"hidden",
+                }}>
+                  {isCalc ? (
+                    <div style={{
+                      flex:1, padding:"10px 12px",
+                      fontFamily:"monospace", fontSize:22, fontWeight:700,
+                      color: accent, textAlign:"center", letterSpacing:1,
+                    }}>{calc()}</div>
+                  ) : (
+                    <input
+                      type="number" min={0} step="any" value={val}
+                      onChange={(e) => set(e.target.value)}
+                      style={{
+                        flex:1, padding:"10px 12px", background:"transparent", border:"none",
+                        fontFamily:"monospace", fontSize:20, fontWeight:700,
+                        color:T.text, outline:"none", textAlign:"center", width:"100%",
+                      }}
+                    />
+                  )}
+                  <div style={{
+                    padding:"0 10px", fontSize:9, fontWeight:700,
+                    color: isCalc ? accent + "99" : T.muted,
+                    borderLeft:`1px solid ${T.line}`, height:"100%",
+                    display:"flex", alignItems:"center",
+                  }}>{unit}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* formula hint */}
+        <div style={{ marginTop:12, fontSize:8, color:T.muted, textAlign:"center", fontFamily:"monospace", letterSpacing:0.3 }}>
+          Espacio (m) = Velocidad (km/h) ÷ 3.6 × Tiempo (s)
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 /* ── Modal ───────────────────────────────────────────────────────────────── */
 export default function HiitPrescriptorModal({ onClose }) {
   return (
@@ -349,6 +447,7 @@ export default function HiitPrescriptorModal({ onClose }) {
           <TablaClasificacion />
           <TablaEleccion />
           <TablaPrescripcion />
+          <Calculadora />
         </div>
       </div>
     </div>
