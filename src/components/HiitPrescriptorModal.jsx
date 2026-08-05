@@ -117,7 +117,7 @@ function TablaClasificacion() {
             <div key={t.n} style={{ background:T.card, border:`1px solid ${T.line}`, borderRadius:10, overflow:"hidden" }}>
               <div style={{ background:`${primary}18`, borderBottom:`1px solid ${primary}44`, padding:"6px 10px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <span style={{ fontFamily:"monospace", fontWeight:700, fontSize:13, color:primary }}>TIPO {t.n}</span>
-                <span style={{ fontSize:8, color:T.muted, fontWeight:600, background:T.panel, borderRadius:4, padding:"1px 5px" }}>{t.sub}</span>
+                <span style={{ fontSize:8, color:T.text, fontWeight:600, background:T.panel, borderRadius:4, padding:"1px 5px" }}>{t.sub}</span>
               </div>
               <div style={{ padding:"8px 10px" }}>
                 <div style={{ fontSize:8, color:T.muted, fontWeight:700, marginBottom:3, letterSpacing:0.5 }}>{t.meta}</div>
