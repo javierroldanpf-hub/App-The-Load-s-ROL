@@ -169,6 +169,18 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
               <div key={bi} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${D.blue}` }}>
                 {b.name && <div style={{ fontSize: 10, fontWeight: 700, color: indInt.color, wordBreak: "break-word", overflowWrap: "anywhere" }}>{b.name.toUpperCase()}{b.duration ? ` · ${b.duration} min` : ""}</div>}
                 {b.content && <div style={{ fontSize: 10, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.4, wordBreak: "break-word", overflowWrap: "anywhere" }}>{b.content}</div>}
+                {b.tasks?.length > 0 && (
+                  <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
+                    {b.tasks.map((t, ti) => (
+                      <div key={ti} style={{ fontSize: 9, lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                        <span style={{ color: D.text, fontWeight: 700 }}>{ti + 1}. {t.name}</span>
+                        {[t.workTime && `⏱ ${t.workTime}`, t.restTime && `↺ ${t.restTime}`, t.space && `📐 ${t.space}`, t.relativeArea && `m² ${t.relativeArea}`].filter(Boolean).map((seg, si) => (
+                          <span key={si} style={{ color: indInt.color, marginLeft: 3 }}>{seg}</span>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {!compact && indNote?.content && (
