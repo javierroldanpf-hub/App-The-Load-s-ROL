@@ -73,13 +73,19 @@ const Section = ({ n, title, children }) => (
 );
 
 /* ── Section 1: clasificación ────────────────────────────────────────────── */
+const SUBCICLOS = {
+  1: "Subciclo 1 · Foco Extensivo SGJ EM",
+  2: "Subciclo 2 · Foco Velocidad SMJ EG",
+  3: "Subciclo 3 · Foco Intensivo SRJ EP",
+};
+
 const TIPOS = [
-  { n:1, sub:"Subciclo 1", meta:"METABÓLICO",    desc:"Predominante aeróbico",                      ae:true,  an:false, nm:false },
-  { n:2, sub:"Subciclo 3", meta:"METABÓLICO",    desc:"Aeróbico con estrés neuromuscular",          ae:true,  an:false, nm:true  },
-  { n:3, sub:"Subciclo 1", meta:"METABÓLICO",    desc:"Aeróbico con contribución anaeróbica glucolítica", ae:true,  an:true,  nm:false },
-  { n:4, sub:"Subciclo 3", meta:"METABÓLICO",    desc:"Oxidativo/anaeróbico + estrés NM",           ae:true,  an:true,  nm:true  },
-  { n:5, sub:"Subciclo 2", meta:"ANAERÓBICO",    desc:"Anaeróbico con estrés neuromuscular",        ae:false, an:true,  nm:true  },
-  { n:6, sub:"Subciclo 2", meta:"NEUROMUSCULAR", desc:"Sin contribución metabólica",                ae:false, an:false, nm:true  },
+  { n:1, sub:SUBCICLOS[1], meta:"METABÓLICO",    desc:"Predominante aeróbico",                           ae:true,  an:false, nm:false },
+  { n:2, sub:SUBCICLOS[3], meta:"METABÓLICO",    desc:"Aeróbico con estrés neuromuscular",               ae:true,  an:false, nm:true  },
+  { n:3, sub:SUBCICLOS[1], meta:"METABÓLICO",    desc:"Aeróbico con contribución anaeróbica glucolítica", ae:true,  an:true,  nm:false },
+  { n:4, sub:SUBCICLOS[3], meta:"METABÓLICO",    desc:"Oxidativo/anaeróbico + estrés NM",                ae:true,  an:true,  nm:true  },
+  { n:5, sub:SUBCICLOS[2], meta:"ANAERÓBICO",    desc:"Anaeróbico con estrés neuromuscular",             ae:false, an:true,  nm:true  },
+  { n:6, sub:SUBCICLOS[2], meta:"NEUROMUSCULAR", desc:"Sin contribución metabólica",                     ae:false, an:false, nm:true  },
 ];
 
 function TablaClasificacion() {
