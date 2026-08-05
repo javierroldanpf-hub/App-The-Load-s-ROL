@@ -1490,7 +1490,7 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
         <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>
           {meso.name} · {week.name || `Microciclo ${(meso.weeks || []).indexOf(week) + 1}`}
         </div>
-        <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>📐 Calc. espacios</button>
+        {isSJ && <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>📐 Calc. espacios</button>}
       </div>
       {isSJ
         ? <SJWeekPlanner week={week} pct={pct} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
