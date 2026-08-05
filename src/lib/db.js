@@ -162,6 +162,18 @@ export async function getTeam(teamId) {
 
 export async function saveTeam(team) {
   const sb = getSupabase();
+  // Always fetch the current roster from DB before saving to avoid overwriting
+  // players who joined since the coach last loaded the page (race condition).
+  try {
+    const { data: current } = await sb.from("teams").select("roster").eq("team_id", team.teamId).single();
+    if (current?.roster) {
+      const freshRoster = (current.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
+      const localRoster = (team.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
+      // Merge: keep everyone in DB, add anyone in local roster, never drop DB entries
+      const merged = [...new Set([...freshRoster, ...localRoster])];
+      team = { ...team, roster: merged };
+    }
+  } catch {}
   const record = appTeamToDb(team);
   const { error } = await sb
     .from("teams")
