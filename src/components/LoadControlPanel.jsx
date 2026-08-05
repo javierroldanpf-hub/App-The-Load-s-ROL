@@ -268,6 +268,32 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
   const acwrRisk = playerStats.filter((p) => p.acwrVal !== null && (p.acwrVal > 1.5 || p.acwrVal < 0.8));
   const totalWithData = playerStats.filter((p) => p.acwrVal !== null).length;
 
+  // Estado del grupo (4 grupos)
+  const loadedAcwr = playerStats.filter((p) => p.acwrVal !== null && (p.acwrVal > 1.5 || p.acwrVal < 0.8));
+  const alert4     = playerStats.filter((p) => p.redCount >= 4);
+  const doubt      = playerStats.filter((p) => p.redCount >= 2 && p.redCount < 4);
+  const goodForm   = playerStats.filter((p) => p.acwrVal !== null && p.acwrVal >= 0.8 && p.acwrVal <= 1.3);
+
+  const RED_METRIC_LABELS = [
+    { key: "wsMedio", label: "WS medio",    isR: (p) => isRed.wsMedio(p.wsMedio),  fmt: (p) => p.wsMedio?.toFixed(1) },
+    { key: "wsAC",    label: "A/C WS",      isR: (p) => isRed.wsAC(p.wsAC),        fmt: (p) => p.wsAC?.toFixed(2) },
+    { key: "wsMono",  label: "Mono WS",     isR: (p) => isRed.wsMono(p.wsMono),    fmt: (p) => p.wsMono?.toFixed(1) },
+    { key: "wsStr",   label: "Stress WS",   isR: (p) => isRed.wsStr(p.wsStr),      fmt: (p) => p.wsStr?.toFixed(0) },
+    { key: "rpeMedio",label: "RPE medio",   isR: (p) => isRed.rpeMedio(p.rpeMedio),fmt: (p) => p.rpeMedio?.toFixed(1) },
+    { key: "rpeAC",   label: "A/C sRPE",   isR: (p) => isRed.rpeAC(p.rpeAC),     fmt: (p) => p.rpeAC?.toFixed(2) },
+    { key: "rpeMono", label: "Mono sRPE",   isR: (p) => isRed.rpeMono(p.rpeMono),  fmt: (p) => p.rpeMono?.toFixed(1) },
+    { key: "rpeStr",  label: "Stress sRPE", isR: (p) => isRed.rpeStr(p.rpeStr),    fmt: (p) => p.rpeStr?.toFixed(0) },
+  ];
+
+  const [statusModal, setStatusModal] = useState(null); // { title, color, players }
+
+  const statusGroups = [
+    { label: `${PersonLabel} cargados (ACWR)`, color: "#ff9f40", players: loadedAcwr, desc: "ACWR > 1.5 o < 0.8" },
+    { label: `${PersonLabel} en alerta`,        color: COLORS.coral, players: alert4, desc: "≥4 factores en rojo" },
+    { label: `${PersonLabel} en duda`,          color: "#f2c63c", players: doubt,   desc: "2–3 factores en rojo" },
+    { label: `${PersonLabel} en buena forma`,   color: COLORS.lime,  players: goodForm, desc: "ACWR 0.8–1.3" },
+  ];
+
   const thStyle = { fontSize: 8, color: COLORS.text, padding: "4px 4px", textAlign: "center", fontWeight: 600, borderBottom: `1px solid ${COLORS.line}`, whiteSpace: "nowrap" };
   const tdName = { fontSize: 11, color: COLORS.text, padding: "6px 6px", borderBottom: `1px solid ${COLORS.line}`, whiteSpace: "nowrap", fontWeight: 600 };
 
@@ -278,6 +304,22 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
         <button onClick={() => setShowPdf(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "6px 14px", fontSize: 12, color: COLORS.text, cursor: "pointer", fontWeight: 600 }}>
           Exportar PDF
         </button>
+      </div>
+
+      {/* ── Estado del grupo ────────────────────────────────────────── */}
+      <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, marginBottom: 10 }}>Estado del grupo</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {statusGroups.map((g) => (
+            <button
+              key={g.label}
+              onClick={() => g.players.length > 0 && setStatusModal(g)}
+              style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: "4px 0", cursor: g.players.length > 0 ? "pointer" : "default", textAlign: "left" }}>
+              <span style={{ width: 10, height: 10, borderRadius: "50%", background: g.color, flexShrink: 0, display: "inline-block" }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: g.color }}>{g.label} ({g.players.length})</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Alertas ─────────────────────────────────────────────────── */}
@@ -297,6 +339,38 @@ export default function LoadControlPanel({ team, wellness, rpe, sessions, onPlay
           <div style={{ fontSize: 9, color: COLORS.text, marginTop: 2 }}>ACWR {">"} 1.5 o {"<"} 0.8</div>
         </div>
       </div>
+
+      {/* ── Modal Estado del grupo ───────────────────────────────────── */}
+      {statusModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", zIndex: 60 }}
+          onClick={() => setStatusModal(null)}>
+          <div style={{ background: COLORS.panel, border: `1px solid ${statusModal.color}`, borderRadius: 16, padding: "1.25rem", width: "100%", maxWidth: 400, maxHeight: "80vh", overflowY: "auto" }}
+            onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 16, color: statusModal.color, marginBottom: 4 }}>{statusModal.label}</div>
+            <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 14 }}>{statusModal.desc}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {statusModal.players.map((p) => {
+                const reds = RED_METRIC_LABELS.filter((m) => m.isR(p));
+                return (
+                  <div key={p.username} style={{ background: COLORS.panelRaised, borderRadius: 10, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: reds.length > 0 ? 6 : 0 }}>{p.displayName || p.username}</div>
+                    {reds.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                        {reds.map((m) => (
+                          <span key={m.key} style={{ fontSize: 10, background: `${COLORS.coral}22`, border: `1px solid ${COLORS.coral}55`, borderRadius: 6, padding: "2px 7px", color: COLORS.coral, fontWeight: 600 }}>
+                            {m.label}: {m.fmt(p) ?? "–"}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <button onClick={() => setStatusModal(null)} style={{ marginTop: 14, width: "100%", padding: "10px 0", borderRadius: 10, border: "none", background: COLORS.panelRaised, color: COLORS.text, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cerrar</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Leyenda ─────────────────────────────────────────────────── */}
       <div style={{ background: COLORS.panelRaised, borderRadius: 10, padding: "8px 12px", marginBottom: 14 }}>
