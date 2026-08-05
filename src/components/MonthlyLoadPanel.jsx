@@ -143,7 +143,7 @@ export default function MonthlyLoadPanel({ sessions }) {
                     )}
 
                     {/* Sessions */}
-                    {ms.sort((a, b) => a.date.localeCompare(b.date)).map((s, i) => {
+                    {ms.sort((a, b) => b.date.localeCompare(a.date)).map((s, i) => {
                       const sessionKey = `${key}-${i}`;
                       const isSessionOpen = !!openSessions[sessionKey];
                       const blocks = s.parsedBlocks || [];
