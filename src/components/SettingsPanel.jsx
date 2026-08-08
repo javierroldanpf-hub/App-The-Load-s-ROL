@@ -319,9 +319,13 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     try {
       await deletePlayerData(username, team.teamId);
       const newRoster = (team.roster || []).filter((u) => (typeof u === "string" ? u : u.username) !== username);
-      await save({ roster: newRoster, injuredPlayers: injuredPlayers.filter((u) => u !== username) });
-      // Limpiar team_id del jugador para que tenga que unirse a un nuevo equipo
+      const newInjured = (injuredPlayers || []).filter((u) => u !== username);
+      const updated = { ...team, roster: newRoster, injuredPlayers: newInjured };
+      await saveTeam(updated);
       await expelPlayer(username);
+      onTeamUpdate(updated);
+    } catch (err) {
+      alert("Error al expulsar jugador: " + (err?.message || err));
     } finally { setSaving(false); }
   };
 
