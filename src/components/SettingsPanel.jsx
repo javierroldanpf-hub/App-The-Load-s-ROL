@@ -1236,6 +1236,8 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
   const [pctEdits, setPctEdits] = useState(null); // null = not yet opened
   const [savingDm, setSavingDm] = useState(false);
   const [savingPct, setSavingPct] = useState(false);
+  const [savedDm, setSavedDm] = useState(false);
+  const [savedPct, setSavedPct] = useState(false);
 
   const openDayMinutes = () => {
     if (!showDayMinutes) {
@@ -1255,12 +1257,12 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
 
   const handleSaveDayMinutes = async () => {
     setSavingDm(true);
-    try { await save({ sjDayMinutes: dayMinEdits }, "sjDayMin"); } finally { setSavingDm(false); }
+    try { await save({ sjDayMinutes: dayMinEdits }); setSavedDm(true); setTimeout(() => setSavedDm(false), 2000); } finally { setSavingDm(false); }
   };
 
   const handleSavePct = async () => {
     setSavingPct(true);
-    try { await save({ sjPercentages: pctEdits }, "sjPct"); } finally { setSavingPct(false); }
+    try { await save({ sjPercentages: pctEdits }); setSavedPct(true); setTimeout(() => setSavedPct(false), 2000); } finally { setSavingPct(false); }
   };
 
   const handleSave = (tpl) => {
@@ -1322,7 +1324,7 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
               </table>
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <button onClick={() => setDayMinEdits({ ...DEFAULT_SJ_DAY_MINUTES })} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 11, cursor: "pointer" }}>Restablecer</button>
-                <button onClick={handleSaveDayMinutes} disabled={savingDm} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savedKey === "sjDayMin" ? "✓ Guardado" : savingDm ? "..." : "Guardar"}</button>
+                <button onClick={handleSaveDayMinutes} disabled={savingDm} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savedDm ? "✓ Guardado" : savingDm ? "..." : "Guardar"}</button>
               </div>
             </div>
           )}
@@ -1362,7 +1364,7 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
               </table>
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                 <button onClick={() => setPctEdits(SJ_PERCENTAGES_DEFAULT.map((r) => ({ ...r })))} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 11, cursor: "pointer" }}>Restablecer</button>
-                <button onClick={handleSavePct} disabled={savingPct} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savedKey === "sjPct" ? "✓ Guardado" : savingPct ? "..." : "Guardar"}</button>
+                <button onClick={handleSavePct} disabled={savingPct} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{savedPct ? "✓ Guardado" : savingPct ? "..." : "Guardar"}</button>
               </div>
             </div>
           )}
