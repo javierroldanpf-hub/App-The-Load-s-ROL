@@ -529,7 +529,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                 <div style={{ fontSize: 10, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7, marginTop: 2 }}>{session.duration} min</div>
               )}
             </div>
-            {!readOnly && session.isMatch && (team.kind || "equipo") === "equipo" && (
+            {!readOnly && (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") && (team.kind || "equipo") === "equipo" && (
               <button
                 onClick={(e) => { e.stopPropagation(); setSquadDate(date); }}
                 style={{ width: "100%", padding: "3px 6px", background: "#1a2a1a", border: "none", borderTop: `1px solid ${COLORS.lime}44`, color: COLORS.lime, fontSize: 9, fontWeight: 700, cursor: "pointer", textAlign: "left", letterSpacing: 0.3 }}
