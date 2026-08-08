@@ -170,22 +170,28 @@ export function rpeStatus(rpe) {
   return { label: "Carga baja", color: COLORS.blue, bg: COLORS.blueDark };
 }
 export function sessionLoad(entry) { return entry.rpe * entry.duration; }
-// acwr accepts either:
-// - raw rpe entries: [{date, rpe, duration}, ...] — calls sessionLoad internally
-// - precomputed load entries: [{date, load}, ...] — uses .load directly
-// Optional second arg: reference date string (default: today)
+// acwr — Gabbett (2016) fixed-window method:
+// acute = sum of daily sRPE loads over last 7 days / 7
+// chronic = sum of daily sRPE loads over last 28 days / 28
+// Days with no session count as 0 (fixed denominator, not rolling average of recorded days only)
 export function acwr(playerRpeEntries, referenceDate) {
-  const refDate = referenceDate ? new Date(referenceDate + "T00:00:00") : new Date();
+  const refStr = referenceDate || new Date().toISOString().slice(0, 10);
   const getLoad = (e) => (e.load != null ? e.load : sessionLoad(e));
-  const sorted = [...playerRpeEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const within = (days) => sorted.filter((e) => (refDate - new Date(e.date + "T00:00:00")) / 86400000 <= days);
-  const acute7 = within(7);
-  const chronic28 = within(28);
-  if (chronic28.length === 0) return null;
-  const acuteAvg = acute7.reduce((s, e) => s + getLoad(e), 0) / 7;
-  const chronicAvg = chronic28.reduce((s, e) => s + getLoad(e), 0) / 28;
+  // Build a map of date → total load for that day
+  const loadByDate = {};
+  for (const e of playerRpeEntries) {
+    loadByDate[e.date] = (loadByDate[e.date] || 0) + getLoad(e);
+  }
+  let acute = 0, chronic = 0;
+  for (let i = 0; i < 28; i++) {
+    const d = addDays(refStr, -i);
+    const v = loadByDate[d] || 0;
+    if (i < 7) acute += v;
+    chronic += v;
+  }
+  const chronicAvg = chronic / 28;
   if (chronicAvg === 0) return null;
-  return acuteAvg / chronicAvg;
+  return (acute / 7) / chronicAvg;
 }
 export function acwrStatus(ratio) {
   if (ratio === null) return { label: "Sin datos", color: COLORS.textFaint };
