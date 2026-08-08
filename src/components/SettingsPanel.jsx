@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/constants";
-import { saveTeam, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam, getUser, saveUser, getTeamViewers } from "@/lib/db";
+import { saveTeam, saveTeamRosterDirect, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam, getUser, saveUser, getTeamViewers } from "@/lib/db";
 import { simpleHash } from "@/lib/utils";
 import Avatar from "./Avatar";
 
@@ -321,7 +321,9 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       const newRoster = (team.roster || []).filter((u) => (typeof u === "string" ? u : u.username) !== username);
       const newInjured = (injuredPlayers || []).filter((u) => u !== username);
       const updated = { ...team, roster: newRoster, injuredPlayers: newInjured };
-      await saveTeam(updated);
+      // saveTeamRosterDirect bypasses the merge logic that would re-add the expelled player
+      await saveTeamRosterDirect(team.teamId, newRoster);
+      await saveTeam({ ...updated, roster: newRoster }); // save other fields (injuredPlayers, etc.)
       await expelPlayer(username);
       onTeamUpdate(updated);
     } catch (err) {

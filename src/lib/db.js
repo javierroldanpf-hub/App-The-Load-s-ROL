@@ -181,6 +181,14 @@ export async function saveTeam(team) {
   if (error) throw error;
 }
 
+// Saves roster directly without merge — use only when intentionally removing a player
+export async function saveTeamRosterDirect(teamId, roster) {
+  const sb = getSupabase();
+  const clean = (roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
+  const { error } = await sb.from("teams").update({ roster: clean }).eq("team_id", teamId);
+  if (error) throw error;
+}
+
 export async function getTeamIdByCode(code) {
   try {
     const sb = getSupabase();
