@@ -109,10 +109,16 @@ export default function MonthlyLoadPanel({ sessions, defaultMatchDuration }) {
         // Aggregate block type total minutes for this month
         const blockMins = {};
         ms.forEach((s) => {
-          (s.parsedBlocks || []).forEach((b) => {
-            const name = blockDisplayName(b);
-            blockMins[name] = (blockMins[name] || 0) + (Number(b.duration) || 0);
-          });
+          const isMatch = s.isMatch || MATCH_TYPES.has(s.sessionType);
+          if (isMatch && (s.parsedBlocks || []).length === 0) {
+            // Partido sin bloques: contar duración efectiva como CAMPO
+            blockMins["CAMPO"] = (blockMins["CAMPO"] || 0) + (s._effDuration || 0);
+          } else {
+            (s.parsedBlocks || []).forEach((b) => {
+              const name = blockDisplayName(b);
+              blockMins[name] = (blockMins[name] || 0) + (Number(b.duration) || 0);
+            });
+          }
         });
         const hasBlocks = Object.keys(blockMins).length > 0;
 
@@ -155,6 +161,7 @@ export default function MonthlyLoadPanel({ sessions, defaultMatchDuration }) {
                       const sessionKey = `${key}-${i}`;
                       const isSessionOpen = !!openSessions[sessionKey];
                       const blocks = s.parsedBlocks || [];
+                      const isMatchSession = s.isMatch || MATCH_TYPES.has(s.sessionType);
                       return (
                         <div key={i} style={{ background: COLORS.panelRaised, borderRadius: 8, overflow: "hidden" }}>
                           <button
@@ -164,6 +171,11 @@ export default function MonthlyLoadPanel({ sessions, defaultMatchDuration }) {
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>{s.sessionType}</span>
                               <span style={{ fontSize: 11, color: COLORS.text, opacity: 0.7 }}>{s.date.slice(8, 10)}/{s.date.slice(5, 7)}</span>
+                              {isMatchSession && blocks.length === 0 && s._effDuration > 0 && (
+                                <span style={{ fontSize: 10, background: `${blockColor("CAMPO")}33`, color: blockColor("CAMPO"), borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>
+                                  CAMPO {s._effDuration}min
+                                </span>
+                              )}
                               {blocks.length > 0 && (
                                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                                   {blocks.map((b, bi) => (
