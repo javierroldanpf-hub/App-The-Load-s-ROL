@@ -50,7 +50,14 @@ function isAthleteNote(b) {
   return b.name === ATHLETE_NOTE_NAME;
 }
 
-export default function MonthlyLoadPanel({ sessions }) {
+const MATCH_TYPES = new Set(["MD(H)", "MD(A)"]);
+function effectiveDuration(s, defaultMatchDuration) {
+  const isMatch = s.isMatch || MATCH_TYPES.has(s.sessionType);
+  if (isMatch) return Number(s.duration) > 0 ? Number(s.duration) : (Number(defaultMatchDuration) || 90);
+  return Number(s.duration) || 0;
+}
+
+export default function MonthlyLoadPanel({ sessions, defaultMatchDuration }) {
   const [openMonths, setOpenMonths] = useState({});
   const [openSessions, setOpenSessions] = useState({});
   const today = new Date().toISOString().slice(0, 10);
@@ -65,8 +72,9 @@ export default function MonthlyLoadPanel({ sessions }) {
         if (mk > currentMonth) return;
         if (!map[mk]) map[mk] = { sessions: [], totalMin: 0 };
         const blocks = parseBlocks(s.description).filter((b) => !isAthleteNote(b));
-        map[mk].sessions.push({ ...s, parsedBlocks: blocks });
-        map[mk].totalMin += Number(s.duration) || 0;
+        const eff = effectiveDuration(s, defaultMatchDuration);
+        map[mk].sessions.push({ ...s, parsedBlocks: blocks, _effDuration: eff });
+        map[mk].totalMin += eff;
       });
 
     const keys = Object.keys(map).sort();
@@ -167,7 +175,7 @@ export default function MonthlyLoadPanel({ sessions }) {
                               )}
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontSize: 12, color: COLORS.text }}>{Number(s.duration) || 0} min</span>
+                              <span style={{ fontSize: 12, color: COLORS.text }}>{s._effDuration ?? (Number(s.duration) || 0)} min</span>
                               {blocks.length > 0 && (
                                 <span style={{ fontSize: 10, color: COLORS.lime, transform: isSessionOpen ? "rotate(180deg)" : "rotate(0deg)", display: "inline-block", transition: "transform 0.15s" }}>▼</span>
                               )}

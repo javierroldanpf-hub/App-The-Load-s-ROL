@@ -237,14 +237,22 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
     return periodRpe.reduce((s, e) => s + e.rpe, 0) / periodRpe.length;
   }, [periodRpe]);
 
+  const MATCH_TYPES_TA = new Set(["MD(H)", "MD(A)"]);
+  const sessEffDur = (sess) => {
+    if (!sess) return 0;
+    const isMatch = sess.isMatch || MATCH_TYPES_TA.has(sess.sessionType);
+    if (isMatch) return Number(sess.duration) > 0 ? Number(sess.duration) : (Number(team?.defaultMatchDuration) || 90);
+    return Number(sess.duration) || 0;
+  };
+
   const avgSrpe = useMemo(() => {
     if (!periodRpe.length) return null;
     const loads = periodRpe.map((e) => {
       const sess = sessions.find((s) => s.date === e.date && s.sessionType === e.sessionType);
-      return e.rpe * (Number(sess?.duration) || 0);
+      return e.rpe * sessEffDur(sess);
     });
     return loads.reduce((s, v) => s + v, 0) / loads.length;
-  }, [periodRpe, sessions]);
+  }, [periodRpe, sessions, team]);
 
   // sRPE histórico para umbrales de color (28d y 7d, fijos)
   const srpe28 = useMemo(() => {
@@ -253,10 +261,10 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
     if (!entries.length) return null;
     const loads = entries.map((e) => {
       const sess = sessions.find((s) => s.date === e.date && s.sessionType === e.sessionType);
-      return e.rpe * (Number(sess?.duration) || 0);
+      return e.rpe * sessEffDur(sess);
     });
     return loads.reduce((s, v) => s + v, 0) / loads.length;
-  }, [rpe, sessions, today]);
+  }, [rpe, sessions, today, team]);
 
   const srpe7 = useMemo(() => {
     const start7 = addDays(today, -6);
@@ -264,10 +272,10 @@ export default function TeamAveragesPanel({ team, wellness, rpe, sessions, displ
     if (!entries.length) return null;
     const loads = entries.map((e) => {
       const sess = sessions.find((s) => s.date === e.date && s.sessionType === e.sessionType);
-      return e.rpe * (Number(sess?.duration) || 0);
+      return e.rpe * sessEffDur(sess);
     });
     return loads.reduce((s, v) => s + v, 0) / loads.length;
-  }, [rpe, sessions, today]);
+  }, [rpe, sessions, today, team]);
 
   // --- Datos por día para cada semana ---
   const wellnessByDate = useMemo(() => {

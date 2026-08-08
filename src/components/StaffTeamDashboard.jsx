@@ -417,7 +417,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
           )}
 
           {resumenSubTab === "mensual" && (
-            <MonthlyLoadPanel sessions={sessions} />
+            <MonthlyLoadPanel sessions={sessions} defaultMatchDuration={team.defaultMatchDuration} />
           )}
         </>
         );
