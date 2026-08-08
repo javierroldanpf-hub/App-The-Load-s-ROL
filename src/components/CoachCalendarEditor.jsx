@@ -529,7 +529,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                 <div style={{ fontSize: 10, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7, marginTop: 2 }}>{session.duration} min</div>
               )}
             </div>
-            {!readOnly && (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") && (team.kind || "equipo") === "equipo" && (
+            {!readOnly && viewMode !== "mesociclo" && (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") && (team.kind || "equipo") === "equipo" && (
               <button
                 onClick={(e) => { e.stopPropagation(); setSquadDate(date); }}
                 style={{ width: "100%", padding: "3px 6px", background: "#1a2a1a", border: "none", borderTop: `1px solid ${COLORS.lime}44`, color: COLORS.lime, fontSize: 9, fontWeight: 700, cursor: "pointer", textAlign: "left", letterSpacing: 0.3 }}
@@ -728,9 +728,17 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                     <div style={{ fontSize: 9, color: COLORS.text }}>{fmtDateShort(date)}</div>
                   </div>
                   {session && (session.sessionType || session.isRest) ? (
-                    <div onClick={() => openEditor(date)} style={{ borderRadius: 6, padding: "5px 3px", textAlign: "center", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised, cursor: "pointer" }}>
-                      <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.textFaint }}>{session.isRest ? "Descanso" : session.sessionType}</div>
-                      {session.duration > 0 && !session.isRest && <div style={{ fontSize: 9, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7 }}>{session.duration} min</div>}
+                    <div style={{ borderRadius: 6, overflow: "hidden", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised }}>
+                      <div onClick={() => openEditor(date)} style={{ padding: "5px 3px", textAlign: "center", cursor: "pointer" }}>
+                        <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.textFaint }}>{session.isRest ? "Descanso" : session.sessionType}</div>
+                        {session.duration > 0 && !session.isRest && <div style={{ fontSize: 9, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7 }}>{session.duration} min</div>}
+                      </div>
+                      {!readOnly && (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") && (team.kind || "equipo") === "equipo" && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSquadDate(date); }}
+                          style={{ width: "100%", padding: "3px 6px", background: "#1a2a1a", border: "none", borderTop: `1px solid ${COLORS.lime}44`, color: COLORS.lime, fontSize: 9, fontWeight: 700, cursor: "pointer", textAlign: "left", letterSpacing: 0.3 }}
+                        >📋 Convocatoria</button>
+                      )}
                     </div>
                   ) : !readOnly ? (
                     <div onClick={() => openEditor(date)} style={{ display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, border: `1px dashed ${COLORS.line}`, width: "100%", height: 36, cursor: "pointer" }}>

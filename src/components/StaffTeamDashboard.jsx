@@ -19,6 +19,7 @@ import ExportDataModal from "./ExportDataModal";
 import HelpPanel from "./HelpPanel";
 import PrintableReportModal from "./PrintableReportModal";
 import SettingsPanel from "./SettingsPanel";
+import SquadModal from "./SquadModal";
 
 function PhysicalTab({ teamWithPhotos, allPhysical, onTeamUpdate, playerProfiles, readOnly = false }) {
   const [physTab, setPhysTab] = useState("datos");
@@ -60,6 +61,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const [playerSort, setPlayerSort] = useState("nombre");
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const [checkinModal, setCheckinModal] = useState(null);
+  const [squadDate, setSquadDate] = useState(null);
 
   const refreshData = useCallback(async () => {
     const [t, w, r, s] = await Promise.all([getTeam(teamId), loadTeamWellness(teamId), loadTeamRpe(teamId), loadTeamSessions(teamId)]);
@@ -208,20 +210,34 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         </div>
         {todaySession && (() => {
           const intensity = INTENSITY_LEVELS[todaySession.intensity];
+          const isTodayMatch = todaySession.isMatch || todaySession.sessionType === "MD(H)" || todaySession.sessionType === "MD(A)";
+          const isEquipo = (team.kind || "equipo") === "equipo";
           return (
-            <button onClick={() => setShowSessionDetail(true)} style={{
-              display: "flex", flexDirection: "column", alignItems: "flex-end",
-              background: intensity ? intensity.dark : COLORS.panelRaised,
-              border: `1px solid ${intensity ? intensity.color : COLORS.line}`,
-              borderRadius: 10, padding: "6px 12px", cursor: "pointer", flexShrink: 0,
-            }}>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 22, color: intensity ? intensity.color : COLORS.textDim, lineHeight: 1 }}>
-                {todaySession.sessionType}
-              </div>
-              <div style={{ fontSize: 10, color: COLORS.text, marginTop: 2, textTransform: "capitalize" }}>
-                {fmtDateLong(todayStr())}
-              </div>
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              {!readOnly && isTodayMatch && isEquipo && (
+                <button onClick={() => setSquadDate(todayStr())} style={{
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                  background: "#1a2a1a", border: `1px solid ${COLORS.lime}66`,
+                  borderRadius: 10, padding: "6px 10px", cursor: "pointer",
+                }}>
+                  <span style={{ fontSize: 16 }}>📋</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, marginTop: 1 }}>Convocatoria</span>
+                </button>
+              )}
+              <button onClick={() => setShowSessionDetail(true)} style={{
+                display: "flex", flexDirection: "column", alignItems: "flex-end",
+                background: intensity ? intensity.dark : COLORS.panelRaised,
+                border: `1px solid ${intensity ? intensity.color : COLORS.line}`,
+                borderRadius: 10, padding: "6px 12px", cursor: "pointer",
+              }}>
+                <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 22, color: intensity ? intensity.color : COLORS.textDim, lineHeight: 1 }}>
+                  {todaySession.sessionType}
+                </div>
+                <div style={{ fontSize: 10, color: COLORS.text, marginTop: 2, textTransform: "capitalize" }}>
+                  {fmtDateLong(todayStr())}
+                </div>
+              </button>
+            </div>
           );
         })()}
       </div>
@@ -433,6 +449,9 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       )}
       {showSessionDetail && todaySession && (
         <SessionDetailModal date={todayStr()} session={todaySession} onClose={() => setShowSessionDetail(false)} isEquipo={(team.kind || "equipo") === "equipo"} />
+      )}
+      {squadDate && (
+        <SquadModal team={team} date={squadDate} roster={team.roster || []} displayNames={displayNames} onClose={() => setSquadDate(null)} onSaved={(updated) => { handleTeamUpdate(updated); setSquadDate(null); }} />
       )}
     </div>
   );
