@@ -7,6 +7,7 @@ import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
+import SquadModal from "./SquadModal";
 
 const BLOCK_TYPES = ["CAMPO", "PISTA", "FUERZA", "CARRERA", "METABÓLICO", "HIIT", "EMOM", "AMRAP", "CALENTAMIENTO", "MOVEMENT PREP", "OTRO"];
 
@@ -387,6 +388,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   const [editDate, setEditDate] = useState(null);
   const [existingSession, setExistingSession] = useState(null);
   const [viewDetail, setViewDetail] = useState(null);
+  const [squadDate, setSquadDate] = useState(null);
 
   // Si hay sesiones pero firstMonday no está fijado, lo fijamos ahora
   useEffect(() => {
@@ -518,12 +520,20 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         {session ? (
           <>
           {(session.sessionType || session.isRest) && (
-          <div onClick={() => openEditor(date)} style={{ borderRadius: 7, padding: "6px 6px", background: intensity ? intensity.dark : COLORS.panelRaised, cursor: "pointer", minHeight: 32 }}>
-            <div style={{ fontSize: viewMode === "week" ? 12 : 10, fontWeight: 700, color: intensity ? intensity.color : COLORS.textFaint, fontFamily: "'Oswald', sans-serif" }}>
-              {session.isRest ? "Descanso" : session.sessionType}
+          <div style={{ borderRadius: 7, overflow: "hidden", background: intensity ? intensity.dark : COLORS.panelRaised }}>
+            <div onClick={() => openEditor(date)} style={{ padding: "6px 6px", cursor: "pointer", minHeight: 32 }}>
+              <div style={{ fontSize: viewMode === "week" ? 12 : 10, fontWeight: 700, color: intensity ? intensity.color : COLORS.textFaint, fontFamily: "'Oswald', sans-serif" }}>
+                {session.isRest ? "Descanso" : session.sessionType}
+              </div>
+              {!session.isRest && session.duration > 0 && viewMode === "week" && (
+                <div style={{ fontSize: 10, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7, marginTop: 2 }}>{session.duration} min</div>
+              )}
             </div>
-            {!session.isRest && session.duration > 0 && viewMode === "week" && (
-              <div style={{ fontSize: 10, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7, marginTop: 2 }}>{session.duration} min</div>
+            {!readOnly && session.isMatch && (team.kind || "equipo") === "equipo" && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setSquadDate(date); }}
+                style={{ width: "100%", padding: "3px 6px", background: "#1a2a1a", border: "none", borderTop: `1px solid ${COLORS.lime}44`, color: COLORS.lime, fontSize: 9, fontWeight: 700, cursor: "pointer", textAlign: "left", letterSpacing: 0.3 }}
+              >📋 Convocatoria</button>
             )}
           </div>
           )}
@@ -789,6 +799,16 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
       )}
       {viewDetail && sessionByDate[viewDetail] && (
         <SessionDetailModal date={viewDetail} session={sessionByDate[viewDetail]} onClose={() => setViewDetail(null)} isEquipo={(team.kind || "equipo") === "equipo"} />
+      )}
+      {squadDate && (
+        <SquadModal
+          team={team}
+          date={squadDate}
+          roster={team.roster || []}
+          displayNames={displayNames}
+          onClose={() => setSquadDate(null)}
+          onSaved={() => setSquadDate(null)}
+        />
       )}
       {showPdf && (
         <CalendarPdfExport
