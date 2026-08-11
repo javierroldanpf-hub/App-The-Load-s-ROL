@@ -98,11 +98,12 @@ export async function getTeamsByCoach(coachUsername) {
 
 export async function transferPlayerData(username, fromTeamId, toTeamId) {
   const sb = getSupabase();
-  const tables = ["wellness", "rpe_entries", "physical_entries"];
+  // Move all session/load data
+  const tables = ["wellness", "rpe_entries", "physical_entries", "weight_entries", "player_alerts"];
   for (const table of tables) {
     await sb.from(table).update({ team_id: toTeamId }).eq("team_id", fromTeamId).eq("username", username);
   }
-  // Player profile
+  // Move player profile (name, photo, position, height, etc.)
   const { data: prof } = await sb.from("player_profiles").select("*").eq("team_id", fromTeamId).eq("username", username).single();
   if (prof) {
     await sb.from("player_profiles").upsert({ ...prof, team_id: toTeamId }, { onConflict: "team_id,username" });

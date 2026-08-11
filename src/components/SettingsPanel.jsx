@@ -342,13 +342,21 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
     try {
       await transferPlayerData(transferPlayer, team.teamId, transferTarget);
       await setPlayerTeam(transferPlayer, transferTarget);
-      const targetRoster = [...(targetTeam.roster || [])];
+      // Add to target team roster
+      const targetRoster = (targetTeam.roster || []).map((u) => typeof u === "string" ? u : u.username);
       if (!targetRoster.includes(transferPlayer)) targetRoster.push(transferPlayer);
-      await saveTeam({ ...targetTeam, roster: targetRoster });
+      await saveTeamRosterDirect(targetTeam.teamId, targetRoster);
+      // Remove from source team roster (bypass merge so player is actually removed)
       const newRoster = (team.roster || []).filter((u) => (typeof u === "string" ? u : u.username) !== transferPlayer);
-      await save({ roster: newRoster, injuredPlayers: injuredPlayers.filter((u) => u !== transferPlayer) });
+      const newInjured = (injuredPlayers || []).filter((u) => u !== transferPlayer);
+      await saveTeamRosterDirect(team.teamId, newRoster);
+      const updated = { ...team, roster: newRoster, injuredPlayers: newInjured };
+      await saveTeam(updated);
+      onTeamUpdate(updated);
       setTransferPlayer("");
       setTransferTarget("");
+    } catch (err) {
+      alert("Error al mover jugador: " + (err?.message || err));
     } finally { setTransferring(false); }
   };
 
