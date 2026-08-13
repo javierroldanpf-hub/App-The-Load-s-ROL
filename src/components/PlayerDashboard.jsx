@@ -365,7 +365,7 @@ function PlayerToday({ user, team, session, wellnessDone, rpeDone, existingWelln
         </div>
       </button>
 
-      {showDetail && <SessionDetailModal date={session.date} session={session} onClose={() => setShowDetail(false)} />}
+      {showDetail && <SessionDetailModal date={session.date} session={session} onClose={() => setShowDetail(false)} user={user} />}
 
       {(() => {
         const isMatch = session.sessionType && (session.sessionType.includes("MD(H)") || session.sessionType.includes("MD(A)"));
@@ -754,6 +754,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
           session={detailSession}
           onClose={() => { setDetailDate(null); setDetailSession(null); }}
           refreshData={refreshData}
+          user={user}
         />
       )}
     </div>
