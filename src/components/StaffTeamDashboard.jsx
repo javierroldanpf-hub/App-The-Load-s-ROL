@@ -138,7 +138,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
     { id: "resumen", label: "Datos de Carga" },
     { id: "calendario", label: "Planificación" },
     ...(!readOnly || viewerCanSeeMessages ? [{ id: "mensajes", label: unreadCount > 0 ? `Avisos (${unreadCount})` : "Avisos" }] : []),
-    { id: "fisicos", label: "Datos Físicos" },
+    { id: "fisicos", label: teamKind === "individual" ? "Datos Atleta" : teamKind === "grupo" ? "Datos Atletas" : teamGender === "femenino" ? "Datos Jugadoras" : "Datos Jugadores" },
     { id: "ajustes", label: "Ajustes" },
   ];
 
