@@ -67,6 +67,18 @@ export default function RpeForm({ user, session, existing, refreshData, dateOver
       </div>
 
 
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>Comentario (opcional)</div>
+        <textarea
+          value={comment}
+          onChange={(e) => handleCommentChange(e.target.value)}
+          placeholder="Añade observaciones sobre la sesión, sensaciones, molestias..."
+          rows={3}
+          style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: COLORS.panelRaised, border: `1px solid ${comment.trim() ? COLORS.lime : COLORS.line}`, color: COLORS.text, fontSize: 13, fontFamily: "'Inter', sans-serif", resize: "vertical", outline: "none", boxSizing: "border-box" }}
+        />
+        {comment.trim() && <div style={{ fontSize: 10, color: COLORS.lime, marginTop: 3 }}>💬 Tu preparador/a verá este comentario en la pestaña Avisos</div>}
+      </div>
+
       <button onClick={handleSubmit} disabled={saving} style={{
         width: "100%", padding: "13px 0", borderRadius: 12, border: "none",
         background: isSaved ? COLORS.limeDark : COLORS.lime, color: isSaved ? COLORS.lime : "#14171c",

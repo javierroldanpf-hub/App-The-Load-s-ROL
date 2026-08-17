@@ -532,8 +532,11 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             {!readOnly && viewMode !== "mesociclo" && (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") && (team.kind || "equipo") === "equipo" && (
               <button
                 onClick={(e) => { e.stopPropagation(); setSquadDate(date); }}
-                style={{ width: "100%", padding: "3px 6px", background: "#1a2a1a", border: "none", borderTop: `1px solid ${COLORS.lime}44`, color: COLORS.lime, fontSize: 9, fontWeight: 700, cursor: "pointer", textAlign: "left", letterSpacing: 0.3 }}
-              >📋 Convocatoria</button>
+                style={{ width: "100%", padding: "4px 2px", background: "#1a2a1a", border: "none", borderTop: `1px solid ${COLORS.lime}44`, color: COLORS.lime, fontSize: 8, fontWeight: 700, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}
+              >
+                <span style={{ fontSize: 11 }}>📋</span>
+                <span style={{ letterSpacing: 0.2, lineHeight: 1.2 }}>Convocatoria</span>
+              </button>
             )}
           </div>
           )}
