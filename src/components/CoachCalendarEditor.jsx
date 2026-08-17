@@ -815,7 +815,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           roster={team.roster || []}
           displayNames={displayNames}
           onClose={() => setSquadDate(null)}
-          onSaved={() => setSquadDate(null)}
+          onSaved={() => { setSquadDate(null); onSessionsChange?.(); }}
         />
       )}
       {showPdf && (

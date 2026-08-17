@@ -69,6 +69,8 @@ export default function SquadModal({ team, date, roster, displayNames, onClose, 
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       onSaved?.(updated);
+    } catch (err) {
+      alert("Error al guardar convocatoria: " + (err?.message || err));
     } finally { setSaving(false); }
   };
 
