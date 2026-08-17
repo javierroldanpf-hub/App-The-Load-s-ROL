@@ -92,27 +92,33 @@ function TablaClasificacion() {
   return (
     <Section n={1} title="Clasificación de tipos HIIT">
       {/* leyenda */}
-      <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
-        {[["AE","Aeróbico",T.ae],["AN","Anaeróbico",T.an],["NM","Neuromuscular",T.nm]].map(([k,l,c])=>(
-          <div key={k} style={{ display:"flex", alignItems:"center", gap:5 }}>
-            <Dot active color={c} />
-            <span style={{ fontSize:9, color:T.muted, fontWeight:600 }}>{l}</span>
-          </div>
-        ))}
-        <div style={{ flex:1 }} />
-        {/* respuestas del juego */}
-        {[["🫀 Metabólica","EL JUEGO (90')"],["🏃 Locomotora","HIGH SPEED / SPRINT"],["💥 Neuromuscular","ACC / DECC / COD"]].map(([k,v])=>(
-          <div key={k} style={{ display:"flex", alignItems:"center", gap:6, background:T.card, border:`1px solid ${T.line}`, borderRadius:6, padding:"3px 8px" }}>
-            <span style={{ fontSize:9, color:T.muted }}>{k}</span>
-            <span style={{ fontSize:9, fontWeight:700, color:T.text }}>{v}</span>
-          </div>
-        ))}
+      <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
+        {/* fila 1: sistemas energéticos */}
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+          {[["AE","Aeróbico",T.ae],["AN","Anaeróbico",T.an],["NM","Neuromuscular",T.nm]].map(([k,l,c])=>(
+            <div key={k} style={{ display:"flex", alignItems:"center", gap:5 }}>
+              <Dot active color={c} />
+              <span style={{ fontSize:9, color:T.muted, fontWeight:600 }}>{l}</span>
+            </div>
+          ))}
+        </div>
+        {/* fila 2: tipos de respuesta (debajo) */}
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {[["🫀","Metabólica","EL JUEGO (90')",T.ae],["🏃","Locomotora","HIGH SPEED / SPRINT",T.an],["💥","Neuromuscular","ACC / DECC / COD",T.nm]].map(([emoji,k,v,c])=>(
+            <div key={k} style={{ display:"flex", alignItems:"center", gap:5, background:T.card, border:`1px solid ${c}44`, borderRadius:6, padding:"3px 8px" }}>
+              <span style={{ fontSize:11 }}>{emoji}</span>
+              <span style={{ fontSize:9, color:T.muted }}>{k}</span>
+              <span style={{ fontSize:9, fontWeight:700, color:T.text }}>{v}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* cards de tipo */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:6 }}>
         {TIPOS.map((t)=>{
           const primary = t.an && t.nm ? T.an : t.nm ? T.nm : T.ae;
+          const metaEmoji = t.meta === "NEUROMUSCULAR" ? "💥" : t.meta === "ANAERÓBICO" ? "🏃" : "🫀";
           return (
             <div key={t.n} style={{ background:T.card, border:`1px solid ${T.line}`, borderRadius:10, overflow:"hidden" }}>
               <div style={{ background:`${primary}18`, borderBottom:`1px solid ${primary}44`, padding:"6px 10px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -120,7 +126,7 @@ function TablaClasificacion() {
                 <span style={{ fontSize:8, color:T.text, fontWeight:600, background:T.panel, borderRadius:4, padding:"1px 5px" }}>{t.sub}</span>
               </div>
               <div style={{ padding:"8px 10px" }}>
-                <div style={{ fontSize:8, color:T.muted, fontWeight:700, marginBottom:3, letterSpacing:0.5 }}>{t.meta}</div>
+                <div style={{ fontSize:8, color:T.muted, fontWeight:700, marginBottom:3, letterSpacing:0.5 }}>{metaEmoji} {t.meta}</div>
                 <div style={{ fontSize:9, color:T.text, lineHeight:1.4, marginBottom:8 }}>{t.desc}</div>
                 <div style={{ display:"flex", gap:8 }}>
                   {[["AE",t.ae,T.ae],["AN",t.an,T.an],["NM",t.nm,T.nm]].map(([k,v,c])=>(
