@@ -79,12 +79,13 @@ const SECTIONS_PLAYER = [
 
 const READONLY_EXCLUDED = ["Avisos", "Ajustes"];
 
-export default function HelpPanel({ onClose, readOnly = false, mode = "coach" }) {
+export default function HelpPanel({ onClose, readOnly = false, mode = "coach", physicsLabel = "Datos Físicos" }) {
+  const sectionsCoach = SECTIONS_ALL.map((s) => s.title === "Datos Físicos" ? { ...s, title: physicsLabel } : s);
   const SECTIONS = mode === "player"
     ? SECTIONS_PLAYER
     : readOnly
-      ? SECTIONS_ALL.filter((s) => !READONLY_EXCLUDED.includes(s.title))
-      : SECTIONS_ALL;
+      ? sectionsCoach.filter((s) => !READONLY_EXCLUDED.includes(s.title))
+      : sectionsCoach;
   const [openIdx, setOpenIdx] = useState(null);
 
   return (

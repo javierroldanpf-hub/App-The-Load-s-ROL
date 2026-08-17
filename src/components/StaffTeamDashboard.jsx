@@ -137,7 +137,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const mainTabs = [
     { id: "resumen", label: "Datos de Carga" },
     { id: "calendario", label: "Planificación" },
-    ...(!readOnly || viewerCanSeeMessages ? [{ id: "mensajes", label: unreadCount > 0 ? `Avisos (${unreadCount})` : "Avisos" }] : []),
+    ...(!readOnly || viewerCanSeeMessages ? [{ id: "mensajes", label: "Avisos", badge: unreadCount > 0 ? unreadCount : null }] : []),
     { id: "fisicos", label: teamKind === "individual" ? "Datos Atleta" : teamKind === "grupo" ? "Datos Atletas" : teamGender === "femenino" ? "Datos Jugadoras" : "Datos Jugadores" },
     { id: "ajustes", label: "Ajustes" },
   ];
@@ -250,7 +250,15 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
               flex: "1 0 auto", padding: "8px 10px", borderRadius: 9, border: "none", fontSize: 11, fontWeight: 600,
               background: tab === t.id ? COLORS.panelRaised : "transparent",
               color: tab === t.id ? COLORS.text : COLORS.textDim, cursor: "pointer", whiteSpace: "nowrap",
-            }}>{t.label}</button>
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+            }}>
+              {t.label}
+              {t.badge && (
+                <span style={{ background: "#e53e3e", color: "#fff", fontSize: 10, fontWeight: 800, borderRadius: 999, minWidth: 18, height: 18, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px", lineHeight: 1 }}>
+                  {t.badge}
+                </span>
+              )}
+            </button>
           ))}
         </div>
         <div style={{ height: 3, background: COLORS.panelRaised, borderRadius: 2, margin: "4px 30% 0" }} />
@@ -439,7 +447,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         <SettingsPanel team={team} teamWithPhotos={teamWithPhotos} onTeamUpdate={handleTeamUpdate} sessions={sessions} rpe={rpe} coachTeamIds={user?.teamIds || user?.team_ids || []} coachUsername={user?.username || ""} onTeamDeleted={onBack} user={user} readOnly={readOnly} />
       )}
 
-      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} readOnly={readOnly} />}
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} readOnly={readOnly} physicsLabel={teamKind === "individual" ? "Datos Atleta" : teamKind === "grupo" ? "Datos Atletas" : teamGender === "femenino" ? "Datos Jugadoras" : "Datos Jugadores"} />}
 
       {showExport && (
         <ExportDataModal team={team} wellness={wellness} rpe={rpe} sessions={sessions} onClose={() => setShowExport(false)} />
