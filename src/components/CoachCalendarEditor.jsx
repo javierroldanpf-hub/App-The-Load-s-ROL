@@ -9,6 +9,14 @@ import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
 import SquadModal from "./SquadModal";
 
+function parseMatchDesc(raw) {
+  try {
+    const p = JSON.parse(raw || "{}");
+    if (p.rivalText !== undefined) return { rivalText: p.rivalText || "", rivalPhoto: p.rivalPhoto || "", scoreHome: p.scoreHome ?? "", scoreAway: p.scoreAway ?? "", resultText: p.resultText || "" };
+  } catch {}
+  return { rivalText: "", rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" };
+}
+
 const BLOCK_TYPES = ["CAMPO", "PISTA", "FUERZA", "CARRERA", "METABÓLICO", "HIIT", "EMOM", "AMRAP", "CALENTAMIENTO", "MOVEMENT PREP", "OTRO"];
 
 function getBlockType(b) {
@@ -116,17 +124,20 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   const parseDesc = (raw) => {
     try {
       const p = JSON.parse(raw || "{}");
-      if (p.blocks) return { blocks: p.blocks, rivalText: "", rivalPhoto: "" };
-      if (p.rivalText !== undefined) return { blocks: [], rivalText: p.rivalText || "", rivalPhoto: p.rivalPhoto || "" };
-      if (p.g !== undefined || p.c !== undefined) return { blocks: [{ name: "Gimnasio", duration: "", content: p.g || "" }, { name: "Campo", duration: "", content: p.c || "" }].filter(b => b.content), rivalText: "", rivalPhoto: "" };
-      return { blocks: [], rivalText: "" , rivalPhoto: "" };
-    } catch { return { blocks: [], rivalText: raw || "", rivalPhoto: "" }; }
+      if (p.blocks) return { blocks: p.blocks, rivalText: "", rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" };
+      if (p.rivalText !== undefined) return { blocks: [], rivalText: p.rivalText || "", rivalPhoto: p.rivalPhoto || "", scoreHome: p.scoreHome ?? "", scoreAway: p.scoreAway ?? "", resultText: p.resultText || "" };
+      if (p.g !== undefined || p.c !== undefined) return { blocks: [{ name: "Gimnasio", duration: "", content: p.g || "" }, { name: "Campo", duration: "", content: p.c || "" }].filter(b => b.content), rivalText: "", rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" };
+      return { blocks: [], rivalText: "", rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" };
+    } catch { return { blocks: [], rivalText: raw || "", rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" }; }
   };
   const parsed = parseDesc(existing?.description);
   const existingAthleteNote = parsed.blocks.find((b) => b.name === "Nota del atleta") || null;
   const [blocks, setBlocks] = useState(parsed.blocks.filter((b) => b.name !== "Nota del atleta").length > 0 ? parsed.blocks.filter((b) => b.name !== "Nota del atleta") : []);
   const [description, setDescription] = useState(parsed.rivalText);
   const [rivalPhoto, setRivalPhoto] = useState(parsed.rivalPhoto || "");
+  const [scoreHome, setScoreHome] = useState(String(parsed.scoreHome ?? ""));
+  const [scoreAway, setScoreAway] = useState(String(parsed.scoreAway ?? ""));
+  const [resultText, setResultText] = useState(parsed.resultText || "");
   const [isRest, setIsRest] = useState(existing ? !!existing.isRest : false);
   const [allowPlayerNote, setAllowPlayerNote] = useState(existing ? !!existing.allowPlayerNote : false);
   const [extraDates, setExtraDates] = useState([]);
@@ -173,7 +184,9 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
     setSaving(true);
     try {
       const allBlocks = existingAthleteNote ? [...blocks, existingAthleteNote] : blocks;
-      const finalDesc = isMatch ? JSON.stringify({ rivalText: description, rivalPhoto }) : JSON.stringify({ blocks: allBlocks });
+      const finalDesc = isMatch
+        ? JSON.stringify({ rivalText: description, rivalPhoto, scoreHome: scoreHome !== "" ? scoreHome : undefined, scoreAway: scoreAway !== "" ? scoreAway : undefined, resultText: resultText || undefined })
+        : JSON.stringify({ blocks: allBlocks });
       await onSaveGroup({ sessionType, intensity, duration: parseInt(duration) || 0, description: finalDesc, isRest, isMatch, allowPlayerNote }, extraDates);
     } finally { setSaving(false); }
   };
@@ -249,11 +262,29 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                     {!isTrainingGroup && !isIndividualAthlete && (
                       <>
                         <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Escudo del rival</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
                           {rivalPhoto && <img src={rivalPhoto} alt="Escudo rival" style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, background: COLORS.panelRaised, padding: 4 }} />}
                           <ImageUploadButton label={rivalPhoto ? "Cambiar escudo" : "+ Añadir escudo"} onUploaded={(dataUrl) => setRivalPhoto(dataUrl)} />
                           {rivalPhoto && <button onClick={() => setRivalPhoto("")} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 10px", fontSize: 12, cursor: "pointer" }}>Quitar</button>}
                         </div>
+                        <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Marcador</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Tu equipo</div>
+                            <input type="number" inputMode="numeric" min="0" value={scoreHome} onChange={(e) => setScoreHome(e.target.value)} placeholder="—" style={{ ...inputStyle, textAlign: "center" }} />
+                          </div>
+                          <span style={{ fontSize: 18, color: COLORS.text, marginTop: 18 }}>–</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>{description || "Rival"}</div>
+                            <input type="number" inputMode="numeric" min="0" value={scoreAway} onChange={(e) => setScoreAway(e.target.value)} placeholder="—" style={{ ...inputStyle, textAlign: "center" }} />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {(isTrainingGroup || isIndividualAthlete) && (
+                      <>
+                        <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Resultado</div>
+                        <input type="text" value={resultText} onChange={(e) => setResultText(e.target.value)} placeholder="Ej: 1.ª posición, medalla de oro..." style={inputStyle} />
                       </>
                     )}
                   </div>
@@ -519,13 +550,34 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
 
         {session ? (
           <>
-          {(session.sessionType || session.isRest) && (
+          {(session.sessionType || session.isRest) && (() => {
+            const matchInfo = (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") ? parseMatchDesc(session.description) : null;
+            const hasScore = matchInfo && (matchInfo.scoreHome !== "" || matchInfo.scoreAway !== "");
+            const hasResult = matchInfo && matchInfo.resultText;
+            return (
           <div style={{ borderRadius: 7, overflow: "hidden", background: intensity ? intensity.dark : COLORS.panelRaised }}>
             <div onClick={() => openEditor(date)} style={{ padding: "6px 6px", cursor: "pointer", minHeight: 32 }}>
               <div style={{ fontSize: viewMode === "week" ? 12 : 10, fontWeight: 700, color: intensity ? intensity.color : COLORS.textFaint, fontFamily: "'Oswald', sans-serif" }}>
                 {session.isRest ? "Descanso" : session.sessionType}
               </div>
-              {!session.isRest && session.duration > 0 && viewMode === "week" && (
+              {matchInfo && matchInfo.rivalPhoto && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 4, marginBottom: 2 }}>
+                  <img src={matchInfo.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }} />
+                </div>
+              )}
+              {matchInfo && matchInfo.rivalText && (
+                <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>vs {matchInfo.rivalText}</div>
+              )}
+              {hasScore && (
+                <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 700, marginTop: 1 }}>{matchInfo.scoreHome} – {matchInfo.scoreAway}</div>
+              )}
+              {hasResult && (
+                <div style={{ fontSize: 9, color: COLORS.text, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{matchInfo.resultText}</div>
+              )}
+              {!session.isRest && session.duration > 0 && viewMode === "week" && !matchInfo?.rivalText && (
+                <div style={{ fontSize: 10, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7, marginTop: 2 }}>{session.duration} min</div>
+              )}
+              {!session.isRest && session.duration > 0 && viewMode === "week" && matchInfo?.rivalText && (
                 <div style={{ fontSize: 10, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7, marginTop: 2 }}>{session.duration} min</div>
               )}
             </div>
@@ -539,7 +591,8 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
               </button>
             )}
           </div>
-          )}
+            );
+          })()}
           {!session.sessionType && !session.isRest && !readOnly && (
             <div onClick={() => openEditor(date, "grupo")} style={{ display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 7, border: `1px dashed ${COLORS.line}`, height: 28, cursor: "pointer" }}>
               <span style={{ fontSize: 14, color: COLORS.text }}>+</span>
@@ -730,10 +783,21 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                     <div style={{ fontSize: 10, fontWeight: 600, color: isToday ? COLORS.lime : COLORS.text }}>{weekdayLabel(date).slice(0, 3)}</div>
                     <div style={{ fontSize: 9, color: COLORS.text }}>{fmtDateShort(date)}</div>
                   </div>
-                  {session && (session.sessionType || session.isRest) ? (
+                  {session && (session.sessionType || session.isRest) ? (() => {
+                    const wkMatchInfo = (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") ? parseMatchDesc(session.description) : null;
+                    const wkHasScore = wkMatchInfo && (wkMatchInfo.scoreHome !== "" || wkMatchInfo.scoreAway !== "");
+                    return (
                     <div style={{ borderRadius: 6, overflow: "hidden", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised }}>
                       <div onClick={() => openEditor(date)} style={{ padding: "5px 3px", textAlign: "center", cursor: "pointer" }}>
                         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.textFaint }}>{session.isRest ? "Descanso" : session.sessionType}</div>
+                        {wkMatchInfo?.rivalPhoto && (
+                          <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}>
+                            <img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} />
+                          </div>
+                        )}
+                        {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>vs {wkMatchInfo.rivalText}</div>}
+                        {wkHasScore && <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{wkMatchInfo.scoreHome} – {wkMatchInfo.scoreAway}</div>}
+                        {wkMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{wkMatchInfo.resultText}</div>}
                         {session.duration > 0 && !session.isRest && <div style={{ fontSize: 9, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7 }}>{session.duration} min</div>}
                       </div>
                       {!readOnly && (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") && (team.kind || "equipo") === "equipo" && (
@@ -746,7 +810,8 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                         </button>
                       )}
                     </div>
-                  ) : !readOnly ? (
+                    );
+                  })() : !readOnly ? (
                     <div onClick={() => openEditor(date)} style={{ display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, border: `1px dashed ${COLORS.line}`, width: "100%", height: 36, cursor: "pointer" }}>
                       <span style={{ fontSize: 16, color: COLORS.text }}>+</span>
                     </div>

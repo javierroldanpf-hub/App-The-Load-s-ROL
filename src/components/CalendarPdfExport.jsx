@@ -99,13 +99,13 @@ function DayBadges({ date, mesocycles }) {
 
 // ── Session card ──────────────────────────────────────────────────────────────
 function parseMatchDesc(description) {
-  if (!description) return { rivalText: "", rivalPhoto: "" };
+  if (!description) return { rivalText: "", rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" };
   try {
     const p = JSON.parse(description);
     if (p.rivalText !== undefined || p.rivalPhoto !== undefined)
-      return { rivalText: p.rivalText || "", rivalPhoto: p.rivalPhoto || "" };
+      return { rivalText: p.rivalText || "", rivalPhoto: p.rivalPhoto || "", scoreHome: p.scoreHome ?? "", scoreAway: p.scoreAway ?? "", resultText: p.resultText || "" };
   } catch {}
-  return { rivalText: description, rivalPhoto: "" };
+  return { rivalText: description, rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" };
 }
 
 function SessionCard({ session, showGroup, showInd, compact = false, displayNames }) {
@@ -129,6 +129,12 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
               <div style={{ marginTop: 6, display: "flex", justifyContent: "center" }}>
                 <img src={match.rivalPhoto} alt="" style={{ width: compact ? 28 : 64, height: compact ? 28 : 64, objectFit: "contain", borderRadius: 6, background: "rgba(255,255,255,0.07)", padding: 4 }} />
               </div>
+            )}
+            {match && (match.scoreHome !== "" || match.scoreAway !== "") && (
+              <div style={{ fontSize: compact ? 10 : 12, color: D.text, fontWeight: 700, textAlign: "center", marginTop: 4 }}>{match.scoreHome} – {match.scoreAway}</div>
+            )}
+            {match?.resultText && (
+              <div style={{ fontSize: compact ? 9 : 11, color: D.text, textAlign: "center", marginTop: 2 }}>{match.resultText}</div>
             )}
             {!compact && !match && blocks.map((b, i) => (
               <div key={i} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${int.border}` }}>
@@ -338,6 +344,8 @@ function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, show
                   <div style={{ background: int?.bg, border: `1px solid ${int?.border}`, borderRadius: 4, padding: "3px 5px", fontSize: 10, fontWeight: 700, color: int?.color }}>
                     <div>{session.sessionType}{m?.rivalText ? ` · ${m.rivalText}` : ""}</div>
                     {m?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}><img src={m.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.07)", padding: 3 }} /></div>}
+                    {m && (m.scoreHome !== "" || m.scoreAway !== "") && <div style={{ fontSize: 9, textAlign: "center", marginTop: 2 }}>{m.scoreHome} – {m.scoreAway}</div>}
+                    {m?.resultText && <div style={{ fontSize: 9, textAlign: "center", marginTop: 1, fontWeight: 400 }}>{m.resultText}</div>}
                   </div>
                 );
               })()}
