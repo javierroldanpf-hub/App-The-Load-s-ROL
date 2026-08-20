@@ -9,6 +9,19 @@ import WellnessForm from "./WellnessForm";
 import RpeForm from "./RpeForm";
 import SessionDetailModal from "./SessionDetailModal";
 import PlayerMyData from "./PlayerMyData";
+
+function parseMatchDesc(raw) {
+  try {
+    const p = JSON.parse(raw || "{}");
+    if (p.rivalText !== undefined) return { rivalText: p.rivalText || "", rivalPhoto: p.rivalPhoto || "", scoreHome: p.scoreHome ?? "", scoreAway: p.scoreAway ?? "", resultText: p.resultText || "" };
+  } catch {}
+  return null;
+}
+function matchScoreLabel(info, sessionType) {
+  if (!info || (info.scoreHome === "" && info.scoreAway === "")) return null;
+  const isAway = sessionType === "MD(A)";
+  return isAway ? `${info.scoreAway} – ${info.scoreHome}` : `${info.scoreHome} – ${info.scoreAway}`;
+}
 import HelpPanel from "./HelpPanel";
 
 export default function PlayerDashboard({ user, onLogout }) {
@@ -683,11 +696,19 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
                   <div style={{ fontSize: 10, fontWeight: 600, color: isToday ? COLORS.lime : COLORS.text }}>{wdLabel(date).slice(0, 3)}</div>
                   <div style={{ fontSize: 9, color: COLORS.text }}>{fmtDateShort(date)}</div>
                 </div>
-                {group ? (
+                {group ? (() => {
+                  const gMatchInfo = (group.isMatch || group.sessionType === "MD(H)" || group.sessionType === "MD(A)") ? parseMatchDesc(group.description) : null;
+                  const gScore = matchScoreLabel(gMatchInfo, group.sessionType);
+                  return (
                   <div onClick={() => openDetail(date, group)} style={{ borderRadius: 6, padding: "5px 3px", textAlign: "center", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised, cursor: "pointer" }}>
                     <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.text }}>{group.isRest ? "Descanso" : group.sessionType}</div>
+                    {gMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={gMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} /></div>}
+                    {gMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>vs {gMatchInfo.rivalText}</div>}
+                    {gScore && <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{gScore}</div>}
+                    {gMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{gMatchInfo.resultText}</div>}
                   </div>
-                ) : (
+                  );
+                })() : (
                   <div style={{ fontSize: 9, color: COLORS.text, padding: "8px 0" }}>—</div>
                 )}
                 {individuals.map((ind, i) => (
@@ -730,11 +751,19 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
                     {relaxinM && <span style={{ fontSize: 7, lineHeight: 1 }}>⚡</span>}
                   </div>
                   <span style={{ fontSize: 11, color: isToday ? COLORS.lime : COLORS.text, fontWeight: 600 }}>{dayNum}</span>
-                  {group ? (
-                    <span onClick={() => openDetail(date, group)} style={{ fontSize: 9, fontWeight: 600, padding: "2px 4px", borderRadius: 5, width: "100%", textAlign: "center", background: intensity ? intensity.dark : COLORS.panelRaised, color: intensity ? intensity.color : COLORS.text, cursor: "pointer" }}>
-                      {group.isRest ? "Desc." : group.sessionType}
-                    </span>
-                  ) : <span style={{ fontSize: 9, color: COLORS.text }}>—</span>}
+                  {group ? (() => {
+                    const mMatchInfo = (group.isMatch || group.sessionType === "MD(H)" || group.sessionType === "MD(A)") ? parseMatchDesc(group.description) : null;
+                    const mScore = matchScoreLabel(mMatchInfo, group.sessionType);
+                    return (
+                    <div onClick={() => openDetail(date, group)} style={{ fontSize: 9, fontWeight: 600, padding: "2px 4px", borderRadius: 5, width: "100%", textAlign: "center", background: intensity ? intensity.dark : COLORS.panelRaised, color: intensity ? intensity.color : COLORS.text, cursor: "pointer" }}>
+                      <div>{group.isRest ? "Desc." : group.sessionType}</div>
+                      {mMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}><img src={mMatchInfo.rivalPhoto} alt="" style={{ width: 18, height: 18, objectFit: "contain", borderRadius: 3 }} /></div>}
+                      {mMatchInfo?.rivalText && <div style={{ fontSize: 7, color: "#f87171", fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2 }}>vs {mMatchInfo.rivalText}</div>}
+                      {mScore && <div style={{ fontSize: 7, color: COLORS.text, fontWeight: 700 }}>{mScore}</div>}
+                      {mMatchInfo?.resultText && <div style={{ fontSize: 7, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{mMatchInfo.resultText}</div>}
+                    </div>
+                    );
+                  })() : <span style={{ fontSize: 9, color: COLORS.text }}>—</span>}
                   {individuals.map((ind, i) => (
                     <span key={i} onClick={() => openDetail(date, ind)} style={{ fontSize: 9, fontWeight: 700, padding: "2px 4px", borderRadius: 5, width: "100%", textAlign: "center", background: COLORS.panelRaised, color: COLORS.blue, border: `1px solid ${COLORS.blue}`, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {ind.sessionType}

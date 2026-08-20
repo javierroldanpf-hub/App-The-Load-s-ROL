@@ -122,7 +122,7 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
         ) : (
           <div style={{ background: int.bg, border: `1px solid ${int.border}`, borderRadius: 5, padding: compact ? "4px 7px" : "7px 9px" }}>
             <div style={{ fontSize: compact ? 11 : 13, fontWeight: 800, color: int.color }}>
-              {session.sessionType}{match?.rivalText ? ` · ${match.rivalText}` : ""}
+              {session.sessionType}{match?.rivalText ? <span style={{ fontWeight: 400 }}> · {match.rivalText}</span> : ""}
               {!compact && session.duration > 0 && <span style={{ fontWeight: 400, fontSize: 10, color: D.textMuted, marginLeft: 6 }}>{session.duration} min</span>}
             </div>
             {match?.rivalPhoto && (
@@ -130,9 +130,11 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                 <img src={match.rivalPhoto} alt="" style={{ width: compact ? 28 : 64, height: compact ? 28 : 64, objectFit: "contain", borderRadius: 6, background: "rgba(255,255,255,0.07)", padding: 4 }} />
               </div>
             )}
-            {match && (match.scoreHome !== "" || match.scoreAway !== "") && (
-              <div style={{ fontSize: compact ? 10 : 12, color: D.text, fontWeight: 700, textAlign: "center", marginTop: 4 }}>{match.scoreHome} – {match.scoreAway}</div>
-            )}
+            {match && (match.scoreHome !== "" || match.scoreAway !== "") && (() => {
+              const isAway = session.sessionType === "MD(A)";
+              const sl = isAway ? `${match.scoreAway} – ${match.scoreHome}` : `${match.scoreHome} – ${match.scoreAway}`;
+              return <div style={{ fontSize: compact ? 10 : 12, color: D.text, fontWeight: 700, textAlign: "center", marginTop: 4 }}>{sl}</div>;
+            })()}
             {match?.resultText && (
               <div style={{ fontSize: compact ? 9 : 11, color: D.text, textAlign: "center", marginTop: 2 }}>{match.resultText}</div>
             )}
@@ -344,7 +346,7 @@ function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, show
                   <div style={{ background: int?.bg, border: `1px solid ${int?.border}`, borderRadius: 4, padding: "3px 5px", fontSize: 10, fontWeight: 700, color: int?.color }}>
                     <div>{session.sessionType}{m?.rivalText ? ` · ${m.rivalText}` : ""}</div>
                     {m?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}><img src={m.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.07)", padding: 3 }} /></div>}
-                    {m && (m.scoreHome !== "" || m.scoreAway !== "") && <div style={{ fontSize: 9, textAlign: "center", marginTop: 2 }}>{m.scoreHome} – {m.scoreAway}</div>}
+                    {m && (m.scoreHome !== "" || m.scoreAway !== "") && (() => { const isAway = session.sessionType === "MD(A)"; return <div style={{ fontSize: 9, textAlign: "center", marginTop: 2 }}>{isAway ? `${m.scoreAway} – ${m.scoreHome}` : `${m.scoreHome} – ${m.scoreAway}`}</div>; })()}
                     {m?.resultText && <div style={{ fontSize: 9, textAlign: "center", marginTop: 1, fontWeight: 400 }}>{m.resultText}</div>}
                   </div>
                 );
