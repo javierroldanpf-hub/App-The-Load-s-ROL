@@ -108,7 +108,7 @@ function parseMatchDesc(description) {
   return { rivalText: description, rivalPhoto: "", scoreHome: "", scoreAway: "", resultText: "" };
 }
 
-function SessionCard({ session, showGroup, showInd, compact = false, displayNames }) {
+function SessionCard({ session, showGroup, showInd, compact = false, displayNames, isEquipo = false }) {
   if (!session) return null;
   const blocks = parseBlocks(session.description);
   const athleteNote = parseAthleteNote(session.description);
@@ -122,7 +122,7 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
         ) : (
           <div style={{ background: int.bg, border: `1px solid ${int.border}`, borderRadius: 5, padding: compact ? "4px 7px" : "7px 9px" }}>
             <div style={{ fontSize: compact ? 11 : 13, fontWeight: 800, color: int.color }}>
-              {session.sessionType}{match?.rivalText ? <span style={{ fontWeight: 400 }}> · {match.rivalText}</span> : ""}
+              {session.sessionType}{match?.rivalText ? <span style={{ fontWeight: 400 }}> · {isEquipo ? `vs ${match.rivalText}` : match.rivalText}</span> : ""}
               {!compact && session.duration > 0 && <span style={{ fontWeight: 400, fontSize: 10, color: D.textMuted, marginLeft: 6 }}>{session.duration} min</span>}
             </div>
             {match?.rivalPhoto && (
@@ -311,7 +311,7 @@ function WeekContent({ team, sessions, mesocycles, weekMonday, coachName, showGr
               <div style={{ fontSize: 15, fontWeight: 800, color: D.text }}>{fmtShort(date)}</div>
             </div>
             <div style={{ padding: 9, flex: 1 }}>
-              {byDate[date] ? <SessionCard session={byDate[date]} showGroup={showGroup} showInd={showInd} displayNames={displayNames} /> : <div style={{ fontSize: 12, color: D.textMuted }}>—</div>}
+              {byDate[date] ? <SessionCard session={byDate[date]} showGroup={showGroup} showInd={showInd} displayNames={displayNames} isEquipo={isEquipo} /> : <div style={{ fontSize: 12, color: D.textMuted }}>—</div>}
             </div>
           </div>
         ))}
@@ -344,7 +344,7 @@ function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, show
                 const m = session.isMatch ? parseMatchDesc(session.description) : null;
                 return (
                   <div style={{ background: int?.bg, border: `1px solid ${int?.border}`, borderRadius: 4, padding: "3px 5px", fontSize: 10, fontWeight: 700, color: int?.color }}>
-                    <div>{session.sessionType}{m?.rivalText ? ` · ${m.rivalText}` : ""}</div>
+                    <div>{session.sessionType}{m?.rivalText ? ` · ${isEquipo ? `vs ${m.rivalText}` : m.rivalText}` : ""}</div>
                     {m?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}><img src={m.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.07)", padding: 3 }} /></div>}
                     {m && (m.scoreHome !== "" || m.scoreAway !== "") && (() => { const isAway = session.sessionType === "MD(A)"; return <div style={{ fontSize: 9, textAlign: "center", marginTop: 2 }}>{isAway ? `${m.scoreAway} – ${m.scoreHome}` : `${m.scoreHome} – ${m.scoreAway}`}</div>; })()}
                     {m?.resultText && <div style={{ fontSize: 9, textAlign: "center", marginTop: 1, fontWeight: 400 }}>{m.resultText}</div>}
@@ -391,7 +391,7 @@ function MesoContent({ team, sessions, meso, mesocycles, coachName, showGroup, s
                   <DayBadges date={date} mesocycles={mesocycles} />
                   <div style={{ fontSize: 10, fontWeight: 700, color: D.textMuted }}>{WEEKDAY_LABELS[dayIdx(date)]?.slice(0, 3).toUpperCase()}</div>
                   <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{fmtShort(date)}</div>
-                  {byDate[date] ? <SessionCard session={byDate[date]} showGroup={showGroup} showInd={showInd} displayNames={displayNames} /> : <div style={{ fontSize: 11, color: D.textMuted }}>—</div>}
+                  {byDate[date] ? <SessionCard session={byDate[date]} showGroup={showGroup} showInd={showInd} displayNames={displayNames} isEquipo={isEquipo} /> : <div style={{ fontSize: 11, color: D.textMuted }}>—</div>}
                 </div>
               ))}
             </div>

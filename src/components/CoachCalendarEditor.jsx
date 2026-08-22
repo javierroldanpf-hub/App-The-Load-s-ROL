@@ -290,6 +290,12 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                     )}
                     {(isTrainingGroup || isIndividualAthlete) && (
                       <>
+                        <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Foto de referencia de la competición</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                          {rivalPhoto && <img src={rivalPhoto} alt="Foto competición" style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, background: COLORS.panelRaised, padding: 4 }} />}
+                          <ImageUploadButton label={rivalPhoto ? "Cambiar foto" : "+ Añadir foto"} onUploaded={(dataUrl) => setRivalPhoto(dataUrl)} />
+                          {rivalPhoto && <button onClick={() => setRivalPhoto("")} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 10px", fontSize: 12, cursor: "pointer" }}>Quitar</button>}
+                        </div>
                         <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Resultado</div>
                         <input type="text" value={resultText} onChange={(e) => setResultText(e.target.value)} placeholder="Ej: 1.ª posición, medalla de oro..." style={inputStyle} />
                       </>
@@ -573,7 +579,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                 </div>
               )}
               {matchInfo && matchInfo.rivalText && (
-                <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>vs {matchInfo.rivalText}</div>
+                <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>{(team.kind || "equipo") === "equipo" ? `vs ${matchInfo.rivalText}` : matchInfo.rivalText}</div>
               )}
               {(() => { const sl = matchInfo ? scoreLabel(matchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 700, marginTop: 1 }}>{sl}</div> : null; })()}
               {hasResult && (
@@ -797,7 +803,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                             <img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} />
                           </div>
                         )}
-                        {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>vs {wkMatchInfo.rivalText}</div>}
+                        {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{(team.kind || "equipo") === "equipo" ? `vs ${wkMatchInfo.rivalText}` : wkMatchInfo.rivalText}</div>}
                         {(() => { const sl = wkMatchInfo ? scoreLabel(wkMatchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{sl}</div> : null; })()}
                         {wkMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{wkMatchInfo.resultText}</div>}
                         {session.duration > 0 && !session.isRest && <div style={{ fontSize: 9, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7 }}>{session.duration} min</div>}
