@@ -535,17 +535,20 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
         if (img.complete) return Promise.resolve();
         return new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
       }));
+      // Scale 1 to avoid memory crash in mobile WebView (Capacitor/WKWebView)
       const canvas = await html2canvas(printRef.current, {
-        scale: 2, useCORS: true, allowTaint: true, backgroundColor: D.bg,
+        scale: 1, useCORS: true, allowTaint: true, backgroundColor: D.bg,
         width: printRef.current.scrollWidth, height: printRef.current.scrollHeight,
-        imageTimeout: 15000,
+        imageTimeout: 15000, logging: false,
       });
-      const imgData = canvas.toDataURL("image/png");
-      const w = canvas.width / 2, h = canvas.height / 2;
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      const w = canvas.width, h = canvas.height;
       const pdf = new jsPDF({ orientation: w > h ? "landscape" : "portrait", unit: "px", format: [w, h] });
-      pdf.addImage(imgData, "PNG", 0, 0, w, h);
+      pdf.addImage(imgData, "JPEG", 0, 0, w, h);
       const name = type === "week" ? `semana-${weekMonday}` : type === "month" ? `mes-${monthAnchor.slice(0, 7)}` : type === "session" ? `sesion-${sessionDate}` : `mesociclo-${selectedMeso?.name || "meso"}`;
       pdf.save(`${name}.pdf`);
+    } catch (err) {
+      alert("Error al generar el PDF: " + (err?.message || err));
     } finally { setDownloading(false); }
   };
 
