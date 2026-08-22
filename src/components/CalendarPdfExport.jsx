@@ -3,8 +3,6 @@ import React, { useRef, useState, useEffect } from "react";
 import { COLORS, WEEKDAY_LABELS } from "@/lib/constants";
 import { weekDates, mondayOf, addWeeks, addMonths, monthGridDates, weekNumberFrom, addDays } from "@/lib/utils";
 import Avatar from "./Avatar";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 
 function monthLabel(d) {
   return new Date(d + "T00:00:00").toLocaleDateString("es-ES", { month: "long", year: "numeric" });
@@ -525,6 +523,12 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
   const printRef = useRef(null);
   const selectedMeso = mesocycles.find((m) => m.id === mesoId) || mesocycles[0];
 
+  // Prefetch PDF libs as soon as the modal opens (non-blocking)
+  useEffect(() => {
+    import("html2canvas").catch(() => {});
+    import("jspdf").catch(() => {});
+  }, []);
+
   const handleDownload = async () => {
     if (!printRef.current) return;
     setDownloading(true);
@@ -535,6 +539,9 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
         if (img.complete) return Promise.resolve();
         return new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
       }));
+      // Dynamic import keeps these large libs out of the main bundle
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
       // Scale 1 to avoid memory crash in mobile WebView (Capacitor/WKWebView)
       const canvas = await html2canvas(printRef.current, {
         scale: 1, useCORS: true, allowTaint: true, backgroundColor: D.bg,
