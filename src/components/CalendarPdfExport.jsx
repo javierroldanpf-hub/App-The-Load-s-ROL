@@ -527,16 +527,11 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
     if (!printRef.current) return;
     setDownloading(true);
     try {
-      // Preload all images in the print area so html2canvas captures them correctly
+      // Wait for any images that haven't finished loading yet
       const imgs = Array.from(printRef.current.querySelectorAll("img"));
       await Promise.all(imgs.map((img) => {
-        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-        return new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve;
-          // Force reload for data URIs that may not have triggered load
-          if (img.src) { const s = img.src; img.src = ""; img.src = s; }
-        });
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
       }));
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
