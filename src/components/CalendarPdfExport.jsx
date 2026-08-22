@@ -296,7 +296,7 @@ function PdfHeader({ team, coachName, mesocycles, visibleDates, title }) {
 }
 
 // ── Week content ──────────────────────────────────────────────────────────────
-function WeekContent({ team, sessions, mesocycles, weekMonday, coachName, showGroup, showInd, displayNames }) {
+function WeekContent({ team, sessions, mesocycles, weekMonday, coachName, showGroup, showInd, displayNames, isEquipo = false }) {
   const byDate = Object.fromEntries(sessions.map((s) => [s.date, s]));
   const days = weekDates(weekMonday);
   const meso = getMeso(days[0], mesocycles) || getMeso(days[6], mesocycles);
@@ -324,7 +324,7 @@ function WeekContent({ team, sessions, mesocycles, weekMonday, coachName, showGr
 }
 
 // ── Month content ─────────────────────────────────────────────────────────────
-function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, showGroup, showInd }) {
+function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, showGroup, showInd, isEquipo = false }) {
   const byDate = Object.fromEntries(sessions.map((s) => [s.date, s]));
   const cells = monthGridDates(monthAnchor);
   const inMonth = cells.filter((c) => c.inMonth).map((c) => c.date);
@@ -367,7 +367,7 @@ function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, show
 }
 
 // ── Meso content ──────────────────────────────────────────────────────────────
-function MesoContent({ team, sessions, meso, mesocycles, coachName, showGroup, showInd, displayNames }) {
+function MesoContent({ team, sessions, meso, mesocycles, coachName, showGroup, showInd, displayNames, isEquipo = false }) {
   const byDate = Object.fromEntries(sessions.map((s) => [s.date, s]));
   if (!meso) return null;
   const allDates = [];
@@ -679,9 +679,9 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
       {/* Scrollable preview */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "1.5rem", display: "flex", justifyContent: "center" }}>
         <div ref={printRef} style={{ display: "inline-block" }}>
-          {type === "week" && <WeekContent team={team} sessions={sessions} mesocycles={mesocycles} weekMonday={weekMonday} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} />}
-          {type === "month" && <MonthContent team={team} sessions={sessions} mesocycles={mesocycles} monthAnchor={monthAnchor} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} />}
-          {type === "meso" && selectedMeso && <MesoContent team={team} sessions={sessions} meso={selectedMeso} mesocycles={mesocycles} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} />}
+          {type === "week" && <WeekContent team={team} sessions={sessions} mesocycles={mesocycles} weekMonday={weekMonday} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} isEquipo={isEquipo} />}
+          {type === "month" && <MonthContent team={team} sessions={sessions} mesocycles={mesocycles} monthAnchor={monthAnchor} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} isEquipo={isEquipo} />}
+          {type === "meso" && selectedMeso && <MesoContent team={team} sessions={sessions} meso={selectedMeso} mesocycles={mesocycles} coachName={coachName} showGroup={showGroup} showInd={showInd} displayNames={displayNames} isEquipo={isEquipo} />}
           {type === "session" && <SessionContent team={team} session={sessions.find((s) => s.date === sessionDate) || null} date={sessionDate} coachName={coachName} />}
         </div>
       </div>
