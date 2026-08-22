@@ -523,35 +523,41 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
   const printRef = useRef(null);
   const selectedMeso = mesocycles.find((m) => m.id === mesoId) || mesocycles[0];
 
-  // Prefetch PDF libs as soon as the modal opens (non-blocking)
-  useEffect(() => {
-    import("html2canvas").catch(() => {});
-    import("jspdf").catch(() => {});
-  }, []);
-
   const handleDownload = async () => {
     if (!printRef.current) return;
     setDownloading(true);
     try {
-      // Wait for any images that haven't finished loading yet
-      const imgs = Array.from(printRef.current.querySelectorAll("img"));
-      await Promise.all(imgs.map((img) => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
-      }));
-      // Dynamic import keeps these large libs out of the main bundle
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
-      // Scale 1 to avoid memory crash in mobile WebView (Capacitor/WKWebView)
+
+      // Collect img positions BEFORE html2canvas (relative to printRef top-left)
+      const containerRect = printRef.current.getBoundingClientRect();
+      const imageData = Array.from(printRef.current.querySelectorAll("img")).map((img) => {
+        const r = img.getBoundingClientRect();
+        return { src: img.src, x: r.left - containerRect.left, y: r.top - containerRect.top, w: r.width, h: r.height };
+      }).filter(d => d.src && d.src.startsWith("data:"));
+
+      // Capture layout WITHOUT images (avoids canvas crash with base64 data URIs)
       const canvas = await html2canvas(printRef.current, {
-        scale: 1, useCORS: true, allowTaint: true, backgroundColor: D.bg,
+        scale: 1, backgroundColor: D.bg,
         width: printRef.current.scrollWidth, height: printRef.current.scrollHeight,
-        imageTimeout: 15000, logging: false,
+        logging: false,
+        onclone: (doc) => {
+          // Hide all imgs in the clone — html2canvas never processes the base64 data
+          doc.querySelectorAll("img").forEach((img) => { img.style.display = "none"; });
+        },
       });
+
       const imgData = canvas.toDataURL("image/jpeg", 0.85);
       const w = canvas.width, h = canvas.height;
       const pdf = new jsPDF({ orientation: w > h ? "landscape" : "portrait", unit: "px", format: [w, h] });
       pdf.addImage(imgData, "JPEG", 0, 0, w, h);
+
+      // Add each image directly via jsPDF (bypasses html2canvas entirely for images)
+      for (const d of imageData) {
+        try { pdf.addImage(d.src, "JPEG", d.x, d.y, d.w, d.h); } catch {}
+      }
+
       const name = type === "week" ? `semana-${weekMonday}` : type === "month" ? `mes-${monthAnchor.slice(0, 7)}` : type === "session" ? `sesion-${sessionDate}` : `mesociclo-${selectedMeso?.name || "meso"}`;
       pdf.save(`${name}.pdf`);
     } catch (err) {
