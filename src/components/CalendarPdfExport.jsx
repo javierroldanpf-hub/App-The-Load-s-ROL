@@ -3,6 +3,8 @@ import React, { useRef, useState, useEffect } from "react";
 import { COLORS, WEEKDAY_LABELS } from "@/lib/constants";
 import { weekDates, mondayOf, addWeeks, addMonths, monthGridDates, weekNumberFrom, addDays } from "@/lib/utils";
 import Avatar from "./Avatar";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 function monthLabel(d) {
   return new Date(d + "T00:00:00").toLocaleDateString("es-ES", { month: "long", year: "numeric" });
@@ -533,8 +535,6 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
         if (img.complete) return Promise.resolve();
         return new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
       }));
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
       const canvas = await html2canvas(printRef.current, {
         scale: 2, useCORS: true, allowTaint: true, backgroundColor: D.bg,
         width: printRef.current.scrollWidth, height: printRef.current.scrollHeight,
