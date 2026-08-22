@@ -702,10 +702,19 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
                   return (
                   <div onClick={() => openDetail(date, group)} style={{ borderRadius: 6, padding: "5px 3px", textAlign: "center", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised, cursor: "pointer" }}>
                     <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.text }}>{group.isRest ? "Descanso" : group.sessionType}</div>
-                    {gMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={gMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} /></div>}
-                    {gMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{(team.kind || "equipo") === "equipo" ? `vs ${gMatchInfo.rivalText}` : gMatchInfo.rivalText}</div>}
-                    {gScore && <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{gScore}</div>}
-                    {gMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{gMatchInfo.resultText}</div>}
+                    {(team.kind || "equipo") === "equipo" ? (
+                      <>
+                        {gMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={gMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} /></div>}
+                        {gMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>vs {gMatchInfo.rivalText}</div>}
+                        {gScore && <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{gScore}</div>}
+                      </>
+                    ) : (
+                      <>
+                        {gMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{gMatchInfo.rivalText}</div>}
+                        {gMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={gMatchInfo.rivalPhoto} alt="" style={{ width: 30, height: 30, objectFit: "contain", borderRadius: 3 }} /></div>}
+                        {gMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{gMatchInfo.resultText}</div>}
+                      </>
+                    )}
                   </div>
                   );
                 })() : (
@@ -757,10 +766,19 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
                     return (
                     <div onClick={() => openDetail(date, group)} style={{ fontSize: 9, fontWeight: 600, padding: "2px 4px", borderRadius: 5, width: "100%", textAlign: "center", background: intensity ? intensity.dark : COLORS.panelRaised, color: intensity ? intensity.color : COLORS.text, cursor: "pointer" }}>
                       <div>{group.isRest ? "Desc." : group.sessionType}</div>
-                      {mMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}><img src={mMatchInfo.rivalPhoto} alt="" style={{ width: 18, height: 18, objectFit: "contain", borderRadius: 3 }} /></div>}
-                      {mMatchInfo?.rivalText && <div style={{ fontSize: 7, color: "#f87171", fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2 }}>{(team.kind || "equipo") === "equipo" ? `vs ${mMatchInfo.rivalText}` : mMatchInfo.rivalText}</div>}
-                      {mScore && <div style={{ fontSize: 7, color: COLORS.text, fontWeight: 700 }}>{mScore}</div>}
-                      {mMatchInfo?.resultText && <div style={{ fontSize: 7, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{mMatchInfo.resultText}</div>}
+                      {(team.kind || "equipo") === "equipo" ? (
+                        <>
+                          {mMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}><img src={mMatchInfo.rivalPhoto} alt="" style={{ width: 18, height: 18, objectFit: "contain", borderRadius: 3 }} /></div>}
+                          {mMatchInfo?.rivalText && <div style={{ fontSize: 7, color: "#f87171", fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2 }}>vs {mMatchInfo.rivalText}</div>}
+                          {mScore && <div style={{ fontSize: 7, color: COLORS.text, fontWeight: 700 }}>{mScore}</div>}
+                        </>
+                      ) : (
+                        <>
+                          {mMatchInfo?.rivalText && <div style={{ fontSize: 7, color: "#f87171", fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2 }}>{mMatchInfo.rivalText}</div>}
+                          {mMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}><img src={mMatchInfo.rivalPhoto} alt="" style={{ width: 24, height: 24, objectFit: "contain", borderRadius: 3 }} /></div>}
+                          {mMatchInfo?.resultText && <div style={{ fontSize: 7, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{mMatchInfo.resultText}</div>}
+                        </>
+                      )}
                     </div>
                     );
                   })() : <span style={{ fontSize: 9, color: COLORS.text }}>—</span>}

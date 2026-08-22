@@ -122,12 +122,15 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
         ) : (
           <div style={{ background: int.bg, border: `1px solid ${int.border}`, borderRadius: 5, padding: compact ? "4px 7px" : "7px 9px" }}>
             <div style={{ fontSize: compact ? 11 : 13, fontWeight: 800, color: int.color }}>
-              {session.sessionType}{match?.rivalText ? <span style={{ fontWeight: 400 }}> · {isEquipo ? `vs ${match.rivalText}` : match.rivalText}</span> : ""}
+              {session.sessionType}{match?.rivalText && isEquipo ? <span style={{ fontWeight: 400 }}> · vs {match.rivalText}</span> : ""}
               {!compact && session.duration > 0 && <span style={{ fontWeight: 400, fontSize: 10, color: D.textMuted, marginLeft: 6 }}>{session.duration} min</span>}
             </div>
+            {match?.rivalText && !isEquipo && (
+              <div style={{ fontSize: compact ? 10 : 12, fontWeight: 700, color: int.color, marginTop: 3, textAlign: "center", wordBreak: "break-word" }}>{match.rivalText}</div>
+            )}
             {match?.rivalPhoto && (
               <div style={{ marginTop: 6, display: "flex", justifyContent: "center" }}>
-                <img src={match.rivalPhoto} alt="" style={{ width: compact ? 28 : 64, height: compact ? 28 : 64, objectFit: "contain", borderRadius: 6, background: "rgba(255,255,255,0.07)", padding: 4 }} />
+                <img src={match.rivalPhoto} alt="" style={{ width: compact ? 36 : 80, height: compact ? 36 : 80, objectFit: "contain", borderRadius: 6, background: "rgba(255,255,255,0.07)", padding: 4 }} />
               </div>
             )}
             {match && (match.scoreHome !== "" || match.scoreAway !== "") && (() => {
@@ -136,7 +139,7 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
               return <div style={{ fontSize: compact ? 10 : 12, color: D.text, fontWeight: 700, textAlign: "center", marginTop: 4 }}>{sl}</div>;
             })()}
             {match?.resultText && (
-              <div style={{ fontSize: compact ? 9 : 11, color: D.text, textAlign: "center", marginTop: 2 }}>{match.resultText}</div>
+              <div style={{ fontSize: compact ? 9 : 11, color: D.text, textAlign: "center", marginTop: 2, wordBreak: "break-word" }}>{match.resultText}</div>
             )}
             {!compact && !match && blocks.map((b, i) => (
               <div key={i} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${int.border}` }}>
@@ -344,10 +347,11 @@ function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, show
                 const m = session.isMatch ? parseMatchDesc(session.description) : null;
                 return (
                   <div style={{ background: int?.bg, border: `1px solid ${int?.border}`, borderRadius: 4, padding: "3px 5px", fontSize: 10, fontWeight: 700, color: int?.color }}>
-                    <div>{session.sessionType}{m?.rivalText ? ` · ${isEquipo ? `vs ${m.rivalText}` : m.rivalText}` : ""}</div>
-                    {m?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}><img src={m.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.07)", padding: 3 }} /></div>}
+                    <div>{session.sessionType}{m?.rivalText && isEquipo ? ` · vs ${m.rivalText}` : ""}</div>
+                    {m?.rivalText && !isEquipo && <div style={{ fontSize: 9, fontWeight: 700, textAlign: "center", marginTop: 2, wordBreak: "break-word" }}>{m.rivalText}</div>}
+                    {m?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}><img src={m.rivalPhoto} alt="" style={{ width: 40, height: 40, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.07)", padding: 3 }} /></div>}
                     {m && (m.scoreHome !== "" || m.scoreAway !== "") && (() => { const isAway = session.sessionType === "MD(A)"; return <div style={{ fontSize: 9, textAlign: "center", marginTop: 2 }}>{isAway ? `${m.scoreAway} – ${m.scoreHome}` : `${m.scoreHome} – ${m.scoreAway}`}</div>; })()}
-                    {m?.resultText && <div style={{ fontSize: 9, textAlign: "center", marginTop: 1, fontWeight: 400 }}>{m.resultText}</div>}
+                    {m?.resultText && <div style={{ fontSize: 9, textAlign: "center", marginTop: 1, fontWeight: 400, wordBreak: "break-word" }}>{m.resultText}</div>}
                   </div>
                 );
               })()}
@@ -523,6 +527,17 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
     if (!printRef.current) return;
     setDownloading(true);
     try {
+      // Preload all images in the print area so html2canvas captures them correctly
+      const imgs = Array.from(printRef.current.querySelectorAll("img"));
+      await Promise.all(imgs.map((img) => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+          // Force reload for data URIs that may not have triggered load
+          if (img.src) { const s = img.src; img.src = ""; img.src = s; }
+        });
+      }));
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
       const canvas = await html2canvas(printRef.current, {

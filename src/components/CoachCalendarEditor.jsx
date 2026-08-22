@@ -573,17 +573,18 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
               <div style={{ fontSize: viewMode === "week" ? 12 : 10, fontWeight: 700, color: intensity ? intensity.color : COLORS.textFaint, fontFamily: "'Oswald', sans-serif" }}>
                 {session.isRest ? "Descanso" : session.sessionType}
               </div>
-              {matchInfo && matchInfo.rivalPhoto && (
-                <div style={{ display: "flex", justifyContent: "center", marginTop: 4, marginBottom: 2 }}>
-                  <img src={matchInfo.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }} />
-                </div>
-              )}
-              {matchInfo && matchInfo.rivalText && (
-                <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>{(team.kind || "equipo") === "equipo" ? `vs ${matchInfo.rivalText}` : matchInfo.rivalText}</div>
-              )}
-              {(() => { const sl = matchInfo ? scoreLabel(matchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 700, marginTop: 1 }}>{sl}</div> : null; })()}
-              {hasResult && (
-                <div style={{ fontSize: 9, color: COLORS.text, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{matchInfo.resultText}</div>
+              {(team.kind || "equipo") === "equipo" ? (
+                <>
+                  {matchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4, marginBottom: 2 }}><img src={matchInfo.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }} /></div>}
+                  {matchInfo?.rivalText && <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>vs {matchInfo.rivalText}</div>}
+                  {(() => { const sl = matchInfo ? scoreLabel(matchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 700, marginTop: 1 }}>{sl}</div> : null; })()}
+                </>
+              ) : (
+                <>
+                  {matchInfo?.rivalText && <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>{matchInfo.rivalText}</div>}
+                  {matchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3, marginBottom: 2 }}><img src={matchInfo.rivalPhoto} alt="" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 4 }} /></div>}
+                  {hasResult && <div style={{ fontSize: 9, color: COLORS.text, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{matchInfo.resultText}</div>}
+                </>
               )}
               {!session.isRest && session.duration > 0 && viewMode === "week" && (
                 <div style={{ fontSize: 10, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7, marginTop: 2 }}>{session.duration} min</div>
@@ -798,14 +799,19 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                     <div style={{ borderRadius: 6, overflow: "hidden", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised }}>
                       <div onClick={() => openEditor(date)} style={{ padding: "5px 3px", textAlign: "center", cursor: "pointer" }}>
                         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.textFaint }}>{session.isRest ? "Descanso" : session.sessionType}</div>
-                        {wkMatchInfo?.rivalPhoto && (
-                          <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}>
-                            <img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} />
-                          </div>
+                        {(team.kind || "equipo") === "equipo" ? (
+                          <>
+                            {wkMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} /></div>}
+                            {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>vs {wkMatchInfo.rivalText}</div>}
+                            {(() => { const sl = wkMatchInfo ? scoreLabel(wkMatchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{sl}</div> : null; })()}
+                          </>
+                        ) : (
+                          <>
+                            {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{wkMatchInfo.rivalText}</div>}
+                            {wkMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 30, height: 30, objectFit: "contain", borderRadius: 3 }} /></div>}
+                            {wkMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{wkMatchInfo.resultText}</div>}
+                          </>
                         )}
-                        {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{(team.kind || "equipo") === "equipo" ? `vs ${wkMatchInfo.rivalText}` : wkMatchInfo.rivalText}</div>}
-                        {(() => { const sl = wkMatchInfo ? scoreLabel(wkMatchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{sl}</div> : null; })()}
-                        {wkMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{wkMatchInfo.resultText}</div>}
                         {session.duration > 0 && !session.isRest && <div style={{ fontSize: 9, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7 }}>{session.duration} min</div>}
                       </div>
                       {!readOnly && (session.isMatch || session.sessionType === "MD(H)" || session.sessionType === "MD(A)") && (team.kind || "equipo") === "equipo" && (
