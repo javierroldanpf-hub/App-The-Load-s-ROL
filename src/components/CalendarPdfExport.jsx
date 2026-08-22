@@ -139,7 +139,7 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
               return <div style={{ fontSize: compact ? 10 : 12, color: D.text, fontWeight: 700, textAlign: "center", marginTop: 4 }}>{sl}</div>;
             })()}
             {match?.resultText && (
-              <div style={{ fontSize: compact ? 9 : 11, color: D.text, textAlign: "center", marginTop: 2, wordBreak: "break-word" }}>{match.resultText}</div>
+              <div style={{ fontSize: compact ? 9 : 11, color: D.text, textAlign: "center", fontWeight: 700, marginTop: 2, wordBreak: "break-word" }}>{match.resultText}</div>
             )}
             {!compact && !match && blocks.map((b, i) => (
               <div key={i} style={{ marginTop: 4, paddingLeft: 7, borderLeft: `2px solid ${int.border}` }}>
@@ -351,7 +351,7 @@ function MonthContent({ team, sessions, mesocycles, monthAnchor, coachName, show
                     {m?.rivalText && !isEquipo && <div style={{ fontSize: 9, fontWeight: 700, textAlign: "center", marginTop: 2, wordBreak: "break-word" }}>{m.rivalText}</div>}
                     {m?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}><img src={m.rivalPhoto} alt="" style={{ width: 40, height: 40, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.07)", padding: 3 }} /></div>}
                     {m && (m.scoreHome !== "" || m.scoreAway !== "") && (() => { const isAway = session.sessionType === "MD(A)"; return <div style={{ fontSize: 9, textAlign: "center", marginTop: 2 }}>{isAway ? `${m.scoreAway} – ${m.scoreHome}` : `${m.scoreHome} – ${m.scoreAway}`}</div>; })()}
-                    {m?.resultText && <div style={{ fontSize: 9, textAlign: "center", marginTop: 1, fontWeight: 400, wordBreak: "break-word" }}>{m.resultText}</div>}
+                    {m?.resultText && <div style={{ fontSize: 9, textAlign: "center", marginTop: 1, fontWeight: 700, wordBreak: "break-word" }}>{m.resultText}</div>}
                   </div>
                 );
               })()}

@@ -583,7 +583,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                 <>
                   {matchInfo?.rivalText && <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>{matchInfo.rivalText}</div>}
                   {matchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3, marginBottom: 2 }}><img src={matchInfo.rivalPhoto} alt="" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 4 }} /></div>}
-                  {hasResult && <div style={{ fontSize: 9, color: COLORS.text, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{matchInfo.resultText}</div>}
+                  {hasResult && <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2, textAlign: "center" }}>{matchInfo.resultText}</div>}
                 </>
               )}
               {!session.isRest && session.duration > 0 && viewMode === "week" && (
@@ -809,7 +809,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                           <>
                             {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{wkMatchInfo.rivalText}</div>}
                             {wkMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 30, height: 30, objectFit: "contain", borderRadius: 3 }} /></div>}
-                            {wkMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{wkMatchInfo.resultText}</div>}
+                            {wkMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2, textAlign: "center" }}>{wkMatchInfo.resultText}</div>}
                           </>
                         )}
                         {session.duration > 0 && !session.isRest && <div style={{ fontSize: 9, color: intensity ? intensity.color : COLORS.textFaint, opacity: 0.7 }}>{session.duration} min</div>}

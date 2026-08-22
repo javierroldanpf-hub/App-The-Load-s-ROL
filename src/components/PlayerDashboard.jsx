@@ -712,7 +712,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
                       <>
                         {gMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>{gMatchInfo.rivalText}</div>}
                         {gMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={gMatchInfo.rivalPhoto} alt="" style={{ width: 30, height: 30, objectFit: "contain", borderRadius: 3 }} /></div>}
-                        {gMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{gMatchInfo.resultText}</div>}
+                        {gMatchInfo?.resultText && <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2, textAlign: "center" }}>{gMatchInfo.resultText}</div>}
                       </>
                     )}
                   </div>
@@ -776,7 +776,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
                         <>
                           {mMatchInfo?.rivalText && <div style={{ fontSize: 7, color: "#f87171", fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2 }}>{mMatchInfo.rivalText}</div>}
                           {mMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}><img src={mMatchInfo.rivalPhoto} alt="" style={{ width: 24, height: 24, objectFit: "contain", borderRadius: 3 }} /></div>}
-                          {mMatchInfo?.resultText && <div style={{ fontSize: 7, color: COLORS.text, wordBreak: "break-word", lineHeight: 1.2 }}>{mMatchInfo.resultText}</div>}
+                          {mMatchInfo?.resultText && <div style={{ fontSize: 7, color: COLORS.text, fontWeight: 700, wordBreak: "break-word", lineHeight: 1.2, textAlign: "center" }}>{mMatchInfo.resultText}</div>}
                         </>
                       )}
                     </div>
