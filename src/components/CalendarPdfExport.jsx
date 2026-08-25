@@ -529,35 +529,18 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
     try {
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
-
-      // Collect img positions BEFORE html2canvas (relative to printRef top-left)
-      const containerRect = printRef.current.getBoundingClientRect();
-      const imageData = Array.from(printRef.current.querySelectorAll("img")).map((img) => {
-        const r = img.getBoundingClientRect();
-        return { src: img.src, x: r.left - containerRect.left, y: r.top - containerRect.top, w: r.width, h: r.height };
-      }).filter(d => d.src && d.src.startsWith("data:"));
-
-      // Capture layout WITHOUT images (avoids canvas crash with base64 data URIs)
+      // Wait for any images that haven't finished loading
+      const imgs = Array.from(printRef.current.querySelectorAll("img"));
+      await Promise.all(imgs.map((img) => img.complete ? Promise.resolve() : new Promise((r) => { img.onload = r; img.onerror = r; })));
       const canvas = await html2canvas(printRef.current, {
-        scale: 1, backgroundColor: D.bg,
+        scale: 2, useCORS: true, allowTaint: true, backgroundColor: D.bg,
         width: printRef.current.scrollWidth, height: printRef.current.scrollHeight,
         logging: false,
-        onclone: (doc) => {
-          // Hide all imgs in the clone — html2canvas never processes the base64 data
-          doc.querySelectorAll("img").forEach((img) => { img.style.display = "none"; });
-        },
       });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.85);
-      const w = canvas.width, h = canvas.height;
+      const imgData = canvas.toDataURL("image/png");
+      const w = canvas.width / 2, h = canvas.height / 2;
       const pdf = new jsPDF({ orientation: w > h ? "landscape" : "portrait", unit: "px", format: [w, h] });
-      pdf.addImage(imgData, "JPEG", 0, 0, w, h);
-
-      // Add each image directly via jsPDF (bypasses html2canvas entirely for images)
-      for (const d of imageData) {
-        try { pdf.addImage(d.src, "JPEG", d.x, d.y, d.w, d.h); } catch {}
-      }
-
+      pdf.addImage(imgData, "PNG", 0, 0, w, h);
       const name = type === "week" ? `semana-${weekMonday}` : type === "month" ? `mes-${monthAnchor.slice(0, 7)}` : type === "session" ? `sesion-${sessionDate}` : `mesociclo-${selectedMeso?.name || "meso"}`;
       pdf.save(`${name}.pdf`);
     } catch (err) {
