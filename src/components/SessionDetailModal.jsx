@@ -6,6 +6,7 @@ import { saveSession } from "@/lib/db";
 import StatusPill from "./StatusPill";
 
 const ATHLETE_NOTE_BLOCK_NAME = "Nota del atleta";
+const STRENGTH_BLOCK_TYPES = ["FUERZA", "HIIT", "EMOM", "AMRAP"];
 
 function getBlocks(description) {
   try {
@@ -79,6 +80,40 @@ export default function SessionDetailModal({ date, session, onClose, user, refre
                 {b.duration && <div style={{ fontSize: 11, color: COLORS.lime, fontWeight: 600 }}>{b.duration} min</div>}
               </div>
               {b.content && <div style={{ fontSize: 13, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{b.content}</div>}
+              {b.exercises?.length > 0 && STRENGTH_BLOCK_TYPES.includes(b.blockType || b.name) && (
+                <div style={{ marginTop: 10, overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                    <thead>
+                      <tr style={{ background: COLORS.bg || "#14171c" }}>
+                        {["#", "Ejercicio", "Series", "Reps", "Intensidad", "Recup."].map((h) => (
+                          <th key={h} style={{ padding: "4px 7px", textAlign: "left", color: COLORS.text, fontWeight: 700, borderBottom: `1px solid ${COLORS.line}` }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {b.exercises.map((ex, ei) => (
+                        <>
+                          <tr key={ex.id || ei} style={{ borderBottom: `1px solid ${COLORS.line}` }}>
+                            <td style={{ padding: "4px 7px", color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.name}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.series}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.repeticiones}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.intensidad}</td>
+                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.recuperacion}</td>
+                          </tr>
+                          {ex.videoUrl && (
+                            <tr key={`${ex.id || ei}-video`} style={{ borderBottom: `1px solid ${COLORS.line}` }}>
+                              <td colSpan={6} style={{ padding: "4px 7px" }}>
+                                <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#a78bfa" }}>Ver vídeo</a>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               {isEquipo && b.tasks?.length > 0 && (
                 <div style={{ marginTop: 10, overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>

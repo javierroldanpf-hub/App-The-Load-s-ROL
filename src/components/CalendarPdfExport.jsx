@@ -157,6 +157,19 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                     ))}
                   </div>
                 )}
+                {b.exercises?.length > 0 && (
+                  <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
+                    {b.exercises.map((ex, ei) => (
+                      <div key={ei} style={{ fontSize: 9, lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                        <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
+                        {[ex.series && `${ex.series}s`, ex.repeticiones && `${ex.repeticiones}r`, ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
+                          <span key={si} style={{ color: D.text, marginLeft: 4 }}>{seg}</span>
+                        ))}
+                        {ex.videoUrl && <span style={{ color: "#a78bfa", marginLeft: 4 }}>📹</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {!compact && athleteNote?.content && (
@@ -188,6 +201,19 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                         {[t.workTime && `⏱ ${t.workTime}`, t.restTime && `↺ ${t.restTime}`, t.space && `📐 ${t.space}`, t.relativeArea && `m² ${t.relativeArea}`].filter(Boolean).map((seg, si) => (
                           <span key={si} style={{ color: indInt.color, marginLeft: 3 }}>{seg}</span>
                         ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {b.exercises?.length > 0 && (
+                  <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
+                    {b.exercises.map((ex, ei) => (
+                      <div key={ei} style={{ fontSize: 9, lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                        <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
+                        {[ex.series && `${ex.series}s`, ex.repeticiones && `${ex.repeticiones}r`, ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
+                          <span key={si} style={{ color: D.text, marginLeft: 4 }}>{seg}</span>
+                        ))}
+                        {ex.videoUrl && <span style={{ color: "#a78bfa", marginLeft: 4 }}>📹</span>}
                       </div>
                     ))}
                   </div>
@@ -452,7 +478,7 @@ function SessionContent({ team, session, date, coachName }) {
               {b.duration && <div style={{ fontSize: 12, color: D.lime, fontWeight: 600 }}>{b.duration} min</div>}
             </div>
             {b.content && (
-              <div style={{ padding: "10px 14px", fontSize: 13, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.6, borderBottom: b.tasks?.length > 0 ? `1px solid ${D.line}` : "none" }}>{b.content}</div>
+              <div style={{ padding: "10px 14px", fontSize: 13, color: D.text, whiteSpace: "pre-wrap", lineHeight: 1.6, borderBottom: (b.tasks?.length > 0 || b.exercises?.length > 0) ? `1px solid ${D.line}` : "none" }}>{b.content}</div>
             )}
             {b.tasks?.length > 0 && (
               <div style={{ padding: "10px 14px" }}>
@@ -483,6 +509,32 @@ function SessionContent({ team, session, date, coachName }) {
                           </tr>
                         )}
                       </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {b.exercises?.length > 0 && (
+              <div style={{ padding: "10px 14px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  <thead>
+                    <tr style={{ background: D.bg }}>
+                      {["#", "Ejercicio", "Series", "Reps", "Intensidad", "Recup.", "Vídeo"].map((h) => (
+                        <th key={h} style={{ padding: "5px 8px", textAlign: "left", color: D.text, fontWeight: 700, borderBottom: `1px solid ${D.line}` }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {b.exercises.map((ex, ei) => (
+                      <tr key={ex.id || ei} style={{ borderBottom: `1px solid ${D.line}` }}>
+                        <td style={{ padding: "5px 8px", color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}</td>
+                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.name}</td>
+                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.series}</td>
+                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.repeticiones}</td>
+                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.intensidad}</td>
+                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.recuperacion}</td>
+                        <td style={{ padding: "5px 8px" }}>{ex.videoUrl ? <a href={ex.videoUrl} style={{ color: "#a78bfa", fontSize: 11 }}>Ver</a> : ""}</td>
+                      </tr>
                     ))}
                   </tbody>
                 </table>

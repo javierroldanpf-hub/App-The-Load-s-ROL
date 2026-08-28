@@ -25,6 +25,7 @@ function scoreLabel(info, sessionType) {
 }
 
 const BLOCK_TYPES = ["CAMPO", "PISTA", "FUERZA", "CARRERA", "METABÓLICO", "HIIT", "EMOM", "AMRAP", "CALENTAMIENTO", "MOVEMENT PREP", "OTRO"];
+const STRENGTH_BLOCK_TYPES = ["FUERZA", "HIIT", "EMOM", "AMRAP"];
 
 function getBlockType(b) {
   if (b.blockType) return b.blockType;
@@ -55,6 +56,10 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
     reader.onload = (ev) => updateTask(bi, ti, "imageBase64", ev.target.result);
     reader.readAsDataURL(file);
   };
+
+  const addExercise = (bi) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, exercises: [...(b.exercises || []), { id: Date.now(), name: "", series: "", repeticiones: "", intensidad: "", recuperacion: "", videoUrl: "" }] } : b));
+  const updateExercise = (bi, ei, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, exercises: (b.exercises || []).map((e, eidx) => eidx === ei ? { ...e, [field]: val } : e) } : b));
+  const removeExercise = (bi, ei) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, exercises: (b.exercises || []).filter((_, eidx) => eidx !== ei) } : b));
 
   return (
     <div style={{ marginBottom: 14 }}>
@@ -109,6 +114,34 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                   </div>
                 )}
                 <button onClick={() => addTask(i)} style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir tarea</button>
+              </div>
+            )}
+            {STRENGTH_BLOCK_TYPES.includes(getBlockType(b)) && (
+              <div style={{ marginTop: 10 }}>
+                {(b.exercises || []).length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
+                    {(b.exercises || []).map((ex, ei) => (
+                      <div key={ex.id || ei} style={{ background: COLORS.bg || "#14171c", border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "8px 10px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                          <span style={{ background: "#a78bfa", color: "#14171c", borderRadius: 5, padding: "2px 7px", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>E{ei + 1}</span>
+                          <input value={ex.name} onChange={(e) => updateExercise(i, ei, "name", e.target.value)} placeholder="Nombre del ejercicio..." style={{ ...inputStyle, flex: 1, padding: "5px 8px", fontSize: 12 }} />
+                          <button onClick={() => removeExercise(i, ei)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 7px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>✕</button>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
+                          <input value={ex.series} onChange={(e) => updateExercise(i, ei, "series", e.target.value)} placeholder="Series" style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                          <input value={ex.repeticiones} onChange={(e) => updateExercise(i, ei, "repeticiones", e.target.value)} placeholder="Reps" style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                          <input value={ex.intensidad} onChange={(e) => updateExercise(i, ei, "intensidad", e.target.value)} placeholder="Intensidad" style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                          <input value={ex.recuperacion} onChange={(e) => updateExercise(i, ei, "recuperacion", e.target.value)} placeholder="Recup." style={{ ...inputStyle, padding: "5px 8px", fontSize: 11 }} />
+                        </div>
+                        <input value={ex.videoUrl} onChange={(e) => updateExercise(i, ei, "videoUrl", e.target.value)} placeholder="URL del vídeo (YouTube, etc.)" style={{ ...inputStyle, width: "100%", padding: "5px 8px", fontSize: 11, boxSizing: "border-box" }} />
+                        {ex.videoUrl && (
+                          <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: 4, fontSize: 10, color: "#a78bfa" }}>Ver vídeo</a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button onClick={() => addExercise(i)} style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px dashed #a78bfa`, background: "transparent", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir ejercicio</button>
               </div>
             )}
           </div>
