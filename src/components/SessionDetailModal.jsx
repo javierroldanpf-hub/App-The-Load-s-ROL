@@ -95,7 +95,13 @@ export default function SessionDetailModal({ date, session, onClose, user, refre
                         <>
                           <tr key={ex.id || ei} style={{ borderBottom: `1px solid ${COLORS.line}` }}>
                             <td style={{ padding: "4px 7px", color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}</td>
-                            <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.name}</td>
+                            <td style={{ padding: "4px 7px" }}>
+                              {ex.videoUrl ? (
+                                <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: "#a78bfa", fontWeight: 700, textDecoration: "underline" }}>{ex.name}</a>
+                              ) : (
+                                <span style={{ color: COLORS.text }}>{ex.name}</span>
+                              )}
+                            </td>
                             <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.series}</td>
                             <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.repeticiones}</td>
                             <td style={{ padding: "4px 7px", color: COLORS.text }}>{ex.intensidad}</td>

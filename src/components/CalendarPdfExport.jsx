@@ -161,11 +161,14 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                   <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
                     {b.exercises.map((ex, ei) => (
                       <div key={ei} style={{ fontSize: 9, lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "anywhere" }}>
-                        <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
+                        {ex.videoUrl ? (
+                          <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: "#a78bfa", fontWeight: 700, textDecoration: "underline" }}>E{ei + 1}. {ex.name}</a>
+                        ) : (
+                          <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
+                        )}
                         {[ex.series && `${ex.series}s`, ex.repeticiones && `${ex.repeticiones}r`, ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
                           <span key={si} style={{ color: D.text, marginLeft: 4 }}>{seg}</span>
                         ))}
-                        {ex.videoUrl && <span style={{ color: "#a78bfa", marginLeft: 4 }}>📹</span>}
                       </div>
                     ))}
                   </div>
@@ -209,11 +212,14 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                   <div style={{ marginTop: 3, display: "flex", flexDirection: "column", gap: 2 }}>
                     {b.exercises.map((ex, ei) => (
                       <div key={ei} style={{ fontSize: 9, lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "anywhere" }}>
-                        <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
+                        {ex.videoUrl ? (
+                          <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: "#a78bfa", fontWeight: 700, textDecoration: "underline" }}>E{ei + 1}. {ex.name}</a>
+                        ) : (
+                          <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
+                        )}
                         {[ex.series && `${ex.series}s`, ex.repeticiones && `${ex.repeticiones}r`, ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
                           <span key={si} style={{ color: D.text, marginLeft: 4 }}>{seg}</span>
                         ))}
-                        {ex.videoUrl && <span style={{ color: "#a78bfa", marginLeft: 4 }}>📹</span>}
                       </div>
                     ))}
                   </div>
@@ -528,12 +534,18 @@ function SessionContent({ team, session, date, coachName }) {
                     {b.exercises.map((ex, ei) => (
                       <tr key={ex.id || ei} style={{ borderBottom: `1px solid ${D.line}` }}>
                         <td style={{ padding: "5px 8px", color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}</td>
-                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.name}</td>
+                        <td style={{ padding: "5px 8px" }}>
+                          {ex.videoUrl ? (
+                            <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: "#a78bfa", fontWeight: 700, textDecoration: "underline" }}>{ex.name}</a>
+                          ) : (
+                            <span style={{ color: D.text }}>{ex.name}</span>
+                          )}
+                        </td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.series}</td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.repeticiones}</td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.intensidad}</td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.recuperacion}</td>
-                        <td style={{ padding: "5px 8px" }}>{ex.videoUrl ? <a href={ex.videoUrl} style={{ color: "#a78bfa", fontSize: 11 }}>Ver</a> : ""}</td>
+                        <td style={{ padding: "5px 8px" }}></td>
                       </tr>
                     ))}
                   </tbody>
