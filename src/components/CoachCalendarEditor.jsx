@@ -2,7 +2,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { COLORS, INTENSITY_LEVELS, SESSION_TYPES, GROUP_SESSION_TYPES, MATCH_DEFAULT_DURATION, WEEKDAY_LABELS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, weekDates, weekNumberFrom, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
-import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession } from "@/lib/db";
+import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions } from "@/lib/db";
 import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
@@ -456,10 +456,39 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   const [viewMode, setViewMode] = useState("week");
   const [showPdf, setShowPdf] = useState(false);
   const [mesocycles, setMesocycles] = useState([]);
+  const [showCopyWeek, setShowCopyWeek] = useState(false);
+  const [copyTeams, setCopyTeams] = useState([]);
+  const [copyTarget, setCopyTarget] = useState(null);
+  const [copyLoading, setCopyLoading] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
 
   useEffect(() => {
     import("@/lib/db").then(({ loadMesocycles }) => loadMesocycles(team.teamId).then(setMesocycles));
   }, [team.teamId]);
+
+  useEffect(() => {
+    if (!showCopyWeek) return;
+    getTeamsByCoach(team.coachUsername).then((all) => {
+      setCopyTeams(all.filter((t) => t.teamId !== team.teamId));
+      setCopyTarget(null);
+      setCopyDone(false);
+    });
+  }, [showCopyWeek, team.coachUsername, team.teamId]);
+
+  const handleCopyWeek = async () => {
+    if (!copyTarget) return;
+    setCopyLoading(true);
+    try {
+      const weekDays = weekDates(weekMonday);
+      const weekSessions = sessions.filter((s) => weekDays.includes(s.date));
+      await Promise.all(weekSessions.map((s) => saveSession({ ...s, teamId: copyTarget, individualSessions: (s.individualSessions || []).map((ind) => ({ ...ind, players: [] })) })));
+      setCopyDone(true);
+    } catch (e) {
+      alert("Error al copiar: " + (e?.message || e));
+    } finally {
+      setCopyLoading(false);
+    }
+  };
   const [weekMonday, setWeekMonday] = useState(mondayOf(todayStr()));
   const [monthAnchor, setMonthAnchor] = useState(firstOfMonth(todayStr()));
   const [editDate, setEditDate] = useState(null);
@@ -758,6 +787,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             }}>{v.label}</button>
           ))}
         </div>
+        {!readOnly && <button onClick={() => setShowCopyWeek(true)} title="Copiar semana a otro equipo" style={{ padding: "7px 12px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>⧉ Copiar</button>}
         <button onClick={() => setShowPdf(true)} title="Exportar PDF" style={{ padding: "7px 12px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>↓ PDF</button>
       </div>
 
@@ -949,6 +979,46 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           onClose={() => setShowPdf(false)}
           isEquipo={(team.kind || "equipo") === "equipo"}
         />
+      )}
+
+      {showCopyWeek && (
+        <div style={{ position: "fixed", inset: 0, background: "#0009", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "24px 22px", width: "100%", maxWidth: 380 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 17, color: COLORS.text, marginBottom: 4 }}>Copiar semana</div>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 16 }}>
+              {fmtDateLong(weekDates(weekMonday)[0])} – {fmtDateLong(weekDates(weekMonday)[6])}
+            </div>
+            {copyDone ? (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
+                <div style={{ color: COLORS.lime, fontWeight: 700, fontSize: 14 }}>Semana copiada</div>
+                <button onClick={() => setShowCopyWeek(false)} style={{ marginTop: 16, padding: "9px 24px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, cursor: "pointer" }}>Cerrar</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Selecciona el equipo destino:</div>
+                {copyTeams.length === 0 ? (
+                  <div style={{ fontSize: 12, color: COLORS.text, padding: "12px 0" }}>No tienes otros equipos.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18, maxHeight: 240, overflowY: "auto" }}>
+                    {copyTeams.map((t) => (
+                      <button key={t.teamId} onClick={() => setCopyTarget(t.teamId)} style={{ padding: "10px 14px", borderRadius: 9, border: `2px solid ${copyTarget === t.teamId ? COLORS.lime : COLORS.line}`, background: copyTarget === t.teamId ? `${COLORS.lime}18` : COLORS.panelRaised, color: COLORS.text, fontWeight: copyTarget === t.teamId ? 700 : 400, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                        {t.name}
+                        <span style={{ fontSize: 10, color: COLORS.text, marginLeft: 6, opacity: 0.6 }}>{t.kind || "equipo"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setShowCopyWeek(false)} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+                  <button onClick={handleCopyWeek} disabled={!copyTarget || copyLoading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: copyTarget ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, cursor: copyTarget ? "pointer" : "default" }}>
+                    {copyLoading ? "Copiando..." : "Copiar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
