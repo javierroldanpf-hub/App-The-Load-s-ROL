@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { COLORS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateShort, fmtDateLong, monthLabel, firstOfMonth, addMonths, monthGridDates } from "@/lib/utils";
-import { loadMesocycles, saveMesocycle, deleteMesocycle } from "@/lib/db";
+import { loadMesocycles, saveMesocycle, deleteMesocycle, getTeamsByCoach } from "@/lib/db";
 import SpacesCalculatorModal from "./SpacesCalculatorModal";
 import HiitPrescriptorModal from "./HiitPrescriptorModal";
 
@@ -893,10 +893,38 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
 }
 
 /* ── Vista de un mesociclo ───────────────────────────────────────────── */
-function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {}, showSJ = false, showMenstrual = false, customTemplates = [], isGrupo = false, sjDayMinutes = null, sjPercentages = null }) {
+function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster = [], displayNames = {}, showSJ = false, showMenstrual = false, customTemplates = [], isGrupo = false, sjDayMinutes = null, sjPercentages = null, coachUsername = null, currentTeamId = null }) {
   const [editingWeek, setEditingWeek] = useState(null);
   const [editingMeso, setEditingMeso] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showCopyMeso, setShowCopyMeso] = useState(false);
+  const [copyTeams, setCopyTeams] = useState([]);
+  const [copyTarget, setCopyTarget] = useState(null);
+  const [copyLoading, setCopyLoading] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
+
+  useEffect(() => {
+    if (!showCopyMeso || !coachUsername) return;
+    getTeamsByCoach(coachUsername).then((all) => {
+      setCopyTeams(all.filter((t) => t.teamId !== currentTeamId));
+      setCopyTarget(null);
+      setCopyDone(false);
+    });
+  }, [showCopyMeso, coachUsername, currentTeamId]);
+
+  const handleCopyMeso = async () => {
+    if (!copyTarget) return;
+    setCopyLoading(true);
+    try {
+      const { id: _id, teamId: _tid, createdAt: _ca, ...rest } = meso;
+      await saveMesocycle({ ...rest, teamId: copyTarget });
+      setCopyDone(true);
+    } catch (e) {
+      alert("Error al copiar: " + (e?.message || e));
+    } finally {
+      setCopyLoading(false);
+    }
+  };
   const [sjEdits, setSjEdits] = useState({});
   const [mesoUnit, setMesoUnit] = useState(meso.unit || "min");
   const today = todayStr();
@@ -955,6 +983,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           <div style={{ fontSize: 11, color: COLORS.text }}>{fmtDateShort(meso.startDate)} – {fmtDateShort(meso.endDate)} · {meso.weeks.length} microciclos</div>
         </div>
         {isActive && <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.lime, background: "#1e3010", borderRadius: 6, padding: "3px 8px" }}>ACTIVO</span>}
+        {coachUsername && <button onClick={() => setShowCopyMeso(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>⧉ Copiar</button>}
         {!readOnly && <button onClick={() => setEditingMeso(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>Editar</button>}
         {!readOnly && <button onClick={() => { if (confirm("¿Eliminar este mesociclo?")) onDelete(meso.id); }} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>Eliminar</button>}
       </div>
@@ -1311,6 +1340,44 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           onClose={() => setEditingMeso(false)}
         />
       )}
+
+      {showCopyMeso && (
+        <div style={{ position: "fixed", inset: 0, background: "#0009", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "24px 22px", width: "100%", maxWidth: 380 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 17, color: COLORS.text, marginBottom: 4 }}>Copiar mesociclo</div>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 16 }}>{meso.name} · {fmtDateShort(meso.startDate)} – {fmtDateShort(meso.endDate)}</div>
+            {copyDone ? (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
+                <div style={{ color: COLORS.lime, fontWeight: 700, fontSize: 14 }}>Mesociclo copiado</div>
+                <button onClick={() => setShowCopyMeso(false)} style={{ marginTop: 16, padding: "9px 24px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, cursor: "pointer" }}>Cerrar</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Selecciona el equipo destino:</div>
+                {copyTeams.length === 0 ? (
+                  <div style={{ fontSize: 12, color: COLORS.text, padding: "12px 0" }}>No tienes otros equipos.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18, maxHeight: 240, overflowY: "auto" }}>
+                    {copyTeams.map((t) => (
+                      <button key={t.teamId} onClick={() => setCopyTarget(t.teamId)} style={{ padding: "10px 14px", borderRadius: 9, border: `2px solid ${copyTarget === t.teamId ? COLORS.lime : COLORS.line}`, background: copyTarget === t.teamId ? `${COLORS.lime}18` : COLORS.panelRaised, color: COLORS.text, fontWeight: copyTarget === t.teamId ? 700 : 400, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                        {t.name}
+                        <span style={{ fontSize: 10, color: COLORS.text, marginLeft: 6, opacity: 0.6 }}>{t.kind || "equipo"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setShowCopyMeso(false)} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+                  <button onClick={handleCopyMeso} disabled={!copyTarget || copyLoading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: copyTarget ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, cursor: copyTarget ? "pointer" : "default" }}>
+                    {copyLoading ? "Copiando..." : "Copiar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1376,6 +1443,8 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
         isGrupo={isGrupo}
         sjDayMinutes={team.sjDayMinutes || null}
         sjPercentages={team.sjPercentages || null}
+        coachUsername={team.coachUsername || null}
+        currentTeamId={team.teamId || null}
       />
     );
   }
