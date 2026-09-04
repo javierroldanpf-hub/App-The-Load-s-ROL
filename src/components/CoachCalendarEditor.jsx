@@ -504,8 +504,20 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                         <tr>{["L","M","X","J","V","S","D"].map((d) => <th key={d} style={{ fontSize: 10, color: COLORS.text, padding: "2px 0", textAlign: "center", fontWeight: 600 }}>{d}</th>)}</tr>
                       </thead>
                       <tbody>
-                        {weeks.map((week, wi) => (
-                          <tr key={wi}>
+                        {weeks.map((week, wi) => {
+                          const firstOfWeek = week[0];
+                          const showMonthLabel = wi === 0 || firstOfWeek.slice(8) <= "07";
+                          const monthName = showMonthLabel ? new Date(firstOfWeek + "T12:00:00").toLocaleString("es", { month: "long", year: "numeric" }) : null;
+                          return (
+                            <>
+                              {monthName && (
+                                <tr key={`month-${wi}`}>
+                                  <td colSpan={7} style={{ paddingTop: wi === 0 ? 0 : 6, paddingBottom: 2 }}>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.lime, textTransform: "capitalize", letterSpacing: 0.5 }}>{monthName}</div>
+                                  </td>
+                                </tr>
+                              )}
+                              <tr key={wi}>
                             {week.map((d) => {
                               const isOrigin = d === date;
                               const isSel = repeatInd.selectedDates.includes(d);
@@ -526,8 +538,10 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                                 </td>
                               );
                             })}
-                          </tr>
-                        ))}
+                              </tr>
+                            </>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
