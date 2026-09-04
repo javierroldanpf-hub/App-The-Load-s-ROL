@@ -120,7 +120,7 @@ export default function SessionDetailModal({ date, session, onClose, user, refre
                   </table>
                 </div>
               )}
-              {isEquipo && b.tasks?.length > 0 && (
+              {b.tasks?.length > 0 && (
                 <div style={{ marginTop: 10, overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                     <thead>

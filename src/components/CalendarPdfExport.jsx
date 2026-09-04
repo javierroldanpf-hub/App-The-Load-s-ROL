@@ -632,7 +632,7 @@ export default function CalendarPdfExport({ team, sessions, mesocycles, currentW
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", zIndex: 100 }}>
       <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 18, padding: "1.5rem", width: "100%", maxWidth: 500, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ fontFamily: "'Oswald',sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.text, marginBottom: 20 }}>Exportar PDF</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>{tabBtn("week","Semana")}{tabBtn("month","Mes")}{tabBtn("meso","Mesociclo")}{isEquipo && tabBtn("session","Sesión")}</div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>{tabBtn("week","Semana")}{tabBtn("month","Mes")}{tabBtn("meso","Mesociclo")}{tabBtn("session","Sesión")}</div>
 
         {type === "week" && (
           <div style={{ marginBottom: 20 }}>
