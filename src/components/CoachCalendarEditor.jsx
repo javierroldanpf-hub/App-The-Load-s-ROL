@@ -152,7 +152,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
   );
 }
 
-function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo", isEquipo = false }) {
+function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onRepeatInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo", isEquipo = false, allSessions = [] }) {
   const roster = rosterRaw.map((u) => typeof u === "string" ? u : u.username);
   const availableTypes = isTrainingGroup ? GROUP_SESSION_TYPES : SESSION_TYPES;
   const [editorTab, setEditorTab] = useState(defaultTab);
@@ -186,6 +186,9 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   // ── Individuales ──
   const existingIndividual = existing?.individualSessions || [];
   const [indSessions, setIndSessions] = useState(existingIndividual.length > 0 ? existingIndividual : []);
+  const [repeatInd, setRepeatInd] = useState(null); // { indSession, selectedDates[] }
+  const [repeatSaving, setRepeatSaving] = useState(false);
+  const [repeatDone, setRepeatDone] = useState(false);
 
   const addIndSession = () => setIndSessions((prev) => [...prev, { id: Date.now(), title: "", intensity: "amarillo", duration: "60", blocks: [], players: [] }]);
   const updateInd = (i, field, val) => setIndSessions((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: val } : s));
@@ -398,7 +401,10 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
               <div key={s.id || i} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.lime }}>Sesión individual {i + 1}</div>
-                  <button onClick={() => removeInd(i)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>Eliminar</button>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={() => { setRepeatInd({ indSession: s, selectedDates: [] }); setRepeatDone(false); }} style={{ background: "transparent", border: `1px solid ${COLORS.blue}`, color: COLORS.blue, borderRadius: 8, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>↻ Repetir</button>
+                    <button onClick={() => removeInd(i)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>Eliminar</button>
+                  </div>
                 </div>
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 5 }}>Título / nombre de sesión</div>
@@ -448,6 +454,98 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
           </div>
         )}
       </div>
+
+      {repeatInd && (() => {
+        const today = todayStr();
+        const anchor = mondayOf(date);
+        // Build 8 weeks of dates centered around the session date
+        const weeks = Array.from({ length: 12 }, (_, wi) => {
+          const mon = addDays(anchor, wi * 7 - 14);
+          return Array.from({ length: 7 }, (_, di) => addDays(mon, di));
+        });
+        const toggleDate = (d) => {
+          if (d === date) return;
+          setRepeatInd((prev) => ({
+            ...prev,
+            selectedDates: prev.selectedDates.includes(d)
+              ? prev.selectedDates.filter((x) => x !== d)
+              : [...prev.selectedDates, d],
+          }));
+        };
+        const handleConfirm = async () => {
+          if (!repeatInd.selectedDates.length) return;
+          setRepeatSaving(true);
+          try {
+            await onRepeatInd(repeatInd.indSession, repeatInd.selectedDates);
+            setRepeatDone(true);
+          } catch (e) {
+            alert("Error: " + (e?.message || e));
+          } finally {
+            setRepeatSaving(false);
+          }
+        };
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "#000a", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+            <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: "22px 20px", width: "100%", maxWidth: 380, maxHeight: "90vh", overflowY: "auto" }}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 16, color: COLORS.text, marginBottom: 4 }}>Repetir sesión individual</div>
+              <div style={{ fontSize: 11, color: COLORS.blue, marginBottom: 14 }}>{repeatInd.indSession.title || "Sin título"}</div>
+              {repeatDone ? (
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <div style={{ fontSize: 36, marginBottom: 8 }}>✓</div>
+                  <div style={{ color: COLORS.lime, fontWeight: 700 }}>Sesión repetida en {repeatInd.selectedDates.length} día{repeatInd.selectedDates.length !== 1 ? "s" : ""}</div>
+                  <button onClick={() => setRepeatInd(null)} style={{ marginTop: 16, padding: "9px 24px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, cursor: "pointer" }}>Cerrar</button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 10 }}>Selecciona los días donde quieres añadir esta sesión:</div>
+                  <div style={{ overflowX: "auto", marginBottom: 14 }}>
+                    <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                      <thead>
+                        <tr>{["L","M","X","J","V","S","D"].map((d) => <th key={d} style={{ fontSize: 10, color: COLORS.text, padding: "2px 0", textAlign: "center", fontWeight: 600 }}>{d}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {weeks.map((week, wi) => (
+                          <tr key={wi}>
+                            {week.map((d) => {
+                              const isOrigin = d === date;
+                              const isSel = repeatInd.selectedDates.includes(d);
+                              const isPast = d < today;
+                              return (
+                                <td key={d} style={{ padding: "2px" }}>
+                                  <button
+                                    onClick={() => toggleDate(d)}
+                                    disabled={isOrigin}
+                                    style={{
+                                      width: "100%", padding: "5px 2px", borderRadius: 6, border: `1px solid ${isOrigin ? COLORS.lime : isSel ? COLORS.blue : COLORS.line}`,
+                                      background: isOrigin ? `${COLORS.lime}30` : isSel ? `${COLORS.blue}30` : "transparent",
+                                      color: isOrigin ? COLORS.lime : isPast ? COLORS.text : COLORS.text,
+                                      fontSize: 10, cursor: isOrigin ? "default" : "pointer", opacity: isPast && !isOrigin ? 0.5 : 1,
+                                      fontWeight: isOrigin || isSel ? 700 : 400,
+                                    }}
+                                  >{d.slice(8)}</button>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ fontSize: 11, color: COLORS.blue, marginBottom: 12 }}>
+                    {repeatInd.selectedDates.length > 0 ? `${repeatInd.selectedDates.length} día${repeatInd.selectedDates.length !== 1 ? "s" : ""} seleccionado${repeatInd.selectedDates.length !== 1 ? "s" : ""}` : "Ningún día seleccionado"}
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => setRepeatInd(null)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+                    <button onClick={handleConfirm} disabled={!repeatInd.selectedDates.length || repeatSaving} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: repeatInd.selectedDates.length ? COLORS.blue : COLORS.line, color: "#fff", fontWeight: 700, cursor: repeatInd.selectedDates.length ? "pointer" : "default" }}>
+                      {repeatSaving ? "Guardando..." : "Confirmar"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -546,13 +644,27 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
     if (!editDate) return;
     const existing = sessionByDate[editDate];
     if (!existing) {
-      // No hay sesión de grupo aún — guardamos solo las individuales con sessionType vacío
       await saveSession({ teamId: team.teamId, date: editDate, sessionType: "", intensity: "amarillo", duration: 0, description: "", isRest: false, isMatch: false, individualSessions: indSessions });
     } else {
       await saveSession({ teamId: team.teamId, date: editDate, ...existing, individualSessions: indSessions });
     }
     await onSessionsChange();
     setEditDate(null);
+  };
+
+  const handleRepeatInd = async (indSession, targetDates) => {
+    await Promise.all(targetDates.map(async (d) => {
+      const existing = sessionByDate[d];
+      const prevInds = existing?.individualSessions || [];
+      const newInd = { ...indSession, id: Date.now() + Math.random(), players: indSession.players || [] };
+      const merged = [...prevInds, newInd];
+      if (!existing) {
+        await saveSession({ teamId: team.teamId, date: d, sessionType: "", intensity: "amarillo", duration: 0, description: "", isRest: false, isMatch: false, individualSessions: merged });
+      } else {
+        await saveSession({ teamId: team.teamId, date: d, ...existing, individualSessions: merged });
+      }
+    }));
+    await onSessionsChange();
   };
 
   const handleDelete = async () => {
@@ -942,6 +1054,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           onClose={() => setEditDate(null)}
           onSaveGroup={handleSaveGroup}
           onSaveInd={handleSaveInd}
+          onRepeatInd={handleRepeatInd}
           onDelete={handleDelete}
           defaultTab={editDefaultTab}
           defaultMatchDuration={team.defaultMatchDuration}
@@ -951,6 +1064,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           mesocycles={mesocycles}
           roster={team.roster || []}
           displayNames={displayNames}
+          allSessions={sessions}
         />
       )}
       {viewDetail && sessionByDate[viewDetail] && (
