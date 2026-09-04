@@ -525,7 +525,7 @@ function SessionContent({ team, session, date, coachName }) {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                   <thead>
                     <tr style={{ background: D.bg }}>
-                      {["#", "Ejercicio", "Series", "Reps", "Intensidad", "Recup.", "Vídeo"].map((h) => (
+                      {["#", "Ejercicio", "Series", "Reps", "Intensidad", "Recup."].map((h) => (
                         <th key={h} style={{ padding: "5px 8px", textAlign: "left", color: D.text, fontWeight: 700, borderBottom: `1px solid ${D.line}` }}>{h}</th>
                       ))}
                     </tr>
@@ -545,7 +545,6 @@ function SessionContent({ team, session, date, coachName }) {
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.repeticiones}</td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.intensidad}</td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.recuperacion}</td>
-                        <td style={{ padding: "5px 8px" }}></td>
                       </tr>
                     ))}
                   </tbody>
