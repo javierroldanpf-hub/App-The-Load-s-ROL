@@ -25,7 +25,7 @@ function scoreLabel(info, sessionType) {
 }
 
 const BLOCK_TYPES = ["CAMPO", "PISTA", "FUERZA", "CARRERA", "METABÓLICO", "HIIT", "EMOM", "AMRAP", "CALENTAMIENTO", "MOVEMENT PREP", "OTRO"];
-const STRENGTH_BLOCK_TYPES = ["FUERZA", "HIIT", "EMOM", "AMRAP"];
+const STRENGTH_BLOCK_TYPES = ["FUERZA", "HIIT", "EMOM", "AMRAP", "MOVEMENT PREP"];
 
 function getBlockType(b) {
   if (b.blockType) return b.blockType;
@@ -91,7 +91,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
               <button onClick={() => removeBlock(i)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
             </div>
             <textarea value={b.content} onChange={(e) => updateBlock(i, "content", e.target.value)} placeholder="Contenido del bloque..." rows={3} style={{ ...inputStyle, resize: "vertical", fontSize: 13, padding: "8px 10px", lineHeight: 1.5, width: "100%", boxSizing: "border-box" }} />
-            {isEquipo && (
+            {isEquipo && !STRENGTH_BLOCK_TYPES.includes(getBlockType(b)) && (
               <div style={{ marginTop: 10 }}>
                 {(b.tasks || []).length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>

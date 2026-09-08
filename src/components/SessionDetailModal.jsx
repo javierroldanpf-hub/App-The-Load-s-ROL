@@ -6,7 +6,7 @@ import { saveSession } from "@/lib/db";
 import StatusPill from "./StatusPill";
 
 const ATHLETE_NOTE_BLOCK_NAME = "Nota del atleta";
-const STRENGTH_BLOCK_TYPES = ["FUERZA", "HIIT", "EMOM", "AMRAP"];
+const STRENGTH_BLOCK_TYPES = ["FUERZA", "HIIT", "EMOM", "AMRAP", "MOVEMENT PREP"];
 
 function getBlocks(description) {
   try {
