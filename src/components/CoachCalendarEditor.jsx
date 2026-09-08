@@ -39,6 +39,13 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
   const addBlock = () => setBlocks((prev) => [...prev, { name: "CAMPO", blockType: "CAMPO", duration: "", content: "", tasks: [] }]);
   const updateBlock = (i, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === i ? { ...b, [field]: val } : b));
   const removeBlock = (i) => setBlocks((prev) => prev.filter((_, idx) => idx !== i));
+  const moveBlock = (i, dir) => setBlocks((prev) => {
+    const next = [...prev];
+    const j = i + dir;
+    if (j < 0 || j >= next.length) return prev;
+    [next[i], next[j]] = [next[j], next[i]];
+    return next;
+  });
 
   const handleBlockType = (i, type) => setBlocks((prev) => prev.map((b, idx) => {
     if (idx !== i) return b;
@@ -79,6 +86,8 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                 <input value={b.name} onChange={(e) => updateBlock(i, "name", e.target.value)} placeholder="Escribe el nombre..." style={{ ...inputStyle, flex: 2, padding: "8px 10px", fontSize: 13 }} />
               )}
               <input type="number" value={b.duration} onChange={(e) => updateBlock(i, "duration", e.target.value)} placeholder="Min" style={{ ...inputStyle, flex: 1, minWidth: 60, padding: "8px 10px", fontSize: 13 }} />
+              <button onClick={() => moveBlock(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 8px", cursor: i === 0 ? "default" : "pointer", fontSize: 12, flexShrink: 0, opacity: i === 0 ? 0.3 : 1 }}>↑</button>
+              <button onClick={() => moveBlock(i, 1)} disabled={i === blocks.length - 1} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 8px", cursor: i === blocks.length - 1 ? "default" : "pointer", fontSize: 12, flexShrink: 0, opacity: i === blocks.length - 1 ? 0.3 : 1 }}>↓</button>
               <button onClick={() => removeBlock(i)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
             </div>
             <textarea value={b.content} onChange={(e) => updateBlock(i, "content", e.target.value)} placeholder="Contenido del bloque..." rows={3} style={{ ...inputStyle, resize: "vertical", fontSize: 13, padding: "8px 10px", lineHeight: 1.5, width: "100%", boxSizing: "border-box" }} />
