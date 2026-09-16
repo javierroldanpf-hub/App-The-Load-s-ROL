@@ -492,11 +492,24 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile =
     }
     return null;
   };
-  const isRelaxin = (date) => mesocycles.some((m) => {
-    if (!m.isMenstrual || date < m.startDate || date > m.endDate) return false;
-    const diff = Math.round((new Date(date + "T00:00:00") - new Date(m.startDate + "T00:00:00")) / 86400000) + 1;
-    return diff === 20 || diff === 21 || diff === 22;
-  });
+  const effectiveSexo = profile?.sexo || team?.sexo || null;
+  const cycleData = getPlayerCycle(team, user?.username);
+
+  const isRelaxin = (date) => {
+    // Sistema antiguo: mesociclos menstruales
+    const byMeso = mesocycles.some((m) => {
+      if (!m.isMenstrual || date < m.startDate || date > m.endDate) return false;
+      const diff = Math.round((new Date(date + "T00:00:00") - new Date(m.startDate + "T00:00:00")) / 86400000) + 1;
+      return diff === 20 || diff === 21 || diff === 22;
+    });
+    if (byMeso) return true;
+    // Sistema nuevo: playerCycles — días 20-22 del ciclo propio
+    if (cycleData?.cycleDay1 && effectiveSexo === "femenino") {
+      const info = getCycleInfo(cycleData.cycleDay1, date, cycleData.cycleLength || 28);
+      return info && (info.dayNum === 20 || info.dayNum === 21 || info.dayNum === 22);
+    }
+    return false;
+  };
 
   const days = weekDates(weekMonday);
   const effectiveFirstMonday = (team && team.firstMonday) || mondayOf(tStr());
@@ -544,8 +557,6 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile =
   const activeMenstrualMeso = mesocycles.find((m) => m.isMenstrual && today >= m.startDate && today <= m.endDate);
 
   // Ciclo propio de la jugadora (guardado en team.playerCycles por el entrenador)
-  const effectiveSexo = profile?.sexo || team?.sexo || null;
-  const cycleData = getPlayerCycle(team, user?.username);
   const ownCycleInfo = (effectiveSexo === "femenino" && cycleData?.cycleDay1)
     ? getCycleInfo(cycleData.cycleDay1, today, cycleData.cycleLength || 28)
     : null;
