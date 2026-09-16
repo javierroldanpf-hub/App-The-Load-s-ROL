@@ -1015,7 +1015,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         </>
       )}
 
-      {viewMode !== "mesociclo" && viewMode !== "ciclo" && viewMode === "week" ? (
+      {viewMode === "week" ? (
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <button onClick={() => setWeekMonday(addDays(weekMonday, -7))} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}>←</button>
@@ -1123,7 +1123,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             })}
           </div>
         </>
-      ) : (
+      ) : viewMode === "month" ? (
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <button onClick={() => setMonthAnchor(addMonths(monthAnchor, -1))} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}>←</button>
@@ -1139,7 +1139,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             {monthCells.map(({ date, inMonth }) => <DayCell key={date} date={date} inMonth={inMonth} />)}
           </div>
         </>
-      )}
+      ) : null}
 
       {/* ── Vista ciclo menstrual ────────────────────────────────────── */}
       {viewMode === "ciclo" && team.sexo === "femenino" && (
