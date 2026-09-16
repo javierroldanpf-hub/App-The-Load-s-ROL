@@ -165,7 +165,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
 function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev, onNext }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekMonday, i));
   const DAYS_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-  const roster = team.roster || [];
+  const roster = (team.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
 
   return (
     <div style={{ marginBottom: 16 }}>
