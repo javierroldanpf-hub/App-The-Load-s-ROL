@@ -23,6 +23,7 @@ function matchScoreLabel(info, sessionType) {
   return isAway ? `${info.scoreAway} – ${info.scoreHome}` : `${info.scoreHome} – ${info.scoreAway}`;
 }
 import HelpPanel from "./HelpPanel";
+import { getCycleInfo, CYCLE_PHASES, LOAD_RECS, getPlayerCycle } from "@/lib/cycle";
 
 export default function PlayerDashboard({ user, onLogout }) {
   const [tab, setTab] = useState("today");
@@ -148,7 +149,7 @@ export default function PlayerDashboard({ user, onLogout }) {
           existingYesterdayRpe={myRpe.find((e) => e.date === yesterdayStr)}
         />
       )}
-      {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} rpe={rpe} refreshData={refreshData} />}
+      {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} rpe={rpe} refreshData={refreshData} profile={profile} />}
       {tab === "mydata" && <PlayerMyData user={user} team={team} onProfileUpdate={(p) => { setProfile(p); refreshData(); }} />}
       {tab === "settings" && <ReminderSettings username={user.username} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} mode="player" />}
@@ -448,7 +449,7 @@ const MENSTRUAL_PHASES_FULL = [
   { emoji: "💙", label: "Semana 2ª Post Sangrado", fase: "Fase Lútea Temprana", metabolismo: "Bajada del Estrógeno y Subida de la Progesterona (Aumento del Metabolismo de Ácidos Grasos)", type: "descarga" },
 ];
 
-function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
+function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile = null }) {
   const tStr = todayStr;
   const wdLabel = weekdayLabel;
 
@@ -539,9 +540,16 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
   }));
   const visibleMenstrual = MENSTRUAL_PHASES_CAL.filter((_, i) => visibleMenstrualIdxs.has(i));
   const hasRelaxin = visibleDates.some(isRelaxin);
-  const hasLegend = activeMesos.length > 0 || weekTypeEntries.length > 0 || visibleMenstrual.length > 0 || hasRelaxin;
   const today = tStr();
   const activeMenstrualMeso = mesocycles.find((m) => m.isMenstrual && today >= m.startDate && today <= m.endDate);
+
+  // Ciclo propio de la jugadora (guardado en team.playerCycles por el entrenador)
+  const effectiveSexo = profile?.sexo || team?.sexo || null;
+  const cycleData = getPlayerCycle(team, user?.username);
+  const ownCycleInfo = (effectiveSexo === "femenino" && cycleData?.cycleDay1)
+    ? getCycleInfo(cycleData.cycleDay1, today, cycleData.cycleLength || 28)
+    : null;
+  const hasLegend = activeMesos.length > 0 || weekTypeEntries.length > 0 || visibleMenstrual.length > 0 || hasRelaxin || ownCycleInfo;
 
   return (
     <div>
@@ -569,6 +577,13 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData }) {
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ fontSize: 11 }}>⚡</span>
               <span style={{ fontSize: 11, color: "#fde68a" }}>Pico relaxina</span>
+            </div>
+          )}
+          {ownCycleInfo && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, background: ownCycleInfo.phase.bg, border: `1px solid ${ownCycleInfo.phase.color}55`, borderRadius: 8, padding: "3px 10px" }}>
+              <span style={{ fontSize: 13 }}>{ownCycleInfo.phase.emoji}</span>
+              <span style={{ fontSize: 11, color: ownCycleInfo.phase.color, fontWeight: 700 }}>{ownCycleInfo.phase.name} · Día {ownCycleInfo.dayNum}</span>
+              <span style={{ fontSize: 10, color: COLORS.text, opacity: 0.8 }}>· {LOAD_RECS[ownCycleInfo.phase.name]?.label}</span>
             </div>
           )}
         </div>

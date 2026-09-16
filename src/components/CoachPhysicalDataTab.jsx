@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { COLORS, RM_EXERCISES, PERFORMANCE_METRICS, EXTERNAL_LOAD_METRICS } from "@/lib/constants";
 import { todayStr, fmtDateLong, extractPhysicalMetricValue, physicalQuadrantMetricOptions } from "@/lib/utils";
 import { loadPlayerPhysicalHistory, savePhysicalEntry, saveTeam, getLatestWeight, loadPlayerWeightHistory } from "@/lib/db";
+import { getCycleInfo, CYCLE_PHASES, LOAD_RECS, showCycle, setPlayerCycle, getPlayerCycle } from "@/lib/cycle";
 import Avatar from "./Avatar";
 import PhysicalDataView from "./PhysicalDataView";
 
@@ -800,6 +801,63 @@ function CoachInjuryPanel({ injuries, freeText }) {
   );
 }
 
+function CycleEditor({ profile, team, username, readOnly, onTeamUpdate }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const existing = getPlayerCycle(team, username);
+  const [cycleDay1, setCycleDay1] = useState(existing?.cycleDay1 || "");
+  const [cycleLength, setCycleLength] = useState(existing?.cycleLength || 28);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const cycleInfo = cycleDay1 ? getCycleInfo(cycleDay1, today, cycleLength) : null;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const newCycles = setPlayerCycle(team, username, cycleDay1 || null, cycleLength || 28);
+      const updatedTeam = { ...team, playerCycles: newCycles };
+      await saveTeam(updatedTeam);
+      if (onTeamUpdate) onTeamUpdate(updatedTeam);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) { console.error(e); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div style={{ marginTop: 12, borderTop: `1px solid ${COLORS.line}`, paddingTop: 12 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#c084fc", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Ciclo menstrual</div>
+      {cycleInfo && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, background: cycleInfo.phase.bg, border: `1px solid ${cycleInfo.phase.color}44`, borderRadius: 10, padding: "8px 12px" }}>
+          <span style={{ fontSize: 20 }}>{cycleInfo.phase.emoji}</span>
+          <div>
+            <div style={{ fontWeight: 700, color: cycleInfo.phase.color, fontSize: 13 }}>{cycleInfo.phase.name} · Día {cycleInfo.dayNum}</div>
+            <div style={{ fontSize: 11, color: COLORS.text }}>{LOAD_RECS[cycleInfo.phase.name]?.label}</div>
+          </div>
+        </div>
+      )}
+      {!readOnly && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "end" }}>
+          <div>
+            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Día 1 del último ciclo</div>
+            <input type="date" value={cycleDay1} onChange={(e) => setCycleDay1(e.target.value)}
+              style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 13, colorScheme: "dark", boxSizing: "border-box" }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Duración</div>
+            <input type="number" value={cycleLength} onChange={(e) => setCycleLength(Number(e.target.value))} min={21} max={35}
+              style={{ width: 64, padding: "7px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 13 }} />
+          </div>
+          <button onClick={handleSave} disabled={saving}
+            style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: saved ? "#6b21a8" : "#c084fc", color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+            {saved ? "✓" : "Guardar"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CoachPlayerPhysicalEditor({ player, team, onBack, profile, onTeamUpdate, allPhysical = [], readOnly = false }) {
   const [history, setHistory] = useState([]);
   const [bodyWeight, setBodyWeight] = useState(null);
@@ -897,6 +955,9 @@ function CoachPlayerPhysicalEditor({ player, team, onBack, profile, onTeamUpdate
               </div>
             )}
           </div>
+        )}
+        {showCycle(profile, team) && (
+          <CycleEditor profile={profile} team={effectiveTeam} username={player.username} readOnly={readOnly} onTeamUpdate={onTeamUpdate} />
         )}
       </div>
 

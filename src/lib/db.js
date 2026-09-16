@@ -776,6 +776,7 @@ function dbTeamToApp(r) {
     allowViewerEditCalendar: raw?.allowViewerEditCalendar || false,
     allowViewerSeeMessages: raw?.allowViewerSeeMessages || false,
     viewerPermissions: raw?.viewerPermissions || {},
+    playerCycles: raw?.playerCycles || {},
     crestUrl: r.crest_url || null,
   };
 }
@@ -815,6 +816,7 @@ function appTeamToDb(team) {
       allowViewerEditCalendar: team.allowViewerEditCalendar || false,
       allowViewerSeeMessages: team.allowViewerSeeMessages || false,
       viewerPermissions: team.viewerPermissions || {},
+      playerCycles: team.playerCycles || {},
     },
     crest_url: team.crestUrl || null,
   };

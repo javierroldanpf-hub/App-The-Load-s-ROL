@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { COLORS, INTENSITY_LEVELS, SESSION_TYPES, GROUP_SESSION_TYPES, MATCH_DEFAULT_DURATION, WEEKDAY_LABELS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, weekDates, weekNumberFrom, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
 import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions } from "@/lib/db";
+import { getCycleInfo, CYCLE_PHASES, LOAD_RECS, getPlayerCycle } from "@/lib/cycle";
 import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
@@ -157,6 +158,87 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
         ))}
       </div>
       <button onClick={addBlock} style={{ marginTop: 8, width: "100%", padding: "9px 0", borderRadius: 10, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>+ Añadir bloque</button>
+    </div>
+  );
+}
+
+function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev, onNext }) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekMonday, i));
+  const DAYS_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const roster = team.roster || [];
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <button onClick={onPrev} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>←</button>
+        <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: "#c084fc" }}>Ciclo menstrual · semana</div>
+        <button onClick={onNext} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>→</button>
+      </div>
+      {/* Leyenda fases */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+        {CYCLE_PHASES.map((ph) => (
+          <div key={ph.name} style={{ display: "flex", alignItems: "center", gap: 5, background: ph.bg, border: `1px solid ${ph.color}44`, borderRadius: 8, padding: "4px 10px", fontSize: 11 }}>
+            <span>{ph.emoji}</span>
+            <span style={{ color: ph.color, fontWeight: 600 }}>{ph.name}</span>
+            <span style={{ color: COLORS.text, opacity: 0.7 }}>· {LOAD_RECS[ph.name]?.label}</span>
+          </div>
+        ))}
+      </div>
+      {/* Tabla */}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: "6px 10px", textAlign: "left", color: COLORS.text, fontWeight: 700, borderBottom: `1px solid ${COLORS.line}`, minWidth: 120 }}>Jugadora</th>
+              {days.map((d, i) => (
+                <th key={d} style={{ padding: "6px 6px", textAlign: "center", color: COLORS.text, fontWeight: 700, borderBottom: `1px solid ${COLORS.line}`, minWidth: 48 }}>
+                  <div>{DAYS_LABELS[i]}</div>
+                  <div style={{ fontSize: 10, color: COLORS.text, opacity: 0.6 }}>{d.slice(5).replace("-", "/")}</div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {roster.map((username) => {
+              const cycleData = getPlayerCycle(team, username);
+              const name = typeof displayNames[username] === "object" ? (displayNames[username]?.displayName || username) : (displayNames[username] || username);
+              if (!cycleData?.cycleDay1) {
+                return (
+                  <tr key={username} style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
+                    <td style={{ padding: "6px 10px", color: COLORS.text }}>{name}</td>
+                    {days.map((d) => (
+                      <td key={d} style={{ padding: "6px 6px", textAlign: "center", color: COLORS.text, opacity: 0.3, fontSize: 10 }}>–</td>
+                    ))}
+                  </tr>
+                );
+              }
+              return (
+                <tr key={username} style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
+                  <td style={{ padding: "6px 10px", color: COLORS.text, fontWeight: 600 }}>{name}</td>
+                  {days.map((d) => {
+                    const info = getCycleInfo(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
+                    if (!info) return <td key={d} style={{ padding: "6px 6px", textAlign: "center" }}>–</td>;
+                    const ph = info.phase;
+                    return (
+                      <td key={d} style={{ padding: "4px 4px", textAlign: "center" }}>
+                        <div style={{ background: ph.bg, border: `1px solid ${ph.color}55`, borderRadius: 6, padding: "3px 2px" }}>
+                          <div style={{ fontSize: 14 }}>{ph.emoji}</div>
+                          <div style={{ fontSize: 9, color: ph.color, fontWeight: 700 }}>D{info.dayNum}</div>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {roster.filter((u) => getPlayerCycle(team, u)?.cycleDay1).length === 0 && (
+          <div style={{ color: COLORS.text, fontSize: 13, textAlign: "center", padding: "2rem 0", opacity: 0.6 }}>
+            Ninguna jugadora tiene el día 1 del ciclo configurado.<br />Edítalo en la ficha individual (pestaña Físico).
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -573,7 +655,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   );
 }
 
-export default function CoachCalendarEditor({ team, sessions, onSessionsChange, readOnly = false, displayNames = {}, coachName = "", teamGender = "masculino" }) {
+export default function CoachCalendarEditor({ team, sessions, onSessionsChange, readOnly = false, displayNames = {}, coachName = "", teamGender = "masculino", playerProfiles = {} }) {
   const [viewMode, setViewMode] = useState("week");
   const [showPdf, setShowPdf] = useState(false);
   const [mesocycles, setMesocycles] = useState([]);
@@ -914,7 +996,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
         <div style={{ flex: 1, display: "flex", gap: 6, background: COLORS.panelRaised, borderRadius: 10, padding: 4 }}>
-          {[{ id: "week", label: "Semanal" }, { id: "month", label: "Mensual" }, { id: "mesociclo", label: "Mesociclo" }].map((v) => (
+          {[{ id: "week", label: "Semanal" }, { id: "month", label: "Mensual" }, { id: "mesociclo", label: "Mesociclo" }, ...(team.sexo === "femenino" ? [{ id: "ciclo", label: "Ciclo" }] : [])].map((v) => (
             <button key={v.id} onClick={() => setViewMode(v.id)} style={{
               flex: 1, padding: "6px 0", borderRadius: 7, border: "none", fontSize: 12, fontWeight: 600,
               background: viewMode === v.id ? COLORS.panel : "transparent",
@@ -933,7 +1015,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         </>
       )}
 
-      {viewMode !== "mesociclo" && viewMode === "week" ? (
+      {viewMode !== "mesociclo" && viewMode !== "ciclo" && viewMode === "week" ? (
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <button onClick={() => setWeekMonday(addDays(weekMonday, -7))} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}>←</button>
@@ -1059,8 +1141,20 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         </>
       )}
 
+      {/* ── Vista ciclo menstrual ────────────────────────────────────── */}
+      {viewMode === "ciclo" && team.sexo === "femenino" && (
+        <CycleWeekPanel
+          team={team}
+          weekMonday={weekMonday}
+          playerProfiles={playerProfiles}
+          displayNames={displayNames}
+          onPrev={() => setWeekMonday(addDays(weekMonday, -7))}
+          onNext={() => setWeekMonday(addDays(weekMonday, 7))}
+        />
+      )}
+
       {/* ── Editor microciclo activo ─────────────────────────────────── */}
-      {viewMode !== "mesociclo" && (
+      {viewMode !== "mesociclo" && viewMode !== "ciclo" && (
         <MesoWeekInline
           mesocycles={mesocycles}
           weekMonday={weekMonday}
