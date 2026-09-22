@@ -839,7 +839,7 @@ function CycleEditor({ profile, team, username, readOnly, onTeamUpdate }) {
       {!readOnly && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "end" }}>
           <div>
-            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Día 1 del último ciclo</div>
+            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Día 1 del último sangrado</div>
             <input type="date" value={cycleDay1} onChange={(e) => setCycleDay1(e.target.value)}
               style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 13, colorScheme: "dark", boxSizing: "border-box" }} />
           </div>
