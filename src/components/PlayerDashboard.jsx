@@ -23,7 +23,7 @@ function matchScoreLabel(info, sessionType) {
   return isAway ? `${info.scoreAway} – ${info.scoreHome}` : `${info.scoreHome} – ${info.scoreAway}`;
 }
 import HelpPanel from "./HelpPanel";
-import { getCycleInfo, CYCLE_PHASES, LOAD_RECS, getPlayerCycle } from "@/lib/cycle";
+import { getCycleWeek, CYCLE_WEEKS, getPlayerCycle, isCycleRelaxin } from "@/lib/cycle";
 
 export default function PlayerDashboard({ user, onLogout }) {
   const [tab, setTab] = useState("today");
@@ -505,8 +505,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile =
     if (byMeso) return true;
     // Sistema nuevo: playerCycles — días 20-22 del ciclo propio
     if (cycleData?.cycleDay1 && effectiveSexo === "femenino") {
-      const info = getCycleInfo(cycleData.cycleDay1, date, cycleData.cycleLength || 28);
-      return info && (info.dayNum === 20 || info.dayNum === 21 || info.dayNum === 22);
+      return isCycleRelaxin(cycleData.cycleDay1, date, cycleData.cycleLength || 28);
     }
     return false;
   };
@@ -558,7 +557,7 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile =
 
   // Ciclo propio de la jugadora (guardado en team.playerCycles por el entrenador)
   const ownCycleInfo = (effectiveSexo === "femenino" && cycleData?.cycleDay1)
-    ? getCycleInfo(cycleData.cycleDay1, today, cycleData.cycleLength || 28)
+    ? getCycleWeek(cycleData.cycleDay1, today, cycleData.cycleLength || 28)
     : null;
   const hasLegend = activeMesos.length > 0 || weekTypeEntries.length > 0 || visibleMenstrual.length > 0 || hasRelaxin || ownCycleInfo;
 
@@ -591,10 +590,10 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile =
             </div>
           )}
           {ownCycleInfo && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, background: ownCycleInfo.phase.bg, border: `1px solid ${ownCycleInfo.phase.color}55`, borderRadius: 8, padding: "3px 10px" }}>
-              <span style={{ fontSize: 13 }}>{ownCycleInfo.phase.emoji}</span>
-              <span style={{ fontSize: 11, color: ownCycleInfo.phase.color, fontWeight: 700 }}>{ownCycleInfo.phase.name} · Día {ownCycleInfo.dayNum}</span>
-              <span style={{ fontSize: 10, color: COLORS.text, opacity: 0.8 }}>· {LOAD_RECS[ownCycleInfo.phase.name]?.label}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, background: ownCycleInfo.week.bg, border: `1px solid ${ownCycleInfo.week.color}55`, borderRadius: 8, padding: "3px 10px" }}>
+              <span style={{ fontSize: 13 }}>{ownCycleInfo.week.emoji}</span>
+              <span style={{ fontSize: 11, color: ownCycleInfo.week.color, fontWeight: 700 }}>{ownCycleInfo.week.label} · Día {ownCycleInfo.dayInCycle}</span>
+              <span style={{ fontSize: 10, color: COLORS.text, opacity: 0.8, textTransform: "capitalize" }}>· {ownCycleInfo.week.type}</span>
             </div>
           )}
         </div>

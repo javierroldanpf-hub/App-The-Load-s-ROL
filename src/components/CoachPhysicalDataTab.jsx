@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { COLORS, RM_EXERCISES, PERFORMANCE_METRICS, EXTERNAL_LOAD_METRICS } from "@/lib/constants";
 import { todayStr, fmtDateLong, extractPhysicalMetricValue, physicalQuadrantMetricOptions } from "@/lib/utils";
 import { loadPlayerPhysicalHistory, savePhysicalEntry, saveTeam, getLatestWeight, loadPlayerWeightHistory } from "@/lib/db";
-import { getCycleInfo, CYCLE_PHASES, LOAD_RECS, showCycle, setPlayerCycle, getPlayerCycle } from "@/lib/cycle";
+import { getCycleWeek, CYCLE_WEEKS, showCycle, setPlayerCycle, getPlayerCycle } from "@/lib/cycle";
 import Avatar from "./Avatar";
 import PhysicalDataView from "./PhysicalDataView";
 
@@ -809,7 +809,7 @@ function CycleEditor({ profile, team, username, readOnly, onTeamUpdate }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const cycleInfo = cycleDay1 ? getCycleInfo(cycleDay1, today, cycleLength) : null;
+  const cycleInfo = cycleDay1 ? getCycleWeek(cycleDay1, today, cycleLength) : null;
 
   const handleSave = async () => {
     setSaving(true);
@@ -828,11 +828,11 @@ function CycleEditor({ profile, team, username, readOnly, onTeamUpdate }) {
     <div style={{ marginTop: 12, borderTop: `1px solid ${COLORS.line}`, paddingTop: 12 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: "#c084fc", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Ciclo menstrual</div>
       {cycleInfo && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, background: cycleInfo.phase.bg, border: `1px solid ${cycleInfo.phase.color}44`, borderRadius: 10, padding: "8px 12px" }}>
-          <span style={{ fontSize: 20 }}>{cycleInfo.phase.emoji}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, background: cycleInfo.week.bg, border: `1px solid ${cycleInfo.week.color}44`, borderRadius: 10, padding: "8px 12px" }}>
+          <span style={{ fontSize: 20 }}>{cycleInfo.week.emoji}</span>
           <div>
-            <div style={{ fontWeight: 700, color: cycleInfo.phase.color, fontSize: 13 }}>{cycleInfo.phase.name} · Día {cycleInfo.dayNum}</div>
-            <div style={{ fontSize: 11, color: COLORS.text }}>{LOAD_RECS[cycleInfo.phase.name]?.label}</div>
+            <div style={{ fontWeight: 700, color: cycleInfo.week.color, fontSize: 13 }}>{cycleInfo.week.label} · Día {cycleInfo.dayInCycle}</div>
+            <div style={{ fontSize: 11, color: COLORS.text, textTransform: "capitalize" }}>{cycleInfo.week.type}</div>
           </div>
         </div>
       )}

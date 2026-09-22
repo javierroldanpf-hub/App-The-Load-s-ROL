@@ -1,46 +1,36 @@
-// Menstrual cycle utilities
+// Menstrual cycle utilities — week-based, matching the mesocycle menstrual system
 
-export const CYCLE_PHASES = [
-  { name: "Menstruación", emoji: "🔴", days: [1, 5], color: "#ef4444", bg: "#450a0a" },
-  { name: "Folicular", emoji: "🌱", days: [6, 13], color: "#22c55e", bg: "#052e16" },
-  { name: "Ovulación", emoji: "⚡", days: [14, 14], color: "#facc15", bg: "#422006" },
-  { name: "Lútea", emoji: "🌙", days: [15, 28], color: "#818cf8", bg: "#1e1b4b" },
+// Same order as MENSTRUAL_PHASES_CAL / MENSTRUAL_PHASES_FULL in PlayerDashboard
+// Week index from cycleDay1: week 0 = Sangrado (days 1-7), week 1 = Post Sangrado, etc.
+export const CYCLE_WEEKS = [
+  { emoji: "🔴",   label: "Semana de Sangrado",       type: "carga",      color: "#ef4444", bg: "#450a0a" },
+  { emoji: "🔥💪", label: "Semana Post Sangrado",      type: "sobrecarga", color: "#f97316", bg: "#431407" },
+  { emoji: "💙",   label: "Semana 2ª Post Sangrado",   type: "descarga",   color: "#60a5fa", bg: "#172554" },
+  { emoji: "🌕",   label: "Semana Previa al Sangrado", type: "carga",      color: "#fbbf24", bg: "#422006" },
 ];
 
-export const LOAD_RECS = {
-  "Menstruación": { label: "Descarga", color: "#818cf8" },
-  "Folicular":    { label: "Carga",    color: "#22c55e" },
-  "Ovulación":    { label: "Pico",     color: "#facc15" },
-  "Lútea":        { label: "Sobrecarga → Descarga", color: "#f97316" },
-};
+export const LOAD_COLORS = { carga: "#f97316", sobrecarga: "#ef4444", descarga: "#60a5fa" };
 
 /**
- * Returns the phase object for a given day number (1–28+).
+ * Given cycleDay1 (YYYY-MM-DD) and a target date, returns { weekIdx, week } or null.
+ * cycleLength defaults to 28. Week index 0 = Sangrado (day 1), 1 = Post Sangrado, etc.
  */
-export function getPhaseForDay(dayNum, cycleLength = 28) {
-  // Normalize to 1-based within cycle
-  const d = ((dayNum - 1) % cycleLength) + 1;
-  // Scale phase boundaries if cycleLength != 28
-  const ratio = cycleLength / 28;
-  if (d <= Math.round(5 * ratio)) return CYCLE_PHASES[0];
-  if (d <= Math.round(13 * ratio)) return CYCLE_PHASES[1];
-  if (d <= Math.round(14 * ratio)) return CYCLE_PHASES[2];
-  return CYCLE_PHASES[3];
-}
-
-/**
- * Given a cycle_day1 date string (YYYY-MM-DD) and a target date string,
- * returns { dayNum, phase } or null if no cycle data.
- */
-export function getCycleInfo(cycleDay1, targetDate, cycleLength = 28) {
+export function getCycleWeek(cycleDay1, targetDate, cycleLength = 28) {
   if (!cycleDay1) return null;
   const start = new Date(cycleDay1 + "T00:00:00");
   const target = new Date(targetDate + "T00:00:00");
   const diffDays = Math.floor((target - start) / 86400000);
   if (diffDays < 0) return null;
-  const dayNum = (diffDays % cycleLength) + 1;
-  const phase = getPhaseForDay(dayNum, cycleLength);
-  return { dayNum, phase };
+  const dayInCycle = (diffDays % cycleLength) + 1; // 1-based
+  const weekIdx = Math.min(Math.floor((dayInCycle - 1) / 7), 3);
+  return { weekIdx, week: CYCLE_WEEKS[weekIdx], dayInCycle };
+}
+
+// Relaxin peak: days 20-22 of cycle (middle of 3rd week)
+export function isCycleRelaxin(cycleDay1, targetDate, cycleLength = 28) {
+  const info = getCycleWeek(cycleDay1, targetDate, cycleLength);
+  if (!info) return false;
+  return info.dayInCycle === 20 || info.dayInCycle === 21 || info.dayInCycle === 22;
 }
 
 /**

@@ -3,7 +3,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { COLORS, INTENSITY_LEVELS, SESSION_TYPES, GROUP_SESSION_TYPES, MATCH_DEFAULT_DURATION, WEEKDAY_LABELS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, weekDates, weekNumberFrom, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
 import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions } from "@/lib/db";
-import { getCycleInfo, CYCLE_PHASES, LOAD_RECS, getPlayerCycle } from "@/lib/cycle";
+import { getCycleWeek, CYCLE_WEEKS, LOAD_COLORS, getPlayerCycle } from "@/lib/cycle";
 import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
@@ -174,13 +174,13 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
         <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: "#c084fc" }}>Ciclo menstrual · semana</div>
         <button onClick={onNext} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>→</button>
       </div>
-      {/* Leyenda fases */}
+      {/* Leyenda semanas */}
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-        {CYCLE_PHASES.map((ph) => (
-          <div key={ph.name} style={{ display: "flex", alignItems: "center", gap: 5, background: ph.bg, border: `1px solid ${ph.color}44`, borderRadius: 8, padding: "4px 10px", fontSize: 11 }}>
-            <span>{ph.emoji}</span>
-            <span style={{ color: ph.color, fontWeight: 600 }}>{ph.name}</span>
-            <span style={{ color: COLORS.text, opacity: 0.7 }}>· {LOAD_RECS[ph.name]?.label}</span>
+        {CYCLE_WEEKS.map((w) => (
+          <div key={w.label} style={{ display: "flex", alignItems: "center", gap: 5, background: w.bg, border: `1px solid ${w.color}44`, borderRadius: 8, padding: "4px 10px", fontSize: 11 }}>
+            <span>{w.emoji}</span>
+            <span style={{ color: w.color, fontWeight: 600 }}>{w.label}</span>
+            <span style={{ color: COLORS.text, opacity: 0.7 }}>· {LOAD_COLORS[w.type] ? w.type : w.type}</span>
           </div>
         ))}
       </div>
@@ -216,14 +216,14 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
                 <tr key={username} style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
                   <td style={{ padding: "6px 10px", color: COLORS.text, fontWeight: 600 }}>{name}</td>
                   {days.map((d) => {
-                    const info = getCycleInfo(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
+                    const info = getCycleWeek(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
                     if (!info) return <td key={d} style={{ padding: "6px 6px", textAlign: "center" }}>–</td>;
-                    const ph = info.phase;
+                    const w = info.week;
                     return (
                       <td key={d} style={{ padding: "4px 4px", textAlign: "center" }}>
-                        <div style={{ background: ph.bg, border: `1px solid ${ph.color}55`, borderRadius: 6, padding: "3px 2px" }}>
-                          <div style={{ fontSize: 14 }}>{ph.emoji}</div>
-                          <div style={{ fontSize: 9, color: ph.color, fontWeight: 700 }}>D{info.dayNum}</div>
+                        <div style={{ background: w.bg, border: `1px solid ${w.color}55`, borderRadius: 6, padding: "3px 2px" }}>
+                          <div style={{ fontSize: 14 }}>{w.emoji}</div>
+                          <div style={{ fontSize: 9, color: w.color, fontWeight: 700 }}>D{info.dayInCycle}</div>
                         </div>
                       </td>
                     );
