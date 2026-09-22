@@ -23,7 +23,7 @@ function matchScoreLabel(info, sessionType) {
   return isAway ? `${info.scoreAway} – ${info.scoreHome}` : `${info.scoreHome} – ${info.scoreAway}`;
 }
 import HelpPanel from "./HelpPanel";
-import { getCycleWeek, CYCLE_WEEKS, getPlayerCycle, isCycleRelaxin } from "@/lib/cycle";
+import { getCycleWeek, getPlayerCycle, isCycleRelaxin } from "@/lib/cycle";
 
 export default function PlayerDashboard({ user, onLogout }) {
   const [tab, setTab] = useState("today");
@@ -591,13 +591,30 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile =
           )}
           {ownCycleInfo && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, background: ownCycleInfo.week.bg, border: `1px solid ${ownCycleInfo.week.color}55`, borderRadius: 8, padding: "3px 10px" }}>
-              <span style={{ fontSize: 13 }}>{ownCycleInfo.week.emoji}</span>
+              <span style={{ fontSize: 13 }}>{ownCycleInfo.week.emoji}{isCycleRelaxin(cycleData.cycleDay1, today, cycleData.cycleLength || 28) ? "⚡" : ""}</span>
               <span style={{ fontSize: 11, color: ownCycleInfo.week.color, fontWeight: 700 }}>{ownCycleInfo.week.label} · Día {ownCycleInfo.dayInCycle}</span>
               <span style={{ fontSize: 10, color: COLORS.text, opacity: 0.8, textTransform: "capitalize" }}>· {ownCycleInfo.week.type}</span>
             </div>
           )}
         </div>
       )}
+      {ownCycleInfo && (
+        <div style={{ background: ownCycleInfo.week.bg, border: `1px solid ${ownCycleInfo.week.color}44`, borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <span style={{ fontSize: 26 }}>{ownCycleInfo.week.emoji}{isCycleRelaxin(cycleData.cycleDay1, today, cycleData.cycleLength || 28) ? "⚡" : ""}</span>
+            <div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 16, color: ownCycleInfo.week.color }}>{ownCycleInfo.week.label}</div>
+              <div style={{ fontSize: 11, color: COLORS.text }}>Día {ownCycleInfo.dayInCycle} del ciclo · <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{ownCycleInfo.week.type}</span></div>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: ownCycleInfo.week.color, fontWeight: 600, marginBottom: 3 }}>{ownCycleInfo.week.fase}</div>
+          <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5 }}>{ownCycleInfo.week.metabolismo}</div>
+          {isCycleRelaxin(cycleData.cycleDay1, today, cycleData.cycleLength || 28) && (
+            <div style={{ marginTop: 8, fontSize: 11, color: "#fde68a", fontWeight: 600 }}>⚡ Pico de relaxina — precaución con estiramientos y movilidad</div>
+          )}
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
         <div style={{ display: "flex", gap: 6, background: COLORS.panel, borderRadius: 12, padding: 5, flex: 1 }}>
           {[{ id: "week", label: "Semanal" }, { id: "month", label: "Mensual" }].map((v) => (

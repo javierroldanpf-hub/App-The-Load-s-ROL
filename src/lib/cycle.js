@@ -3,10 +3,10 @@
 // Same order as MENSTRUAL_PHASES_CAL / MENSTRUAL_PHASES_FULL in PlayerDashboard
 // Week index from cycleDay1: week 0 = Sangrado (days 1-7), week 1 = Post Sangrado, etc.
 export const CYCLE_WEEKS = [
-  { emoji: "🔴",   label: "Semana de Sangrado",       type: "carga",      color: "#ef4444", bg: "#450a0a" },
-  { emoji: "🔥💪", label: "Semana Post Sangrado",      type: "sobrecarga", color: "#f97316", bg: "#431407" },
-  { emoji: "💙",   label: "Semana 2ª Post Sangrado",   type: "descarga",   color: "#60a5fa", bg: "#172554" },
-  { emoji: "🌕",   label: "Semana Previa al Sangrado", type: "carga",      color: "#fbbf24", bg: "#422006" },
+  { emoji: "🔴",   label: "Semana de Sangrado",       type: "carga",      color: "#ef4444", bg: "#450a0a", fase: "Fase Folicular Temprana",   metabolismo: "Bajada de Progesterona y Subida del Estrógeno (No hay predominancia de ninguna vía metabólica)" },
+  { emoji: "🔥💪", label: "Semana Post Sangrado",      type: "sobrecarga", color: "#f97316", bg: "#431407", fase: "Fase Folicular Tardía",      metabolismo: "Predominancia del Estrógeno (Síntesis y Almacenamiento de Glucógeno)" },
+  { emoji: "💙",   label: "Semana 2ª Post Sangrado",   type: "descarga",   color: "#60a5fa", bg: "#172554", fase: "Fase Lútea Temprana",        metabolismo: "Bajada del Estrógeno y Subida de la Progesterona (Aumento del Metabolismo de Ácidos Grasos)" },
+  { emoji: "🌕",   label: "Semana Previa al Sangrado", type: "carga",      color: "#fbbf24", bg: "#422006", fase: "Fase Lútea Tardía",          metabolismo: "Predominancia de Progesterona (Metabolismo de Ácidos Grasos)" },
 ];
 
 export const LOAD_COLORS = { carga: "#f97316", sobrecarga: "#ef4444", descarga: "#60a5fa" };

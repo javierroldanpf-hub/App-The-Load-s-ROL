@@ -3,7 +3,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { COLORS, INTENSITY_LEVELS, SESSION_TYPES, GROUP_SESSION_TYPES, MATCH_DEFAULT_DURATION, WEEKDAY_LABELS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, weekDates, weekNumberFrom, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
 import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions } from "@/lib/db";
-import { getCycleWeek, CYCLE_WEEKS, LOAD_COLORS, getPlayerCycle } from "@/lib/cycle";
+import { getCycleWeek, CYCLE_WEEKS, LOAD_COLORS, getPlayerCycle, isCycleRelaxin } from "@/lib/cycle";
 import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
@@ -180,9 +180,14 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
           <div key={w.label} style={{ display: "flex", alignItems: "center", gap: 5, background: w.bg, border: `1px solid ${w.color}44`, borderRadius: 8, padding: "4px 10px", fontSize: 11 }}>
             <span>{w.emoji}</span>
             <span style={{ color: w.color, fontWeight: 600 }}>{w.label}</span>
-            <span style={{ color: COLORS.text, opacity: 0.7 }}>· {LOAD_COLORS[w.type] ? w.type : w.type}</span>
+            <span style={{ color: COLORS.text, opacity: 0.7, textTransform: "capitalize" }}>· {w.type}</span>
           </div>
         ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 5, background: "#422006", border: "1px solid #fde68a44", borderRadius: 8, padding: "4px 10px", fontSize: 11 }}>
+          <span>⚡</span>
+          <span style={{ color: "#fde68a", fontWeight: 600 }}>Pico relaxina</span>
+          <span style={{ color: COLORS.text, opacity: 0.7 }}>· D20–22</span>
+        </div>
       </div>
       {/* Tabla */}
       <div style={{ overflowX: "auto" }}>
@@ -219,10 +224,11 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
                     const info = getCycleWeek(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
                     if (!info) return <td key={d} style={{ padding: "6px 6px", textAlign: "center" }}>–</td>;
                     const w = info.week;
+                    const relaxin = isCycleRelaxin(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
                     return (
                       <td key={d} style={{ padding: "4px 4px", textAlign: "center" }}>
                         <div style={{ background: w.bg, border: `1px solid ${w.color}55`, borderRadius: 6, padding: "3px 2px" }}>
-                          <div style={{ fontSize: 14 }}>{w.emoji}</div>
+                          <div style={{ fontSize: 13, lineHeight: 1.2 }}>{w.emoji}{relaxin ? "⚡" : ""}</div>
                           <div style={{ fontSize: 9, color: w.color, fontWeight: 700 }}>D{info.dayInCycle}</div>
                         </div>
                       </td>
