@@ -666,6 +666,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   const [showPdf, setShowPdf] = useState(false);
   const [mesocycles, setMesocycles] = useState([]);
   const [showCopyWeek, setShowCopyWeek] = useState(false);
+  const [copySessionDate, setCopySessionDate] = useState(null);
   const [copyTeams, setCopyTeams] = useState([]);
   const [copyTarget, setCopyTarget] = useState(null);
   const [copyLoading, setCopyLoading] = useState(false);
@@ -676,13 +677,13 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   }, [team.teamId]);
 
   useEffect(() => {
-    if (!showCopyWeek) return;
+    if (!showCopyWeek && !copySessionDate) return;
     getTeamsByCoach(team.coachUsername).then((all) => {
       setCopyTeams(all.filter((t) => t.teamId !== team.teamId));
       setCopyTarget(null);
       setCopyDone(false);
     });
-  }, [showCopyWeek, team.coachUsername, team.teamId]);
+  }, [showCopyWeek, copySessionDate, team.coachUsername, team.teamId]);
 
   const handleCopyWeek = async () => {
     if (!copyTarget) return;
@@ -698,6 +699,21 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
       setCopyLoading(false);
     }
   };
+
+  const handleCopySession = async () => {
+    if (!copyTarget || !copySessionDate) return;
+    setCopyLoading(true);
+    try {
+      const s = sessions.find((s) => s.date === copySessionDate);
+      if (s) await saveSession({ ...s, teamId: copyTarget, individualSessions: (s.individualSessions || []).map((ind) => ({ ...ind, players: [] })) });
+      setCopyDone(true);
+    } catch (e) {
+      alert("Error al copiar: " + (e?.message || e));
+    } finally {
+      setCopyLoading(false);
+    }
+  };
+
   const [weekMonday, setWeekMonday] = useState(mondayOf(todayStr()));
   const [monthAnchor, setMonthAnchor] = useState(firstOfMonth(todayStr()));
   const [editDate, setEditDate] = useState(null);
@@ -843,6 +859,9 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             {menstrualPhase && <span style={{ fontSize: 8, lineHeight: 1 }} title={menstrualPhase.short}>{menstrualPhase.emoji}</span>}
             {relaxin && <span style={{ fontSize: 8, lineHeight: 1 }} title="Pico de relaxina — cuidado con estiramientos">⚡</span>}
             {viewMode === "week" && <span style={{ fontSize: 10, color: COLORS.text }}>{fmtDateShort(date)}</span>}
+            {!readOnly && session && (session.sessionType || session.isRest) && (
+              <button onClick={(e) => { e.stopPropagation(); setCopySessionDate(date); }} title="Copiar sesión a otro equipo" style={{ padding: "1px 4px", borderRadius: 4, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 9, cursor: "pointer", lineHeight: 1.4 }}>⧉</button>
+            )}
           </div>
         </div>
 
@@ -1249,6 +1268,44 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => setShowCopyWeek(false)} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
                   <button onClick={handleCopyWeek} disabled={!copyTarget || copyLoading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: copyTarget ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, cursor: copyTarget ? "pointer" : "default" }}>
+                    {copyLoading ? "Copiando..." : "Copiar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {copySessionDate && (
+        <div style={{ position: "fixed", inset: 0, background: "#0009", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "24px 22px", width: "100%", maxWidth: 380 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 17, color: COLORS.text, marginBottom: 4 }}>Copiar sesión</div>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 16 }}>{fmtDateLong(copySessionDate)}</div>
+            {copyDone ? (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
+                <div style={{ color: COLORS.lime, fontWeight: 700, fontSize: 14 }}>Sesión copiada</div>
+                <button onClick={() => setCopySessionDate(null)} style={{ marginTop: 16, padding: "9px 24px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, cursor: "pointer" }}>Cerrar</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Selecciona el equipo destino:</div>
+                {copyTeams.length === 0 ? (
+                  <div style={{ fontSize: 12, color: COLORS.text, padding: "12px 0" }}>No tienes otros equipos.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18, maxHeight: 240, overflowY: "auto" }}>
+                    {copyTeams.map((t) => (
+                      <button key={t.teamId} onClick={() => setCopyTarget(t.teamId)} style={{ padding: "10px 14px", borderRadius: 9, border: `2px solid ${copyTarget === t.teamId ? COLORS.lime : COLORS.line}`, background: copyTarget === t.teamId ? `${COLORS.lime}18` : COLORS.panelRaised, color: COLORS.text, fontWeight: copyTarget === t.teamId ? 700 : 400, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                        {t.name}
+                        <span style={{ fontSize: 10, color: COLORS.text, marginLeft: 6, opacity: 0.6 }}>{t.kind || "equipo"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setCopySessionDate(null)} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+                  <button onClick={handleCopySession} disabled={!copyTarget || copyLoading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: copyTarget ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, cursor: copyTarget ? "pointer" : "default" }}>
                     {copyLoading ? "Copiando..." : "Copiar"}
                   </button>
                 </div>
