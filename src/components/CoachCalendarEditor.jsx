@@ -667,6 +667,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   const [mesocycles, setMesocycles] = useState([]);
   const [showCopyWeek, setShowCopyWeek] = useState(false);
   const [copySessionDate, setCopySessionDate] = useState(null);
+  const [copySessionTargetDate, setCopySessionTargetDate] = useState(null);
   const [copyTeams, setCopyTeams] = useState([]);
   const [copyTarget, setCopyTarget] = useState(null);
   const [copyLoading, setCopyLoading] = useState(false);
@@ -682,6 +683,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
       setCopyTeams(all.filter((t) => t.teamId !== team.teamId));
       setCopyTarget(null);
       setCopyDone(false);
+      if (copySessionDate) setCopySessionTargetDate(copySessionDate);
     });
   }, [showCopyWeek, copySessionDate, team.coachUsername, team.teamId]);
 
@@ -701,11 +703,11 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   };
 
   const handleCopySession = async () => {
-    if (!copyTarget || !copySessionDate) return;
+    if (!copyTarget || !copySessionDate || !copySessionTargetDate) return;
     setCopyLoading(true);
     try {
       const s = sessions.find((s) => s.date === copySessionDate);
-      if (s) await saveSession({ ...s, teamId: copyTarget, individualSessions: (s.individualSessions || []).map((ind) => ({ ...ind, players: [] })) });
+      if (s) await saveSession({ ...s, teamId: copyTarget, date: copySessionTargetDate, individualSessions: (s.individualSessions || []).map((ind) => ({ ...ind, players: [] })) });
       setCopyDone(true);
     } catch (e) {
       alert("Error al copiar: " + (e?.message || e));
@@ -1306,9 +1308,18 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                     ))}
                   </div>
                 )}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6, fontWeight: 600 }}>Fecha destino:</div>
+                  <input
+                    type="date"
+                    value={copySessionTargetDate || ""}
+                    onChange={(e) => setCopySessionTargetDate(e.target.value)}
+                    style={{ width: "100%", padding: "9px 10px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 13, boxSizing: "border-box" }}
+                  />
+                </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => setCopySessionDate(null)} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
-                  <button onClick={handleCopySession} disabled={!copyTarget || copyLoading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: copyTarget ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, cursor: copyTarget ? "pointer" : "default" }}>
+                  <button onClick={handleCopySession} disabled={!copyTarget || !copySessionTargetDate || copyLoading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: (copyTarget && copySessionTargetDate) ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, cursor: (copyTarget && copySessionTargetDate) ? "pointer" : "default" }}>
                     {copyLoading ? "Copiando..." : "Copiar"}
                   </button>
                 </div>
