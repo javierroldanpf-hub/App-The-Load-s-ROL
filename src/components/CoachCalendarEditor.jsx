@@ -1092,6 +1092,9 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                     {mesoColors.map((c, i) => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: c, display: "inline-block" }} />)}
                     {menstrualPhase && <span style={{ fontSize: 8, lineHeight: 1 }}>{menstrualPhase.emoji}</span>}
                     {relaxin && <span style={{ fontSize: 8, lineHeight: 1 }}>⚡</span>}
+                    {!readOnly && session && (session.sessionType || session.isRest) && (
+                      <button onClick={(e) => { e.stopPropagation(); setCopySessionDate(date); }} title="Copiar sesión a otro equipo" style={{ padding: "1px 4px", borderRadius: 4, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 9, cursor: "pointer", lineHeight: 1.4 }}>⧉</button>
+                    )}
                   </div>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: isToday ? COLORS.lime : COLORS.text }}>{weekdayLabel(date).slice(0, 3)}</div>
