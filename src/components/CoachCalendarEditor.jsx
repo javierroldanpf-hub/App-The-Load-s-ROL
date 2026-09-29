@@ -1,9 +1,9 @@
 "use client";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { COLORS, INTENSITY_LEVELS, SESSION_TYPES, GROUP_SESSION_TYPES, MATCH_DEFAULT_DURATION, WEEKDAY_LABELS } from "@/lib/constants";
 import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, weekDates, weekNumberFrom, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
-import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions } from "@/lib/db";
-import { getCycleWeek, CYCLE_WEEKS, LOAD_COLORS, getPlayerCycle, isCycleRelaxin } from "@/lib/cycle";
+import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions, saveTeam } from "@/lib/db";
+import { getCycleWeek, CYCLE_WEEKS, LOAD_COLORS, getPlayerCycle, isCycleRelaxin, setPlayerCycle } from "@/lib/cycle";
 import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
@@ -162,15 +162,45 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
   );
 }
 
-function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev, onNext }) {
+function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev, onNext, onTeamUpdate }) {
   const [showInfo, setShowInfo] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState(null); // username being edited
+  const [editDay1, setEditDay1] = useState("");
+  const [editLength, setEditLength] = useState("28");
+  const [saving, setSaving] = useState(false);
+  const [localTeam, setLocalTeam] = useState(team);
+
+  // keep localTeam in sync if parent team changes
+  useEffect(() => { setLocalTeam(team); }, [team]);
+
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekMonday, i));
   const DAYS_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-  const allRoster = (team.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
-  // For mixed groups, only show female athletes
-  const roster = team.sexo === "femenino"
+  const allRoster = (localTeam.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
+  const roster = localTeam.sexo === "femenino"
     ? allRoster
     : allRoster.filter((u) => playerProfiles[u]?.sexo === "femenino");
+
+  const openEdit = (username) => {
+    const cd = getPlayerCycle(localTeam, username);
+    setEditDay1(cd?.cycleDay1 || "");
+    setEditLength(String(cd?.cycleLength || 28));
+    setEditingPlayer(username);
+  };
+
+  const handleSaveCycle = async () => {
+    if (!editingPlayer) return;
+    setSaving(true);
+    try {
+      const newCycles = setPlayerCycle(localTeam, editingPlayer, editDay1, Number(editLength) || 28);
+      const updated = { ...localTeam, playerCycles: newCycles };
+      await saveTeam(updated);
+      setLocalTeam(updated);
+      if (onTeamUpdate) onTeamUpdate(updated);
+      setEditingPlayer(null);
+    } catch (e) {
+      alert("Error al guardar: " + (e?.message || e));
+    } finally { setSaving(false); }
+  };
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -238,43 +268,79 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
           </thead>
           <tbody>
             {roster.map((username) => {
-              const cycleData = getPlayerCycle(team, username);
+              const cycleData = getPlayerCycle(localTeam, username);
               const name = typeof displayNames[username] === "object" ? (displayNames[username]?.displayName || username) : (displayNames[username] || username);
-              if (!cycleData?.cycleDay1) {
-                return (
-                  <tr key={username} style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
-                    <td style={{ padding: "6px 10px", color: COLORS.text }}>{name}</td>
-                    {days.map((d) => (
+              const isEditing = editingPlayer === username;
+              return (
+                <React.Fragment key={username}>
+                  <tr style={{ borderBottom: isEditing ? "none" : `1px solid ${COLORS.line}22` }}>
+                    <td style={{ padding: "6px 10px", minWidth: 120 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ color: COLORS.text, fontWeight: cycleData?.cycleDay1 ? 600 : 400 }}>{name}</span>
+                        <button onClick={() => isEditing ? setEditingPlayer(null) : openEdit(username)} style={{ padding: "2px 7px", borderRadius: 5, border: `1px solid ${isEditing ? COLORS.lime : COLORS.line}`, background: isEditing ? `${COLORS.lime}18` : "transparent", color: isEditing ? COLORS.lime : COLORS.text, fontSize: 9, cursor: "pointer", flexShrink: 0 }}>
+                          {isEditing ? "✕" : "✎"}
+                        </button>
+                      </div>
+                    </td>
+                    {cycleData?.cycleDay1 ? days.map((d) => {
+                      const info = getCycleWeek(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
+                      if (!info) return <td key={d} style={{ padding: "6px 6px", textAlign: "center", color: COLORS.text, opacity: 0.3, fontSize: 10 }}>–</td>;
+                      const w = info.week;
+                      const relaxin = isCycleRelaxin(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
+                      return (
+                        <td key={d} style={{ padding: "4px 4px", textAlign: "center" }}>
+                          <div style={{ background: w.bg, border: `1px solid ${w.color}55`, borderRadius: 6, padding: "3px 2px" }}>
+                            <div style={{ fontSize: 13, lineHeight: 1.2 }}>{w.emoji}{relaxin ? "⚡" : ""}</div>
+                            <div style={{ fontSize: 9, color: w.color, fontWeight: 700 }}>D{info.dayInCycle}</div>
+                          </div>
+                        </td>
+                      );
+                    }) : days.map((d) => (
                       <td key={d} style={{ padding: "6px 6px", textAlign: "center", color: COLORS.text, opacity: 0.3, fontSize: 10 }}>–</td>
                     ))}
                   </tr>
-                );
-              }
-              return (
-                <tr key={username} style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
-                  <td style={{ padding: "6px 10px", color: COLORS.text, fontWeight: 600 }}>{name}</td>
-                  {days.map((d) => {
-                    const info = getCycleWeek(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
-                    if (!info) return <td key={d} style={{ padding: "6px 6px", textAlign: "center" }}>–</td>;
-                    const w = info.week;
-                    const relaxin = isCycleRelaxin(cycleData.cycleDay1, d, cycleData.cycleLength || 28);
-                    return (
-                      <td key={d} style={{ padding: "4px 4px", textAlign: "center" }}>
-                        <div style={{ background: w.bg, border: `1px solid ${w.color}55`, borderRadius: 6, padding: "3px 2px" }}>
-                          <div style={{ fontSize: 13, lineHeight: 1.2 }}>{w.emoji}{relaxin ? "⚡" : ""}</div>
-                          <div style={{ fontSize: 9, color: w.color, fontWeight: 700 }}>D{info.dayInCycle}</div>
+                  {isEditing && (
+                    <tr style={{ borderBottom: `1px solid ${COLORS.line}22` }}>
+                      <td colSpan={8} style={{ padding: "8px 10px" }}>
+                        <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap", background: COLORS.panelRaised, borderRadius: 8, padding: "10px 12px" }}>
+                          <div>
+                            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Día 1 del último sangrado</div>
+                            <input type="date" value={editDay1} onChange={(e) => setEditDay1(e.target.value)} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${COLORS.line}`, background: "#1c2128", color: COLORS.text, fontSize: 12, outline: "none" }} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Duración ciclo (días)</div>
+                            <input type="number" min={21} max={35} value={editLength} onChange={(e) => setEditLength(e.target.value)} style={{ width: 70, padding: "6px 10px", borderRadius: 7, border: `1px solid ${COLORS.line}`, background: "#1c2128", color: COLORS.text, fontSize: 12, outline: "none" }} />
+                          </div>
+                          <button onClick={handleSaveCycle} disabled={!editDay1 || saving} style={{ padding: "6px 16px", borderRadius: 7, border: "none", background: editDay1 ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: editDay1 ? "pointer" : "default" }}>
+                            {saving ? "..." : "Guardar"}
+                          </button>
+                          {cycleData?.cycleDay1 && (
+                            <button onClick={async () => {
+                              setSaving(true);
+                              try {
+                                const newCycles = setPlayerCycle(localTeam, username, "", 28);
+                                const updated = { ...localTeam, playerCycles: { ...newCycles, [username]: null } };
+                                await saveTeam(updated);
+                                setLocalTeam(updated);
+                                if (onTeamUpdate) onTeamUpdate(updated);
+                                setEditingPlayer(null);
+                              } finally { setSaving(false); }
+                            }} style={{ padding: "6px 12px", borderRadius: 7, border: `1px solid #ef4444`, background: "transparent", color: "#ef4444", fontSize: 12, cursor: "pointer" }}>
+                              Borrar
+                            </button>
+                          )}
                         </div>
                       </td>
-                    );
-                  })}
-                </tr>
+                    </tr>
+                  )}
+                </React.Fragment>
               );
             })}
           </tbody>
         </table>
-        {roster.filter((u) => getPlayerCycle(team, u)?.cycleDay1).length === 0 && (
+        {roster.filter((u) => getPlayerCycle(localTeam, u)?.cycleDay1).length === 0 && !editingPlayer && (
           <div style={{ color: COLORS.text, fontSize: 13, textAlign: "center", padding: "2rem 0", opacity: 0.6 }}>
-            Ninguna jugadora tiene el día 1 del ciclo configurado.<br />Edítalo en la ficha individual (pestaña Físico).
+            Ninguna jugadora tiene el día 1 del ciclo configurado.<br />Pulsa ✎ para editar.
           </div>
         )}
       </div>
@@ -1219,6 +1285,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           displayNames={displayNames}
           onPrev={() => setWeekMonday(addDays(weekMonday, -7))}
           onNext={() => setWeekMonday(addDays(weekMonday, 7))}
+          onTeamUpdate={() => {}}
         />
       )}
 
