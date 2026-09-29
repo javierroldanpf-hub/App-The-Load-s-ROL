@@ -1252,6 +1252,37 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
   const [savingPct, setSavingPct] = useState(false);
   const [savedDm, setSavedDm] = useState(false);
   const [savedPct, setSavedPct] = useState(false);
+  const [copyTpl, setCopyTpl] = useState(null); // template being copied
+  const [copyTplTeams, setCopyTplTeams] = useState([]);
+  const [copyTplTarget, setCopyTplTarget] = useState(null);
+  const [copyTplLoading, setCopyTplLoading] = useState(false);
+  const [copyTplDone, setCopyTplDone] = useState(false);
+
+  useEffect(() => {
+    if (!copyTpl) return;
+    getTeamsByCoach(team.coachUsername).then((all) => {
+      setCopyTplTeams(all.filter((t) => t.teamId !== team.teamId));
+      setCopyTplTarget(null);
+      setCopyTplDone(false);
+    });
+  }, [copyTpl, team.coachUsername, team.teamId]);
+
+  const handleCopyTpl = async () => {
+    if (!copyTplTarget || !copyTpl) return;
+    setCopyTplLoading(true);
+    try {
+      const targetTeams = await getTeamsByCoach(team.coachUsername);
+      const target = targetTeams.find((t) => t.teamId === copyTplTarget);
+      if (!target) throw new Error("Equipo no encontrado");
+      const existing = target.customMesoTemplates || [];
+      const newId = Date.now().toString(36);
+      const newTpl = { ...copyTpl, id: newId };
+      await saveTeam({ ...target, customMesoTemplates: [...existing, newTpl] });
+      setCopyTplDone(true);
+    } catch (e) {
+      alert("Error al copiar: " + (e?.message || e));
+    } finally { setCopyTplLoading(false); }
+  };
 
   const openDayMinutes = () => {
     if (!showDayMinutes) {
@@ -1395,6 +1426,7 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
               {t.weeks} semanas · {t.types?.map((tp) => tp.label).join(" / ")}
             </div>
           </div>
+          <button onClick={() => setCopyTpl(t)} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11 }}>⧉ Copiar</button>
           <button onClick={() => setEditing(t)} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11 }}>Editar</button>
           <button onClick={() => handleDelete(t.id)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11 }}>Eliminar</button>
         </div>
@@ -1412,6 +1444,44 @@ function MesoTemplatesSection({ team, save, showBuiltIn = true }) {
         <button onClick={() => setEditing("new")} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 13, cursor: "pointer", marginTop: 4 }}>
           + Nueva plantilla de mesociclo
         </button>
+      )}
+
+      {copyTpl && (
+        <div style={{ position: "fixed", inset: 0, background: "#0009", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "24px 22px", width: "100%", maxWidth: 380 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 17, color: COLORS.text, marginBottom: 4 }}>Copiar plantilla</div>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 16 }}>«{copyTpl.name}» · {copyTpl.weeks} semanas</div>
+            {copyTplDone ? (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
+                <div style={{ color: COLORS.lime, fontWeight: 700, fontSize: 14 }}>Plantilla copiada</div>
+                <button onClick={() => setCopyTpl(null)} style={{ marginTop: 16, padding: "9px 24px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, cursor: "pointer" }}>Cerrar</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 8, fontWeight: 600 }}>Selecciona el equipo/grupo/atleta destino:</div>
+                {copyTplTeams.length === 0 ? (
+                  <div style={{ fontSize: 12, color: COLORS.text, padding: "12px 0" }}>No tienes otros equipos.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18, maxHeight: 260, overflowY: "auto" }}>
+                    {copyTplTeams.map((t) => (
+                      <button key={t.teamId} onClick={() => setCopyTplTarget(t.teamId)} style={{ padding: "10px 14px", borderRadius: 9, border: `2px solid ${copyTplTarget === t.teamId ? COLORS.lime : COLORS.line}`, background: copyTplTarget === t.teamId ? `${COLORS.lime}18` : COLORS.panelRaised, color: COLORS.text, fontWeight: copyTplTarget === t.teamId ? 700 : 400, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                        {t.name}
+                        <span style={{ fontSize: 10, color: COLORS.text, marginLeft: 6, opacity: 0.6 }}>{t.kind || "equipo"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setCopyTpl(null)} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+                  <button onClick={handleCopyTpl} disabled={!copyTplTarget || copyTplLoading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: copyTplTarget ? COLORS.lime : COLORS.line, color: "#14171c", fontWeight: 700, cursor: copyTplTarget ? "pointer" : "default" }}>
+                    {copyTplLoading ? "Copiando..." : "Copiar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
