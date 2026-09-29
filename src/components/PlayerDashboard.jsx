@@ -609,6 +609,9 @@ function PlayerCalendar({ sessions, team, user, rpe = [], refreshData, profile =
           </div>
           <div style={{ fontSize: 11, color: ownCycleInfo.week.color, fontWeight: 600, marginBottom: 3 }}>{ownCycleInfo.week.fase}</div>
           <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5 }}>{ownCycleInfo.week.metabolismo}</div>
+          {ownCycleInfo.week.descripcion && (
+            <div style={{ fontSize: 12, color: COLORS.text, lineHeight: 1.6, borderTop: `1px solid ${ownCycleInfo.week.color}22`, paddingTop: 8, marginTop: 6 }}>{ownCycleInfo.week.descripcion}</div>
+          )}
           {isCycleRelaxin(cycleData.cycleDay1, today, cycleData.cycleLength || 28) && (
             <div style={{ marginTop: 8, fontSize: 11, color: "#fde68a", fontWeight: 600 }}>⚡ Pico de relaxina — precaución con estiramientos y movilidad</div>
           )}

@@ -185,24 +185,25 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
       {showInfo && (
         <div style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 8 }}>
           {CYCLE_WEEKS.map((w) => (
-            <div key={w.label} style={{ background: w.bg, border: `1px solid ${w.color}44`, borderRadius: 10, padding: "10px 14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 18 }}>{w.emoji}</span>
-                <div>
-                  <span style={{ color: w.color, fontWeight: 700, fontSize: 13 }}>{w.label}</span>
-                  <span style={{ fontSize: 11, color: COLORS.text, marginLeft: 8, textTransform: "capitalize", opacity: 0.7 }}>· {w.type}</span>
+            <div key={w.label} style={{ background: w.bg, border: `1px solid ${w.color}44`, borderRadius: 12, padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 20 }}>{w.emoji}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 15, color: w.color }}>{w.label}</div>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: w.color, background: `${w.color}22`, borderRadius: 4, padding: "2px 7px", display: "inline-block", marginTop: 2, textTransform: "capitalize" }}>{w.type}</span>
                 </div>
               </div>
-              <div style={{ fontSize: 11, color: w.color, fontWeight: 600, marginBottom: 2 }}>{w.fase}</div>
-              <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5 }}>{w.metabolismo}</div>
+              <div style={{ fontSize: 11, color: w.color, fontWeight: 600, marginBottom: 4 }}>{w.fase}</div>
+              <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5, marginBottom: 6 }}>{w.metabolismo}</div>
+              {w.descripcion && <div style={{ fontSize: 12, color: COLORS.text, lineHeight: 1.6, borderTop: `1px solid ${w.color}22`, paddingTop: 8, marginTop: 4 }}>{w.descripcion}</div>}
             </div>
           ))}
-          <div style={{ background: "#422006", border: "1px solid #fde68a44", borderRadius: 10, padding: "10px 14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 18 }}>⚡</span>
-              <span style={{ color: "#fde68a", fontWeight: 700, fontSize: 13 }}>Pico de Relaxina · D20–22</span>
+          <div style={{ background: "#422006", border: "1px solid #fde68a44", borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 20 }}>⚡</span>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 15, color: "#fde68a" }}>Pico de Relaxina · D20–22</div>
             </div>
-            <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5 }}>Precaución con estiramientos y trabajo de movilidad. Mayor laxitud articular.</div>
+            <div style={{ fontSize: 12, color: COLORS.text, lineHeight: 1.6 }}>Precaución con estiramientos y trabajo de movilidad. La relaxina provoca mayor laxitud articular, aumentando el riesgo de lesión en gestos que requieran estabilidad pasiva. Reducir o evitar trabajos de amplitud máxima y pliometría de alto impacto.</div>
           </div>
         </div>
       )}

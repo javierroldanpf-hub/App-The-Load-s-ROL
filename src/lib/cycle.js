@@ -3,10 +3,30 @@
 // Cycle weeks — internal day 1 = start of Semana Previa al Sangrado.
 // The coach inputs the first bleeding day, which maps to internal day 8.
 export const CYCLE_WEEKS = [
-  { emoji: "🌕",   label: "Semana Previa al Sangrado", type: "carga",      color: "#fbbf24", bg: "#422006", fase: "Fase Lútea Tardía",          metabolismo: "Predominancia de Progesterona (Metabolismo de Ácidos Grasos)" },
-  { emoji: "🔴",   label: "Semana de Sangrado",         type: "carga",      color: "#ef4444", bg: "#450a0a", fase: "Fase Folicular Temprana",     metabolismo: "Bajada de Progesterona y Subida del Estrógeno (No hay predominancia de ninguna vía metabólica)" },
-  { emoji: "🔥💪", label: "Semana Post Sangrado",        type: "sobrecarga", color: "#f97316", bg: "#431407", fase: "Fase Folicular Tardía",       metabolismo: "Predominancia del Estrógeno (Síntesis y Almacenamiento de Glucógeno)" },
-  { emoji: "💙",   label: "Semana 2ª Post Sangrado",    type: "descarga",   color: "#60a5fa", bg: "#172554", fase: "Fase Lútea Temprana",         metabolismo: "Bajada del Estrógeno y Subida de la Progesterona (Aumento del Metabolismo de Ácidos Grasos)" },
+  {
+    emoji: "🌕", label: "Semana Previa al Sangrado", type: "carga", color: "#fbbf24", bg: "#422006",
+    fase: "Fase Lútea Tardía",
+    metabolismo: "Predominancia de Progesterona (Metabolismo de Ácidos Grasos)",
+    descripcion: "El cuerpo utiliza preferentemente las grasas como fuente de energía. Buena tolerancia al entrenamiento de fuerza e intensidad moderada-alta. Evitar volúmenes excesivos en los últimos días antes del sangrado.",
+  },
+  {
+    emoji: "🔴", label: "Semana de Sangrado", type: "carga", color: "#ef4444", bg: "#450a0a",
+    fase: "Fase Folicular Temprana",
+    metabolismo: "Bajada de Progesterona y Subida del Estrógeno (No hay predominancia de ninguna vía metabólica)",
+    descripcion: "Periodo de mayor variabilidad individual. Algunas atletas toleran bien el entrenamiento, otras necesitan reducción de carga. Priorizar la escucha activa, el trabajo técnico y la recuperación. Evitar esfuerzos máximos los primeros días.",
+  },
+  {
+    emoji: "🔥💪", label: "Semana Post Sangrado", type: "sobrecarga", color: "#f97316", bg: "#431407",
+    fase: "Fase Folicular Tardía",
+    metabolismo: "Predominancia del Estrógeno (Síntesis y Almacenamiento de Glucógeno)",
+    descripcion: "Momento óptimo para cargas altas de volumen e intensidad. Mayor capacidad de síntesis de glucógeno y recuperación muscular. Ventana ideal para trabajos de potencia, velocidad y alta exigencia neuromuscular.",
+  },
+  {
+    emoji: "💙", label: "Semana 2ª Post Sangrado", type: "descarga", color: "#60a5fa", bg: "#172554",
+    fase: "Fase Lútea Temprana",
+    metabolismo: "Bajada del Estrógeno y Subida de la Progesterona (Aumento del Metabolismo de Ácidos Grasos)",
+    descripcion: "El metabolismo vuelve a orientarse hacia las grasas. Puede aumentar la temperatura corporal basal y la percepción del esfuerzo. Semana de descarga y recuperación activa. Buena para trabajo técnico y volumen bajo.",
+  },
 ];
 
 export const LOAD_COLORS = { carga: "#f97316", sobrecarga: "#ef4444", descarga: "#60a5fa" };
