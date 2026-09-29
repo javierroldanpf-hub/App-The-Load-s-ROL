@@ -163,17 +163,49 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
 }
 
 function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev, onNext }) {
+  const [showInfo, setShowInfo] = React.useState(false);
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekMonday, i));
   const DAYS_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-  const roster = (team.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
+  const allRoster = (team.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);
+  // For mixed groups, only show female athletes
+  const roster = team.sexo === "femenino"
+    ? allRoster
+    : allRoster.filter((u) => playerProfiles[u]?.sexo === "femenino");
 
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <button onClick={onPrev} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>←</button>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: "#c084fc" }}>Ciclo menstrual · semana</div>
-        <button onClick={onNext} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>→</button>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={() => setShowInfo((v) => !v)} title="Info ciclo" style={{ background: showInfo ? "#2e1a47" : COLORS.panel, border: `1px solid ${showInfo ? "#c084fc" : COLORS.line}`, color: showInfo ? "#c084fc" : COLORS.text, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>ℹ Info</button>
+          <button onClick={onNext} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>→</button>
+        </div>
       </div>
+      {showInfo && (
+        <div style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+          {CYCLE_WEEKS.map((w) => (
+            <div key={w.label} style={{ background: w.bg, border: `1px solid ${w.color}44`, borderRadius: 10, padding: "10px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 18 }}>{w.emoji}</span>
+                <div>
+                  <span style={{ color: w.color, fontWeight: 700, fontSize: 13 }}>{w.label}</span>
+                  <span style={{ fontSize: 11, color: COLORS.text, marginLeft: 8, textTransform: "capitalize", opacity: 0.7 }}>· {w.type}</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: w.color, fontWeight: 600, marginBottom: 2 }}>{w.fase}</div>
+              <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5 }}>{w.metabolismo}</div>
+            </div>
+          ))}
+          <div style={{ background: "#422006", border: "1px solid #fde68a44", borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 18 }}>⚡</span>
+              <span style={{ color: "#fde68a", fontWeight: 700, fontSize: 13 }}>Pico de Relaxina · D20–22</span>
+            </div>
+            <div style={{ fontSize: 11, color: COLORS.text, lineHeight: 1.5 }}>Precaución con estiramientos y trabajo de movilidad. Mayor laxitud articular.</div>
+          </div>
+        </div>
+      )}
       {/* Leyenda semanas */}
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         {CYCLE_WEEKS.map((w) => (
@@ -680,10 +712,16 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   useEffect(() => {
     if (!showCopyWeek && !copySessionDate) return;
     getTeamsByCoach(team.coachUsername).then((all) => {
-      setCopyTeams(all.filter((t) => t.teamId !== team.teamId));
+      // For session copy: include the current team at the top; for week copy: only other teams
+      if (copySessionDate) {
+        const others = all.filter((t) => t.teamId !== team.teamId);
+        setCopyTeams([{ ...team, _isCurrent: true }, ...others]);
+        setCopySessionTargetDate(copySessionDate);
+      } else {
+        setCopyTeams(all.filter((t) => t.teamId !== team.teamId));
+      }
       setCopyTarget(null);
       setCopyDone(false);
-      if (copySessionDate) setCopySessionTargetDate(copySessionDate);
     });
   }, [showCopyWeek, copySessionDate, team.coachUsername, team.teamId]);
 
@@ -1023,7 +1061,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
         <div style={{ flex: 1, display: "flex", gap: 6, background: COLORS.panelRaised, borderRadius: 10, padding: 4 }}>
-          {[{ id: "week", label: "Semanal" }, { id: "month", label: "Mensual" }, { id: "mesociclo", label: "Mesociclo" }, ...(team.sexo === "femenino" ? [{ id: "ciclo", label: "Ciclo" }] : [])].map((v) => (
+          {[{ id: "week", label: "Semanal" }, { id: "month", label: "Mensual" }, { id: "mesociclo", label: "Mesociclo" }, ...((team.sexo === "femenino" || Object.values(playerProfiles).some((p) => p?.sexo === "femenino")) ? [{ id: "ciclo", label: "Ciclo" }] : [])].map((v) => (
             <button key={v.id} onClick={() => setViewMode(v.id)} style={{
               flex: 1, padding: "6px 0", borderRadius: 7, border: "none", fontSize: 12, fontWeight: 600,
               background: viewMode === v.id ? COLORS.panel : "transparent",
@@ -1172,7 +1210,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
       ) : null}
 
       {/* ── Vista ciclo menstrual ────────────────────────────────────── */}
-      {viewMode === "ciclo" && team.sexo === "femenino" && (
+      {viewMode === "ciclo" && (team.sexo === "femenino" || Object.values(playerProfiles).some((p) => p?.sexo === "femenino")) && (
         <CycleWeekPanel
           team={team}
           weekMonday={weekMonday}
@@ -1303,7 +1341,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                     {copyTeams.map((t) => (
                       <button key={t.teamId} onClick={() => setCopyTarget(t.teamId)} style={{ padding: "10px 14px", borderRadius: 9, border: `2px solid ${copyTarget === t.teamId ? COLORS.lime : COLORS.line}`, background: copyTarget === t.teamId ? `${COLORS.lime}18` : COLORS.panelRaised, color: COLORS.text, fontWeight: copyTarget === t.teamId ? 700 : 400, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
                         {t.name}
-                        <span style={{ fontSize: 10, color: COLORS.text, marginLeft: 6, opacity: 0.6 }}>{t.kind || "equipo"}</span>
+                        <span style={{ fontSize: 10, color: t._isCurrent ? COLORS.lime : COLORS.text, marginLeft: 6, opacity: t._isCurrent ? 1 : 0.6 }}>{t._isCurrent ? "este equipo" : (t.kind || "equipo")}</span>
                       </button>
                     ))}
                   </div>

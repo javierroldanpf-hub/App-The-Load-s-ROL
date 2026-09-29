@@ -902,6 +902,8 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
   const [copyTarget, setCopyTarget] = useState(null);
   const [copyLoading, setCopyLoading] = useState(false);
   const [copyDone, setCopyDone] = useState(false);
+  const [showApplyTpl, setShowApplyTpl] = useState(false);
+  const [applyTplId, setApplyTplId] = useState(null);
 
   useEffect(() => {
     if (!showCopyMeso || !coachUsername) return;
@@ -925,6 +927,23 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
       setCopyLoading(false);
     }
   };
+  const handleApplyTemplate = async () => {
+    if (!applyTplId) return;
+    const tpl = customTemplates.find((t) => t.id === applyTplId);
+    if (!tpl) return;
+    setSaving(true);
+    try {
+      const weeks = meso.weeks.map((w, i) => ({ ...w, sjBaseMinutes: w.sjBaseMinutes ?? 100 }));
+      const updated = { ...meso, customTemplateId: tpl.id, isSituacionesJugadas: false, isMenstrual: false, weeks };
+      await saveMesocycle(updated);
+      onUpdate(updated);
+      setShowApplyTpl(false);
+      setApplyTplId(null);
+    } catch (e) {
+      alert("Error al aplicar plantilla: " + (e?.message || e));
+    } finally { setSaving(false); }
+  };
+
   const [sjEdits, setSjEdits] = useState({});
   const [mesoUnit, setMesoUnit] = useState(meso.unit || "min");
   const today = todayStr();
@@ -984,6 +1003,9 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
         </div>
         {isActive && <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.lime, background: "#1e3010", borderRadius: 6, padding: "3px 8px" }}>ACTIVO</span>}
         {coachUsername && <button onClick={() => setShowCopyMeso(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>⧉ Copiar</button>}
+        {!readOnly && !meso.customTemplateId && !meso.isSituacionesJugadas && customTemplates.some((t) => Number(t.weeks) === meso.weeks.length) && (
+          <button onClick={() => setShowApplyTpl(true)} style={{ background: COLORS.panelRaised, border: `1px solid #a78bfa`, color: "#a78bfa", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>▶ Plantilla</button>
+        )}
         {!readOnly && <button onClick={() => setEditingMeso(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>Editar</button>}
         {!readOnly && <button onClick={() => { if (confirm("¿Eliminar este mesociclo?")) onDelete(meso.id); }} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>Eliminar</button>}
       </div>
@@ -1339,6 +1361,30 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           onSave={(updated) => { onUpdate(updated); setEditingMeso(false); }}
           onClose={() => setEditingMeso(false)}
         />
+      )}
+
+      {showApplyTpl && (
+        <div style={{ position: "fixed", inset: 0, background: "#0009", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 14, padding: "24px 22px", width: "100%", maxWidth: 380 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 17, color: COLORS.text, marginBottom: 4 }}>Aplicar plantilla</div>
+            <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 16 }}>Selecciona la plantilla a ejecutar sobre «{meso.name}» ({meso.weeks.length} semanas):</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+              {customTemplates.filter((t) => Number(t.weeks) === meso.weeks.length).map((t) => (
+                <button key={t.id} onClick={() => setApplyTplId(t.id)} style={{ padding: "10px 14px", borderRadius: 9, border: `2px solid ${applyTplId === t.id ? "#a78bfa" : COLORS.line}`, background: applyTplId === t.id ? "#2e1a4722" : COLORS.panelRaised, color: COLORS.text, fontWeight: applyTplId === t.id ? 700 : 400, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                  {t.name}
+                  <span style={{ fontSize: 10, color: COLORS.text, marginLeft: 6, opacity: 0.6 }}>{t.weeks} semanas</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, color: "#fde68a", marginBottom: 14 }}>⚠ Se aplicará la distribución de la plantilla. Los datos de volumen/días actuales se mantendrán.</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => { setShowApplyTpl(false); setApplyTplId(null); }} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+              <button onClick={handleApplyTemplate} disabled={!applyTplId || saving} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: applyTplId ? "#a78bfa" : COLORS.line, color: "#14171c", fontWeight: 700, cursor: applyTplId ? "pointer" : "default" }}>
+                {saving ? "Aplicando..." : "Aplicar"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showCopyMeso && (
