@@ -163,7 +163,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
 }
 
 function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev, onNext }) {
-  const [showInfo, setShowInfo] = React.useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekMonday, i));
   const DAYS_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
   const allRoster = (team.roster || []).map((u) => typeof u === "string" ? u : u.username).filter(Boolean);

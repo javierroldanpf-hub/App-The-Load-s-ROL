@@ -1182,7 +1182,10 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
 
           if (activeTpl) {
             const tplColor = activeTpl.types?.[0]?.color || COLORS.lime;
-            const totalMin = Math.round((Number(w.sjBaseMinutes ?? 100)) * (w.volume ?? 100) / 100);
+            const tplEdit = sjEdits[w.weekStart] || {};
+            const tplBaseMin = Number(tplEdit.baseMin ?? w.sjBaseMinutes ?? 100);
+            const tplVol = Number(tplEdit.vol ?? w.volume ?? 100);
+            const totalMin = Math.round(tplBaseMin * tplVol / 100);
             const tplUnitShort = MESO_UNITS.find((u) => u.id === mesoUnit)?.short || "min";
             return (
               <div key={w.weekStart} style={{ background: "#0c1520", border: `1px solid ${isCurrent ? tplColor : COLORS.line}`, borderRadius: 12, padding: "12px 14px" }}>
@@ -1204,15 +1207,26 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Volumen semana</div>
-                    <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: COLORS.lime }}>{w.volume ?? 100}%</div>
+                    <input type="number" inputMode="numeric" min={0} max={200} value={sjEdits[w.weekStart]?.vol ?? String(w.volume ?? 100)}
+                      onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { ...prev[w.weekStart], vol: e.target.value } }))}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.lime, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>Intensidad</div>
+                    <input type="number" inputMode="numeric" min={0} max={200} value={sjEdits[w.weekStart]?.intensity ?? String(w.intensity ?? 70)}
+                      onChange={(e) => setSjEdits((prev) => ({ ...prev, [w.weekStart]: { ...prev[w.weekStart], intensity: e.target.value } }))}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: "#ff9f40", fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                    />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 10, color: COLORS.text, marginBottom: 4 }}>{tplUnitShort}. totales</div>
                     <div style={{ padding: "7px 10px", borderRadius: 8, background: "#1c2128", border: `1px solid ${COLORS.line}`, fontSize: 13, color: tplColor, fontWeight: 700 }}>{totalMin} {tplUnitShort}</div>
                   </div>
-                  {!readOnly && sjEdits[w.weekStart]?.baseMin !== undefined && (
+                  {!readOnly && sjEdits[w.weekStart] !== undefined && (
                     <button onClick={async () => {
-                      const weeks = meso.weeks.map((ww) => ww.weekStart === w.weekStart ? { ...ww, sjBaseMinutes: Number(sjEdits[w.weekStart].baseMin) || 100 } : ww);
+                      const edit = sjEdits[w.weekStart] || {};
+                      const weeks = meso.weeks.map((ww) => ww.weekStart === w.weekStart ? { ...ww, sjBaseMinutes: Number(edit.baseMin ?? ww.sjBaseMinutes) || 100, volume: Number(edit.vol ?? ww.volume) || 100, intensity: Number(edit.intensity ?? ww.intensity) || 70 } : ww);
                       setSaving(true);
                       try { await saveMesocycle({ ...meso, weeks }); onUpdate({ ...meso, weeks }); } finally { setSaving(false); setSjEdits((p) => { const n = { ...p }; delete n[w.weekStart]; return n; }); }
                     }} style={{ padding: "7px 12px", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
