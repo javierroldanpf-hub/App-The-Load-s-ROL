@@ -813,7 +813,13 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
     try {
       const s = sessions.find((s) => s.date === copySessionDate);
       if (s) await saveSession({ ...s, teamId: copyTarget, date: copySessionTargetDate, individualSessions: (s.individualSessions || []).map((ind) => ({ ...ind, players: [] })) });
-      setCopyDone(true);
+      if (copyTarget === team.teamId) {
+        await onSessionsChange();
+        setWeekMonday(mondayOf(copySessionTargetDate));
+        setCopySessionDate(null);
+      } else {
+        setCopyDone(true);
+      }
     } catch (e) {
       alert("Error al copiar: " + (e?.message || e));
     } finally {

@@ -188,7 +188,7 @@ function SentAlertsList({ team }) {
 
 // ── Main tab ──────────────────────────────────────────────────────────────────
 export default function MessagesTab({ team, wellness, rpe, onDataRefresh, readOnly = false }) {
-  const [filter, setFilter] = useState(readOnly ? "avisos" : "avisos");
+  const [filter, setFilter] = useState("comentarios_unread");
   const [activeComment, setActiveComment] = useState(null);
   const [localRead, setLocalRead] = useState(new Set());
   const [sentKey, setSentKey] = useState(0);
