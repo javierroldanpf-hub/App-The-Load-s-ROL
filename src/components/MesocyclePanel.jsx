@@ -709,7 +709,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
 }
 
 /* ── Editor de mesociclo (nombre + fechas) ───────────────────────────── */
-function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, showMenstrual = false, showSJ = false }) {
+function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, showMenstrual = false, showSJ = false, customTemplates = [] }) {
   const [name, setName]             = useState(meso.name || "");
   const [startDate, setStart]       = useState(meso.startDate);
   const [endDate, setEnd]           = useState(meso.endDate);
@@ -717,6 +717,7 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
   const [contenidos, setContenidos] = useState(meso.contenidos || "");
   const [isMenstrual, setIsMenstrual] = useState(meso.isMenstrual || false);
   const [isSJ, setIsSJ]             = useState(meso.isSituacionesJugadas || false);
+  const [activeCustomTpl, setActiveCustomTpl] = useState(meso.customTemplateId || null);
   const [menstrualPlayers, setMenstrualPlayers] = useState(meso.menstrualPlayers || []);
   const [saving, setSaving]         = useState(false);
 
@@ -744,7 +745,8 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
         }
         return existing ? { ...w, ...existing } : { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
       });
-      const updated = { ...meso, name, startDate, endDate, weeks: newWeeks, color, contenidos, isMenstrual: isSJ ? false : isMenstrual, menstrualPlayers: isSJ ? [] : menstrualPlayers, isSituacionesJugadas: isSJ };
+      const activeTpl = activeCustomTpl ? customTemplates.find((t) => t.id === activeCustomTpl) : null;
+      const updated = { ...meso, name, startDate, endDate, weeks: newWeeks.map((w) => activeTpl ? { ...w, sjBaseMinutes: w.sjBaseMinutes ?? 100 } : w), color, contenidos, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null };
       await saveMesocycle(updated);
       onSave(updated);
     } catch (err) {
@@ -807,6 +809,33 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
             )}
           </div>
         )}
+
+        {/* Custom template toggles */}
+        {customTemplates.length > 0 && customTemplates.map((tpl) => {
+          const tplColor = tpl.types?.[0]?.color || "#a78bfa";
+          const isActive = activeCustomTpl === tpl.id;
+          return (
+            <div key={tpl.id} style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>{tpl.emoji || "📋"} {tpl.name}</div>
+                  <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>{tpl.weeks} semanas · {(tpl.types || []).map((t) => t.label).join(" / ")}</div>
+                </div>
+                <button onClick={() => { setActiveCustomTpl(isActive ? null : tpl.id); if (!isActive) { setIsSJ(false); setIsMenstrual(false); } }} style={{
+                  width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+                  background: isActive ? tplColor : COLORS.line, transition: "background 0.2s",
+                }}>
+                  <span style={{ position: "absolute", top: 3, left: isActive ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+                </button>
+              </div>
+              {isActive && (
+                <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, background: `${tplColor}18`, border: `1px solid ${tplColor}44` }}>
+                  <div style={{ fontSize: 11, color: tplColor }}>Al guardar, se aplicará la distribución de «{tpl.name}» al mesociclo.</div>
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {/* Ciclo menstrual toggle */}
         {showMenstrual && (
@@ -1372,6 +1401,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
           displayNames={displayNames}
           showSJ={showSJ}
           showMenstrual={showMenstrual}
+          customTemplates={customTemplates}
           onSave={(updated) => { onUpdate(updated); setEditingMeso(false); }}
           onClose={() => setEditingMeso(false)}
         />
