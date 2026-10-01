@@ -274,6 +274,7 @@ export async function loadTeamWellness(teamId) {
       .from("wellness")
       .select("*")
       .eq("team_id", teamId)
+      .order("date", { ascending: false })
       .limit(5000);
     if (error || !data) return [];
     return data.map(dbWellnessToApp);
@@ -355,6 +356,7 @@ export async function loadTeamRpe(teamId) {
       .from("rpe_entries")
       .select("*")
       .eq("team_id", teamId)
+      .order("date", { ascending: false })
       .limit(5000);
     if (error || !data) return [];
     return data.map(dbRpeToApp);
