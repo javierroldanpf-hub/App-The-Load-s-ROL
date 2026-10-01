@@ -264,6 +264,7 @@ export async function saveWellness(entry) {
   const { error } = await sb
     .from("wellness")
     .upsert(record, { onConflict: "team_id,username,date" });
+  console.log("[saveWellness] error:", error, "record.team_id:", record.team_id);
   if (error) throw error;
 }
 
@@ -274,9 +275,10 @@ export async function loadTeamWellness(teamId) {
       .from("wellness")
       .select("*")
       .eq("team_id", teamId);
+    console.log("[loadTeamWellness] teamId:", teamId, "rows:", data?.length, "error:", error);
     if (error || !data) return [];
     return data.map(dbWellnessToApp);
-  } catch { return []; }
+  } catch (e) { console.log("[loadTeamWellness] catch:", e); return []; }
 }
 
 export async function markWellnessCommentRead(entry) {
