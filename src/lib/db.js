@@ -261,13 +261,10 @@ export async function saveWellness(entry) {
     if (error) throw error;
     return;
   }
-  const { data, error } = await sb
+  const { error } = await sb
     .from("wellness")
-    .upsert(record, { onConflict: "team_id,username,date" })
-    .select();
-  console.log("[saveWellness] record:", record, "data:", data, "error:", error);
+    .upsert(record, { onConflict: "team_id,username,date" });
   if (error) throw error;
-  if (!data || data.length === 0) throw new Error("Sin filas insertadas — posible problema de permisos en Supabase (RLS/GRANT)");
 }
 
 export async function loadTeamWellness(teamId) {
