@@ -37,7 +37,7 @@ export default function WellnessForm({ user, existing, refreshData }) {
       id: existing ? existing.id : undefined, ts: Date.now(),
     };
     try { await saveWellness(entry); await refreshData(); setDirty(false); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); alert("Error al guardar el wellness. Comprueba tu conexión e inténtalo de nuevo.\n" + (e?.message || e)); }
     finally { setSaving(false); }
   };
 

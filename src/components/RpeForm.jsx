@@ -38,7 +38,7 @@ export default function RpeForm({ user, session, existing, refreshData, dateOver
       id: existing ? existing.id : undefined, ts: Date.now(),
     };
     try { await saveRpe(entry); await refreshData(); setDirty(false); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); alert("Error al guardar el RPE. Comprueba tu conexión e inténtalo de nuevo.\n" + (e?.message || e)); }
     finally { setSaving(false); }
   };
 
