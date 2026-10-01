@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { COLORS, TEAM_KINDS, INTENSITY_LEVELS, WEEKDAY_LABELS } from "@/lib/constants";
 import { todayStr, addDays, mondayOf, weekDates, weekNumberFrom, fmtDateLong, fmtDateShort, weekdayLabel, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
-import { getTeam, getPlayerProfile, loadTeamWellness, loadTeamRpe, loadTeamSessions, getReminderSettings, saveReminderSettings, loadMesocycles, getPlayerAlertsForPlayer, dismissPlayerAlert } from "@/lib/db";
+import { getTeam, getPlayerProfile, loadPlayerWellness, loadPlayerRpe, loadTeamSessions, getReminderSettings, saveReminderSettings, loadMesocycles, getPlayerAlertsForPlayer, dismissPlayerAlert } from "@/lib/db";
 import TopBar from "./TopBar";
 import Avatar from "./Avatar";
 import WellnessForm from "./WellnessForm";
@@ -46,7 +46,7 @@ export default function PlayerDashboard({ user, onLogout }) {
   const refreshData = useCallback(async () => {
     const [t, p, w, r, s] = await Promise.all([
       getTeam(teamId), getPlayerProfile(teamId, user.username),
-      loadTeamWellness(teamId), loadTeamRpe(teamId), loadTeamSessions(teamId),
+      loadPlayerWellness(teamId, user.username), loadPlayerRpe(teamId, user.username), loadTeamSessions(teamId),
     ]);
     setTeam(t);
     setProfile(p);

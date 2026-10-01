@@ -264,7 +264,6 @@ export async function saveWellness(entry) {
   const { error } = await sb
     .from("wellness")
     .upsert(record, { onConflict: "team_id,username,date" });
-  console.log("[saveWellness] error:", error, "record.team_id:", record.team_id);
   if (error) throw error;
 }
 
@@ -274,11 +273,26 @@ export async function loadTeamWellness(teamId) {
     const { data, error } = await sb
       .from("wellness")
       .select("*")
-      .eq("team_id", teamId);
-    console.log("[loadTeamWellness] teamId:", teamId, "rows:", data?.length, "error:", error);
+      .eq("team_id", teamId)
+      .limit(5000);
     if (error || !data) return [];
     return data.map(dbWellnessToApp);
-  } catch (e) { console.log("[loadTeamWellness] catch:", e); return []; }
+  } catch { return []; }
+}
+
+export async function loadPlayerWellness(teamId, username) {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from("wellness")
+      .select("*")
+      .eq("team_id", teamId)
+      .eq("username", username)
+      .order("date", { ascending: false })
+      .limit(120);
+    if (error || !data) return [];
+    return data.map(dbWellnessToApp);
+  } catch { return []; }
 }
 
 export async function markWellnessCommentRead(entry) {
@@ -340,7 +354,23 @@ export async function loadTeamRpe(teamId) {
     const { data, error } = await sb
       .from("rpe_entries")
       .select("*")
-      .eq("team_id", teamId);
+      .eq("team_id", teamId)
+      .limit(5000);
+    if (error || !data) return [];
+    return data.map(dbRpeToApp);
+  } catch { return []; }
+}
+
+export async function loadPlayerRpe(teamId, username) {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from("rpe_entries")
+      .select("*")
+      .eq("team_id", teamId)
+      .eq("username", username)
+      .order("date", { ascending: false })
+      .limit(120);
     if (error || !data) return [];
     return data.map(dbRpeToApp);
   } catch { return []; }
