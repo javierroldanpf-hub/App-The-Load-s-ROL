@@ -56,6 +56,14 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
   const addTask = (bi) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: [...(b.tasks || []), { id: Date.now(), name: "", workTime: "", restTime: "", space: "", relativeArea: "", imageBase64: "" }] } : b));
   const updateTask = (bi, ti, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: (b.tasks || []).map((t, tidx) => tidx === ti ? { ...t, [field]: val } : t) } : b));
   const removeTask = (bi, ti) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: (b.tasks || []).filter((_, tidx) => tidx !== ti) } : b));
+  const moveTask = (bi, ti, dir) => setBlocks((prev) => prev.map((b, idx) => {
+    if (idx !== bi) return b;
+    const tasks = [...(b.tasks || [])];
+    const j = ti + dir;
+    if (j < 0 || j >= tasks.length) return b;
+    [tasks[ti], tasks[j]] = [tasks[j], tasks[ti]];
+    return { ...b, tasks };
+  }));
 
   const handleTaskImage = (bi, ti, e) => {
     const file = e.target.files?.[0];
@@ -68,6 +76,14 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
   const addExercise = (bi) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, exercises: [...(b.exercises || []), { id: Date.now(), name: "", series: "", repeticiones: "", intensidad: "", recuperacion: "", videoUrl: "" }] } : b));
   const updateExercise = (bi, ei, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, exercises: (b.exercises || []).map((e, eidx) => eidx === ei ? { ...e, [field]: val } : e) } : b));
   const removeExercise = (bi, ei) => setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, exercises: (b.exercises || []).filter((_, eidx) => eidx !== ei) } : b));
+  const moveExercise = (bi, ei, dir) => setBlocks((prev) => prev.map((b, idx) => {
+    if (idx !== bi) return b;
+    const exercises = [...(b.exercises || [])];
+    const j = ei + dir;
+    if (j < 0 || j >= exercises.length) return b;
+    [exercises[ei], exercises[j]] = [exercises[j], exercises[ei]];
+    return { ...b, exercises };
+  }));
 
   return (
     <div style={{ marginBottom: 14 }}>
@@ -101,6 +117,8 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                           <span style={{ background: COLORS.lime, color: "#14171c", borderRadius: 5, padding: "2px 7px", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>T{ti + 1}</span>
                           <input value={t.name} onChange={(e) => updateTask(i, ti, "name", e.target.value)} placeholder="Nombre de la tarea..." style={{ ...inputStyle, flex: 1, padding: "5px 8px", fontSize: 12 }} />
+                          <button onClick={() => moveTask(i, ti, -1)} disabled={ti === 0} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ti === 0 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ti === 0 ? 0.3 : 1 }}>↑</button>
+                          <button onClick={() => moveTask(i, ti, 1)} disabled={ti === (b.tasks || []).length - 1} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ti === (b.tasks || []).length - 1 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ti === (b.tasks || []).length - 1 ? 0.3 : 1 }}>↓</button>
                           <button onClick={() => removeTask(i, ti)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 7px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>✕</button>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
@@ -135,6 +153,8 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                           <span style={{ background: "#a78bfa", color: "#14171c", borderRadius: 5, padding: "2px 7px", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>E{ei + 1}</span>
                           <input value={ex.name} onChange={(e) => updateExercise(i, ei, "name", e.target.value)} placeholder="Nombre del ejercicio..." style={{ ...inputStyle, flex: 1, padding: "5px 8px", fontSize: 12 }} />
+                          <button onClick={() => moveExercise(i, ei, -1)} disabled={ei === 0} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ei === 0 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ei === 0 ? 0.3 : 1 }}>↑</button>
+                          <button onClick={() => moveExercise(i, ei, 1)} disabled={ei === (b.exercises || []).length - 1} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ei === (b.exercises || []).length - 1 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ei === (b.exercises || []).length - 1 ? 0.3 : 1 }}>↓</button>
                           <button onClick={() => removeExercise(i, ei)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 7px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>✕</button>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
