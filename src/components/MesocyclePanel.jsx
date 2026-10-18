@@ -358,6 +358,134 @@ export function CustomWeekPlanner({ week, template, totalMin, onSave, readOnly =
   );
 }
 
+/* ── Planificador checklist semanal ──────────────────────────────────── */
+const CHECK_DAYS = [
+  { key: "mon", label: "L" }, { key: "tue", label: "M" }, { key: "wed", label: "X" },
+  { key: "thu", label: "J" }, { key: "fri", label: "V" }, { key: "sat", label: "S" }, { key: "sun", label: "D" },
+];
+
+export function CheckWeekPlanner({ week, template, onSave, readOnly = false, matchLabel = "MD" }) {
+  const initPlan = () => week.checkWeekPlan || { days: {}, plannedTypes: [] };
+  const [plan, setPlan] = useState(initPlan);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => { setPlan(initPlan()); setDirty(false); }, [week.weekStart, week.checkWeekPlan]);
+
+  const cols = (template?.types || []).flatMap((t) =>
+    t.subtypes?.length
+      ? t.subtypes.map((s) => ({ key: `${t.id}_${s.id}`, typeLabel: t.label, subLabel: s.label, color: t.color }))
+      : [{ key: t.id, typeLabel: t.label, subLabel: null, color: t.color }]
+  );
+
+  const getDayType = (dk) => plan.days?.[dk] || "entreno";
+  const cycleDayType = (dk) => {
+    if (readOnly) return;
+    const order = ["entreno", "descanso", "partido"];
+    const next = order[(order.indexOf(getDayType(dk)) + 1) % order.length];
+    setPlan((p) => ({ ...p, days: { ...p.days, [dk]: next } }));
+    setDirty(true);
+  };
+
+  const isTypePlanned = (ck) => (plan.plannedTypes || []).includes(ck);
+  const toggleType = (ck) => {
+    if (readOnly) return;
+    setPlan((p) => {
+      const planned = p.plannedTypes || [];
+      return { ...p, plannedTypes: planned.includes(ck) ? planned.filter((k) => k !== ck) : [...planned, ck] };
+    });
+    setDirty(true);
+  };
+
+  const dayBg    = { entreno: "transparent", descanso: "#0c204088", partido: "#2a101088" };
+  const dayColor = { entreno: COLORS.text, descanso: "#60a5fa", partido: "#ff5a5f" };
+  const dayShort = { entreno: "", descanso: "REST", partido: matchLabel };
+
+  const plannedCount = (plan.plannedTypes || []).length;
+  const trainingDays = CHECK_DAYS.filter((d) => getDayType(d.key) === "entreno").length;
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 80, background: COLORS.panelRaised, borderRadius: 8, padding: "6px 10px", textAlign: "center" }}>
+          <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 600 }}>Contenidos planificados</div>
+          <div style={{ fontSize: 14, color: COLORS.lime, fontWeight: 700 }}>{plannedCount}</div>
+        </div>
+        <div style={{ flex: 1, minWidth: 80, background: COLORS.panelRaised, borderRadius: 8, padding: "6px 10px", textAlign: "center" }}>
+          <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 600 }}>Días de entreno</div>
+          <div style={{ fontSize: 14, color: "#38bdf8", fontWeight: 700 }}>{trainingDays}</div>
+        </div>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 10 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: "4px 6px", textAlign: "center", color: COLORS.text, borderBottom: `1px solid ${COLORS.line}`, fontSize: 9, width: 28 }}>Plan.</th>
+              <th style={{ padding: "4px 6px", textAlign: "left", color: COLORS.text, borderBottom: `1px solid ${COLORS.line}`, fontSize: 9 }}>Tipo</th>
+              {CHECK_DAYS.map((d) => {
+                const type = getDayType(d.key);
+                return (
+                  <th key={d.key} style={{ padding: "2px", textAlign: "center", borderBottom: `1px solid ${COLORS.line}`, minWidth: 36 }}>
+                    <button onClick={() => cycleDayType(d.key)} style={{
+                      width: "100%", padding: "4px 2px", borderRadius: 6,
+                      border: `1px solid ${type !== "entreno" ? dayColor[type] : COLORS.line}`,
+                      background: dayBg[type], color: dayColor[type],
+                      fontSize: 9, fontWeight: 700, cursor: readOnly ? "default" : "pointer", lineHeight: 1.3,
+                    }}>
+                      {d.label}{dayShort[type] ? `\n${dayShort[type]}` : ""}
+                    </button>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {cols.map((col) => {
+              const isPlanned = isTypePlanned(col.key);
+              return (
+                <tr key={col.key} style={{ borderBottom: `1px solid ${COLORS.line}22`, background: isPlanned ? `${col.color}08` : "transparent" }}>
+                  <td style={{ padding: "2px", textAlign: "center" }}>
+                    <button onClick={() => toggleType(col.key)} disabled={readOnly} style={{
+                      width: 20, height: 20, borderRadius: 5,
+                      border: `2px solid ${isPlanned ? col.color : COLORS.line}`,
+                      background: isPlanned ? col.color : "transparent",
+                      color: isPlanned ? "#14171c" : COLORS.text,
+                      fontWeight: 700, fontSize: 11, cursor: readOnly ? "default" : "pointer",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {isPlanned ? "✓" : ""}
+                    </button>
+                  </td>
+                  <td style={{ fontSize: 9, color: col.color, fontWeight: 600, padding: "4px 6px", whiteSpace: "nowrap", borderRight: `1px solid ${COLORS.line}` }}>
+                    {col.subLabel ? `${col.typeLabel} · ${col.subLabel}` : col.typeLabel}
+                  </td>
+                  {CHECK_DAYS.map((d) => {
+                    const type = getDayType(d.key);
+                    const isBlocked = type !== "entreno";
+                    const hasCheck = !isBlocked && isPlanned;
+                    return (
+                      <td key={d.key} style={{ padding: "4px 2px", textAlign: "center", background: isBlocked ? dayBg[type] : "transparent" }}>
+                        {isBlocked
+                          ? <span style={{ fontSize: 9, color: dayColor[type], fontWeight: 700 }}>—</span>
+                          : <span style={{ fontSize: 16, color: hasCheck ? COLORS.lime : `${COLORS.line}66`, lineHeight: 1 }}>{hasCheck ? "✓" : "·"}</span>
+                        }
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {!readOnly && dirty && (
+        <button onClick={() => { onSave(plan); setDirty(false); }} style={{ marginTop: 10, width: "100%", padding: "8px 0", borderRadius: 8, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+          Guardar checklist semanal ✓
+        </button>
+      )}
+    </div>
+  );
+}
+
 function mesoWeeks(startDate, endDate) {
   const weeks = [];
   let monday = mondayOf(startDate);
@@ -506,6 +634,7 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
   const [menstrualPlayers, setMenstrualPlayers] = useState([]);
   const [isSJ, setIsSJ]               = useState(false);
   const [activeCustomTpl, setActiveCustomTpl] = useState(null); // template id
+  const [isCheck, setIsCheck]         = useState(false);
   const [saving, setSaving]           = useState(false);
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
@@ -539,8 +668,9 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
         }
         return { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
       });
-      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
-      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null });
+      const mesoIsCheck = !!(isCheck && activeTpl);
+      const id = await saveMesocycle({ teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null, isCheck: mesoIsCheck });
+      onSave({ id, teamId, name, startDate, endDate: effectiveEnd, weeks, color, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null, isCheck: mesoIsCheck });
     } catch (err) {
       const msg = err?.message || err?.error_description || JSON.stringify(err);
       alert("Error al guardar: " + msg);
@@ -624,6 +754,23 @@ function CreateMesoModal({ teamId, onSave, onClose, roster = [], displayNames = 
             </div>
           );
         })}
+
+        {activeCustomTpl && (
+          <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>☑️ Mesociclo Check</div>
+                <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Checklist semanal de contenidos en vez de volumen</div>
+              </div>
+              <button onClick={() => setIsCheck((v) => !v)} style={{
+                width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+                background: isCheck ? COLORS.lime : COLORS.line, transition: "background 0.2s",
+              }}>
+                <span style={{ position: "absolute", top: 3, left: isCheck ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {showMenstrual && (
           <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
@@ -718,6 +865,7 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
   const [isMenstrual, setIsMenstrual] = useState(meso.isMenstrual || false);
   const [isSJ, setIsSJ]             = useState(meso.isSituacionesJugadas || false);
   const [activeCustomTpl, setActiveCustomTpl] = useState(meso.customTemplateId || null);
+  const [isCheck, setIsCheck]       = useState(meso.isCheck || false);
   const [menstrualPlayers, setMenstrualPlayers] = useState(meso.menstrualPlayers || []);
   const [saving, setSaving]         = useState(false);
 
@@ -746,7 +894,8 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
         return existing ? { ...w, ...existing } : { ...w, name: "", type: "carga", volume: 70, intensity: 70 };
       });
       const activeTpl = activeCustomTpl ? customTemplates.find((t) => t.id === activeCustomTpl) : null;
-      const updated = { ...meso, name, startDate, endDate, weeks: newWeeks.map((w) => activeTpl ? { ...w, sjBaseMinutes: w.sjBaseMinutes ?? 100 } : w), color, contenidos, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null };
+      const mesoIsCheck = !!(isCheck && activeTpl);
+      const updated = { ...meso, name, startDate, endDate, weeks: newWeeks.map((w) => activeTpl ? { ...w, sjBaseMinutes: w.sjBaseMinutes ?? 100 } : w), color, contenidos, isMenstrual: (isSJ || activeTpl) ? false : isMenstrual, menstrualPlayers: (isSJ || activeTpl) ? [] : menstrualPlayers, isSituacionesJugadas: isSJ, customTemplateId: activeTpl?.id || null, isCheck: mesoIsCheck };
       await saveMesocycle(updated);
       onSave(updated);
     } catch (err) {
@@ -836,6 +985,23 @@ function EditMesoModal({ meso, onSave, onClose, roster = [], displayNames = {}, 
             </div>
           );
         })}
+
+        {activeCustomTpl && (
+          <div style={{ marginBottom: 14, background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>☑️ Mesociclo Check</div>
+                <div style={{ fontSize: 11, color: COLORS.text, marginTop: 2 }}>Checklist semanal de contenidos en vez de volumen</div>
+              </div>
+              <button onClick={() => setIsCheck((v) => !v)} style={{
+                width: 46, height: 26, borderRadius: 13, border: "none", cursor: "pointer", position: "relative",
+                background: isCheck ? COLORS.lime : COLORS.line, transition: "background 0.2s",
+              }}>
+                <span style={{ position: "absolute", top: 3, left: isCheck ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Ciclo menstrual toggle */}
         {showMenstrual && (
@@ -1012,6 +1178,15 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
 
   const handleCustomPlanSave = async (weekStart, plan) => {
     const weeks = meso.weeks.map((w) => w.weekStart === weekStart ? { ...w, customWeekPlan: plan } : w);
+    setSaving(true);
+    try {
+      await saveMesocycle({ ...meso, weeks });
+      onUpdate({ ...meso, weeks });
+    } finally { setSaving(false); }
+  };
+
+  const handleCheckPlanSave = async (weekStart, plan) => {
+    const weeks = meso.weeks.map((w) => w.weekStart === weekStart ? { ...w, checkWeekPlan: plan } : w);
     setSaving(true);
     try {
       await saveMesocycle({ ...meso, weeks });
@@ -1263,8 +1438,8 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                     </button>
                   )}
                 </div>
-                {/* Tabla resumen % / Min. / Rest. */}
-                {(() => {
+                {/* Tabla resumen % / Min. / Rest. — no para mesociclos check */}
+                {!meso.isCheck && (() => {
                   const cols = (activeTpl.types || []).flatMap((t) =>
                     t.subtypes?.length
                       ? t.subtypes.map((s) => ({ key: `${t.id}_${s.id}`, typeLabel: t.label, subLabel: s.label, color: t.color }))
@@ -1335,15 +1510,24 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                     </div>
                   );
                 })()}
-                <CustomWeekPlanner
-                  week={{ ...w, customWeekIndex: i }}
-                  template={activeTpl}
-                  totalMin={totalMin}
-                  onSave={(plan) => handleCustomPlanSave(w.weekStart, plan)}
-                  readOnly={readOnly}
-                  matchLabel={matchLabel}
-                  unitShort={tplUnitShort}
-                />
+                {meso.isCheck
+                  ? <CheckWeekPlanner
+                      week={w}
+                      template={activeTpl}
+                      onSave={(plan) => handleCheckPlanSave(w.weekStart, plan)}
+                      readOnly={readOnly}
+                      matchLabel={matchLabel}
+                    />
+                  : <CustomWeekPlanner
+                      week={{ ...w, customWeekIndex: i }}
+                      template={activeTpl}
+                      totalMin={totalMin}
+                      onSave={(plan) => handleCustomPlanSave(w.weekStart, plan)}
+                      readOnly={readOnly}
+                      matchLabel={matchLabel}
+                      unitShort={tplUnitShort}
+                    />
+                }
               </div>
             );
           }
@@ -1575,6 +1759,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
                       {m.isSituacionesJugadas && <span style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", background: "#0c1e2a", borderRadius: 5, padding: "2px 5px" }}>⚽ SJ</span>}
                       {m.customTemplateId && (() => { const tpl = customTemplates.find((t) => t.id === m.customTemplateId); return tpl ? <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.text, background: COLORS.panelRaised, borderRadius: 5, padding: "2px 5px" }}>{tpl.emoji || "📋"} {tpl.name}</span> : null; })()}
                       {m.isMenstrual && <span style={{ fontSize: 9, fontWeight: 700, color: "#e879f9", background: "#1a0a1e", borderRadius: 5, padding: "2px 5px" }}>🔴</span>}
+                      {m.isCheck && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, background: "#1e3010", borderRadius: 5, padding: "2px 5px" }}>☑ Check</span>}
                     </div>
                   </div>
                   <div style={{ fontSize: 10, color: COLORS.text, marginTop: 3 }}>{fmtDateShort(m.startDate)} – {fmtDateShort(m.endDate)}</div>
@@ -1622,6 +1807,7 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
   const week = meso.weeks[weekIdx];
 
   const isSJ = !!meso.isSituacionesJugadas;
+  const isCheck = !isSJ && !!meso.isCheck;
   const template = !isSJ && meso.customTemplateId ? (customTemplates.find((t) => t.id === meso.customTemplateId) || null) : null;
   const unitShort = meso.unit === "repeticiones" ? "rep" : meso.unit === "metros" ? "m" : meso.unit === "km" ? "km" : meso.unit === "horas" ? "h" : "min";
   const matchLabel = meso.matchLabel || "MD";
@@ -1639,13 +1825,14 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
   })();
 
   const handleSave = async (data) => {
-    const updated = { ...meso, weeks: (meso.weeks || []).map((w) => w.weekStart === week.weekStart ? { ...w, ...data } : w) };
+    const weekKey = isSJ ? "sjWeekPlan" : isCheck ? "checkWeekPlan" : "customWeekPlan";
+    const updated = { ...meso, weeks: (meso.weeks || []).map((w) => w.weekStart === week.weekStart ? { ...w, [weekKey]: data } : w) };
     await saveMesocycle(updated);
     onMesocyclesChange?.(mesocycles.map((m) => m.id === meso.id ? updated : m));
   };
 
   return (
-    !(isSJ || template) ? null : (
+    !(isSJ || template || isCheck) ? null : (
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>
@@ -1660,7 +1847,9 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
       </div>
       {isSJ
         ? <SJWeekPlanner week={week} pct={pct} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
-        : <CustomWeekPlanner week={week} template={template} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
+        : isCheck
+          ? <CheckWeekPlanner week={week} template={template} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} />
+          : <CustomWeekPlanner week={week} template={template} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
       }
       {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
       {showHiit && <HiitPrescriptorModal onClose={() => setShowHiit(false)} />}
