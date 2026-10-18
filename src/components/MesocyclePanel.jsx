@@ -1608,7 +1608,7 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
 }
 
 /* ── Inline planner para vistas semanal/mensual/mesociclo ────────────── */
-export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, readOnly = false, sjPercentages = null }) {
+export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, readOnly = false, sjPercentages = null, customTemplates = [] }) {
   const [showSpaces, setShowSpaces] = useState(false);
   const [showHiit, setShowHiit] = useState(false);
   if (!mesocycles || mesocycles.length === 0) return null;
@@ -1622,7 +1622,7 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
   const week = meso.weeks[weekIdx];
 
   const isSJ = !!meso.isSituacionesJugadas;
-  const template = !isSJ && meso.templateId ? (meso.customTemplate || null) : null;
+  const template = !isSJ && meso.customTemplateId ? (customTemplates.find((t) => t.id === meso.customTemplateId) || null) : null;
   const unitShort = meso.unit === "repeticiones" ? "rep" : meso.unit === "metros" ? "m" : meso.unit === "km" ? "km" : meso.unit === "horas" ? "h" : "min";
   const matchLabel = meso.matchLabel || "MD";
 
