@@ -20,6 +20,8 @@ import HelpPanel from "./HelpPanel";
 import PrintableReportModal from "./PrintableReportModal";
 import SettingsPanel from "./SettingsPanel";
 import SquadModal from "./SquadModal";
+import HiitPrescriptorModal from "./HiitPrescriptorModal";
+import SpacesCalculatorModal from "./SpacesCalculatorModal";
 
 function PhysicalTab({ teamWithPhotos, allPhysical, onTeamUpdate, playerProfiles, readOnly = false }) {
   const [physTab, setPhysTab] = useState("datos");
@@ -62,6 +64,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const [checkinModal, setCheckinModal] = useState(null);
   const [squadDate, setSquadDate] = useState(null);
+  const [tool, setTool] = useState(null); // "hiit" | "spaces"
 
   const refreshData = useCallback(async () => {
     const [t, w, r, s] = await Promise.all([getTeam(teamId), loadTeamWellness(teamId), loadTeamRpe(teamId), loadTeamSessions(teamId)]);
@@ -207,6 +210,10 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
           <div style={{ fontSize: 12, color: COLORS.text }}>
             {kindDef.label} · Código: <span style={{ color: COLORS.lime, fontWeight: 600 }}>{team.code}</span> · {roster.length} {roster.length === 1 ? kindDef.memberLabel : kindDef.memberLabelPlural}
           </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>⚡ Prescriptor HIIT</button>
+          <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>📐 Calc. espacios</button>
         </div>
         {todaySession && (() => {
           const intensity = INTENSITY_LEVELS[todaySession.intensity];
@@ -461,6 +468,8 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       {squadDate && (
         <SquadModal team={team} date={squadDate} roster={team.roster || []} displayNames={displayNames} onClose={() => setSquadDate(null)} onSaved={(updated) => { handleTeamUpdate(updated); setSquadDate(null); }} />
       )}
+      {tool === "hiit" && <HiitPrescriptorModal onClose={() => setTool(null)} />}
+      {tool === "spaces" && <SpacesCalculatorModal onClose={() => setTool(null)} />}
     </div>
   );
 }
