@@ -460,8 +460,13 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
 
   return (
     <DockPanel id="session-editor" order={0} width={480} zIndex={50} onBackdrop={onClose}>
-        <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 2 }}>{weekdayLabel(date)}</div>
-        <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 20, marginBottom: 14 }}>{fmtDateLong(date)}</div>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+          <div>
+            <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 2 }}>{weekdayLabel(date)}</div>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 20 }}>{fmtDateLong(date)}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textDim, fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}>✕</button>
+        </div>
 
         {/* Pestañas */}
         <div style={{ display: "flex", gap: 4, marginBottom: 18, background: COLORS.panelRaised, borderRadius: 10, padding: 4 }}>
