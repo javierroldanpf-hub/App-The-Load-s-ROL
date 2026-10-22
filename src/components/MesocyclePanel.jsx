@@ -1660,7 +1660,6 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
 export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = false, roster = [], displayNames = {}, teamGender = "masculino" }) {
   const [mesocycles, setMesocycles] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
-  const [showSpaces, setShowSpaces] = useState(false);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const today = todayStr();
@@ -1787,15 +1786,13 @@ export default function MesocyclePanel({ team, onMesocyclesChange, readOnly = fa
       {showCreate && (
         <CreateMesoModal teamId={team.teamId} onSave={handleCreate} onClose={() => setShowCreate(false)} roster={roster} displayNames={displayNames} showMenstrual={showMenstrual} showSJ={showSJ} showCustomTemplates={showCustomTemplates} customTemplates={customTemplates} />
       )}
-      {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
     </div>
   );
 }
 
 /* ── Inline planner para vistas semanal/mensual/mesociclo ────────────── */
 export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, readOnly = false, sjPercentages = null, customTemplates = [] }) {
-  const [showSpaces, setShowSpaces] = useState(false);
-  const [showHiit, setShowHiit] = useState(false);
+  const [tool, setTool] = useState(null); // "hiit" | "spaces"
   if (!mesocycles || mesocycles.length === 0) return null;
 
   const weekEnd = addDays(weekMonday, 6);
@@ -1840,8 +1837,8 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
         </div>
         {isSJ && (
           <div style={{ display: "flex", gap: 6 }}>
-            <button onClick={() => setShowHiit(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>⚡ Prescriptor HIIT</button>
-            <button onClick={() => setShowSpaces(true)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>📐 Calc. espacios</button>
+            <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>⚡ Prescriptor HIIT</button>
+            <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>📐 Calc. espacios</button>
           </div>
         )}
       </div>
@@ -1851,8 +1848,8 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
           ? <CheckWeekPlanner week={week} template={template} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} />
           : <CustomWeekPlanner week={week} template={template} totalMin={totalMin} onSave={handleSave} readOnly={readOnly} matchLabel={matchLabel} unitShort={unitShort} />
       }
-      {showSpaces && <SpacesCalculatorModal onClose={() => setShowSpaces(false)} />}
-      {showHiit && <HiitPrescriptorModal onClose={() => setShowHiit(false)} />}
+      {tool === "spaces" && <SpacesCalculatorModal onClose={() => setTool(null)} />}
+      {tool === "hiit" && <HiitPrescriptorModal onClose={() => setTool(null)} />}
     </div>
   ));
 }

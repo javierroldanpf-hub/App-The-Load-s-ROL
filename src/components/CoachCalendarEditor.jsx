@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { COLORS, INTENSITY_LEVELS, SESSION_TYPES, GROUP_SESSION_TYPES, MATCH_DEFAULT_DURATION, WEEKDAY_LABELS } from "@/lib/constants";
+import DockPanel from "./DockPanel";
 import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, weekDates, weekNumberFrom, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
 import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions, saveTeam } from "@/lib/db";
 import { getCycleWeek, CYCLE_WEEKS, LOAD_COLORS, getPlayerCycle, isCycleRelaxin, setPlayerCycle } from "@/lib/cycle";
@@ -458,8 +459,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", zIndex: 50 }}>
-      <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: "1.5rem", width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto" }}>
+    <DockPanel id="session-editor" order={0} width={480} zIndex={50} onBackdrop={onClose}>
         <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 2 }}>{weekdayLabel(date)}</div>
         <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 20, marginBottom: 14 }}>{fmtDateLong(date)}</div>
 
@@ -669,7 +669,6 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
             </div>
           </div>
         )}
-      </div>
 
       {repeatInd && (() => {
         const today = todayStr();
@@ -776,7 +775,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
           </div>
         );
       })()}
-    </div>
+    </DockPanel>
   );
 }
 

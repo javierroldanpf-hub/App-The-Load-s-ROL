@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { COLORS } from "@/lib/constants";
+import DockPanel from "./DockPanel";
 
 // Standard reference field: 105 × 68 m = 7140 m²
 const STD_AREA = 7140;
@@ -146,8 +147,7 @@ export default function SpacesCalculatorModal({ onClose }) {
   const tipoColW  = 72;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "1rem", zIndex: 80, overflowY: "auto" }}>
-      <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: "1.25rem", width: "100%", maxWidth: 700, marginBottom: "2rem" }}>
+    <DockPanel id="spaces" order={1} width={680} zIndex={55} onBackdrop={onClose} cardMaxWidth={700}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: COLORS.text }}>
@@ -353,7 +353,6 @@ export default function SpacesCalculatorModal({ onClose }) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </DockPanel>
   );
 }

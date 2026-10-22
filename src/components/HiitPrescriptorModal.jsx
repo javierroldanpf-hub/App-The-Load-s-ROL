@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { COLORS } from "@/lib/constants";
+import DockPanel from "./DockPanel";
 
 /* ── design tokens ───────────────────────────────────────────────────────── */
 const T = {
@@ -423,19 +424,7 @@ function Calculadora() {
 /* ── Modal ───────────────────────────────────────────────────────────────── */
 export default function HiitPrescriptorModal({ onClose }) {
   return (
-    <div
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      style={{
-        position:"fixed", inset:0, background:"rgba(0,0,0,0.8)", zIndex:9000,
-        display:"flex", alignItems:"flex-start", justifyContent:"center",
-        padding:"16px 8px", overflowY:"auto",
-      }}
-    >
-      <div style={{
-        background:T.bg, border:`1px solid ${T.line}`,
-        borderRadius:16, width:"100%", maxWidth:760,
-        padding:"20px 18px 24px",
-      }}>
+    <DockPanel id="hiit" order={1} width={700} zIndex={55} onBackdrop={onClose} cardMaxWidth={760}>
         {/* header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -455,7 +444,6 @@ export default function HiitPrescriptorModal({ onClose }) {
           <TablaPrescripcion />
           <Calculadora />
         </div>
-      </div>
-    </div>
+    </DockPanel>
   );
 }
