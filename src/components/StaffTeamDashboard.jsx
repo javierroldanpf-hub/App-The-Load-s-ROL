@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { COLORS, TEAM_KINDS, INTENSITY_LEVELS } from "@/lib/constants";
 import { todayStr, latestEntryForPlayer, addDays, weightedWellnessScore, acwr, acwrStatus, sessionLoad, fmtDateLong } from "@/lib/utils";
 import { getTeam, saveTeam, loadTeamWellness, loadTeamRpe, loadTeamSessions, loadPlayerPhysicalHistory, getUsersDisplayNames, getAllPlayerProfiles } from "@/lib/db";
@@ -65,6 +66,8 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const [checkinModal, setCheckinModal] = useState(null);
   const [squadDate, setSquadDate] = useState(null);
   const [tool, setTool] = useState(null); // "hiit" | "spaces"
+  const isNarrow = useMediaQuery("(max-width: 480px)");
+  const isMid = useMediaQuery("(max-width: 768px)");
 
   const refreshData = useCallback(async () => {
     const [t, w, r, s] = await Promise.all([getTeam(teamId), loadTeamWellness(teamId), loadTeamRpe(teamId), loadTeamSessions(teamId)]);
@@ -173,17 +176,17 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         onBack={onBack}
         title={null}
         rightSlot={
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setShowHelp(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          <div style={{ display: "flex", gap: isNarrow ? 4 : 8 }}>
+            <button onClick={() => setShowHelp(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: isNarrow ? "7px 10px" : "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               <svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="256" cy="256" r="220" />
                 <path d="M190 186c0-36 29-66 66-66s66 30 66 66c0 44-66 66-66 88" />
                 <circle cx="256" cy="370" r="18" fill={COLORS.lime} stroke="none" />
               </svg>
-              Ayuda
+              {!isNarrow && "Ayuda"}
             </button>
-            <button onClick={() => setShowExport(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round"><path d="M320 48H80a32 32 0 0 0-32 32v352a32 32 0 0 0 32 32h352a32 32 0 0 0 32-32V192z"/><path d="M320 48v144h144"/><line x1="176" y1="320" x2="400" y2="320"/><polyline points="336,256 400,320 336,384"/></svg> Exportar</button>
-            <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill={COLORS.lime}><path d="M320 64H80C62 64 48 78 48 96v320c0 18 14 32 32 32h240c18 0 32-14 32-32v-80h-48v64H96V112h208v64h48V96c0-18-14-32-32-32z"/><path d="M456 234l-92-92-34 34 50 50H192v48h188l-50 50 34 34 92-92c9-9 9-24 0-32z"/></svg> Salir</button>
+            <button onClick={() => setShowExport(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: isNarrow ? "7px 10px" : "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill="none" stroke={COLORS.lime} strokeWidth="36" strokeLinecap="round" strokeLinejoin="round"><path d="M320 48H80a32 32 0 0 0-32 32v352a32 32 0 0 0 32 32h352a32 32 0 0 0 32-32V192z"/><path d="M320 48v144h144"/><line x1="176" y1="320" x2="400" y2="320"/><polyline points="336,256 400,320 336,384"/></svg>{!isNarrow && " Exportar"}</button>
+            <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 6, padding: isNarrow ? "7px 10px" : "7px 13px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><svg width="14" height="14" viewBox="0 0 512 512" fill={COLORS.lime}><path d="M320 64H80C62 64 48 78 48 96v320c0 18 14 32 32 32h240c18 0 32-14 32-32v-80h-48v64H96V112h208v64h48V96c0-18-14-32-32-32z"/><path d="M456 234l-92-92-34 34 50 50H192v48h188l-50 50 34 34 92-92c9-9 9-24 0-32z"/></svg>{!isNarrow && " Salir"}</button>
           </div>
         }
       />
@@ -203,50 +206,54 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "14px 0 20px" }}>
-        <Avatar name={team.name} photoUrl={team.crestUrl} size={44} square />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 20 }}>{team.name}</div>
-          <div style={{ fontSize: 12, color: COLORS.text }}>
-            {kindDef.label} · Código: <span style={{ color: COLORS.lime, fontWeight: 600 }}>{team.code}</span> · {roster.length} {roster.length === 1 ? kindDef.memberLabel : kindDef.memberLabelPlural}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-          <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>⚡ Prescriptor HIIT</button>
-          <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>📐 Calc. espacios</button>
-        </div>
-        {todaySession && (() => {
-          const intensity = INTENSITY_LEVELS[todaySession.intensity];
-          const isTodayMatch = todaySession.isMatch || todaySession.sessionType === "MD(H)" || todaySession.sessionType === "MD(A)";
-          const isEquipo = (team.kind || "equipo") === "equipo";
-          return (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              {!readOnly && isTodayMatch && isEquipo && (
-                <button onClick={() => setSquadDate(todayStr())} style={{
-                  display: "flex", flexDirection: "column", alignItems: "center",
-                  background: "#1a2a1a", border: `1px solid ${COLORS.lime}66`,
-                  borderRadius: 10, padding: "6px 10px", cursor: "pointer",
-                }}>
-                  <span style={{ fontSize: 16 }}>📋</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, marginTop: 1 }}>Convocatoria</span>
-                </button>
-              )}
-              <button onClick={() => setShowSessionDetail(true)} style={{
-                display: "flex", flexDirection: "column", alignItems: "flex-end",
-                background: intensity ? intensity.dark : COLORS.panelRaised,
-                border: `1px solid ${intensity ? intensity.color : COLORS.line}`,
-                borderRadius: 10, padding: "6px 12px", cursor: "pointer",
-              }}>
-                <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 22, color: intensity ? intensity.color : COLORS.textDim, lineHeight: 1 }}>
-                  {todaySession.sessionType}
-                </div>
-                <div style={{ fontSize: 10, color: COLORS.text, marginTop: 2, textTransform: "capitalize" }}>
-                  {fmtDateLong(todayStr())}
-                </div>
-              </button>
+      <div style={{ margin: "14px 0 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Avatar name={team.name} photoUrl={team.crestUrl} size={44} square />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: isNarrow ? 17 : 20, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{team.name}</div>
+            <div style={{ fontSize: 11, color: COLORS.text }}>
+              {kindDef.label} · {isNarrow ? "" : `Código: `}<span style={{ color: COLORS.lime, fontWeight: 600 }}>{team.code}</span> · {roster.length} {roster.length === 1 ? kindDef.memberLabel : kindDef.memberLabelPlural}
             </div>
-          );
-        })()}
+          </div>
+          {/* Session button — always in top row */}
+          {todaySession && (() => {
+            const intensity = INTENSITY_LEVELS[todaySession.intensity];
+            const isTodayMatch = todaySession.isMatch || todaySession.sessionType === "MD(H)" || todaySession.sessionType === "MD(A)";
+            const isEquipo = (team.kind || "equipo") === "equipo";
+            return (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                {!readOnly && isTodayMatch && isEquipo && (
+                  <button onClick={() => setSquadDate(todayStr())} style={{
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    background: "#1a2a1a", border: `1px solid ${COLORS.lime}66`,
+                    borderRadius: 10, padding: "6px 10px", cursor: "pointer",
+                  }}>
+                    <span style={{ fontSize: 16 }}>📋</span>
+                    {!isNarrow && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, marginTop: 1 }}>Convocatoria</span>}
+                  </button>
+                )}
+                <button onClick={() => setShowSessionDetail(true)} style={{
+                  display: "flex", flexDirection: "column", alignItems: "flex-end",
+                  background: intensity ? intensity.dark : COLORS.panelRaised,
+                  border: `1px solid ${intensity ? intensity.color : COLORS.line}`,
+                  borderRadius: 10, padding: "6px 12px", cursor: "pointer",
+                }}>
+                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: isNarrow ? 18 : 22, color: intensity ? intensity.color : COLORS.textDim, lineHeight: 1 }}>
+                    {todaySession.sessionType}
+                  </div>
+                  {!isNarrow && <div style={{ fontSize: 10, color: COLORS.text, marginTop: 2, textTransform: "capitalize" }}>{fmtDateLong(todayStr())}</div>}
+                </button>
+              </div>
+            );
+          })()}
+        </div>
+        {/* Tool buttons row — only on narrow screens */}
+        {isNarrow && (
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⚡ HIIT</button>
+            <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📐 Espacios</button>
+          </div>
+        )}
       </div>
 
       {/* Tabs principales */}
