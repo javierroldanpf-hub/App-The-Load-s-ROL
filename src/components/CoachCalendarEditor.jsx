@@ -459,7 +459,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   };
 
   return (
-    <DockPanel id="session-editor" order={0} width={480} zIndex={50} onBackdrop={onClose}>
+    <DockPanel id="session-editor" title="Sesión" order={0} width={480} pct={0.38} minWidth={320} zIndex={50}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
             <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 2 }}>{weekdayLabel(date)}</div>

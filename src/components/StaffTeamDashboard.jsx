@@ -23,6 +23,7 @@ import SettingsPanel from "./SettingsPanel";
 import SquadModal from "./SquadModal";
 import HiitPrescriptorModal from "./HiitPrescriptorModal";
 import SpacesCalculatorModal from "./SpacesCalculatorModal";
+import InjuryIndexPanel from "./InjuryIndexPanel";
 
 function PhysicalTab({ teamWithPhotos, allPhysical, onTeamUpdate, playerProfiles, readOnly = false }) {
   const [physTab, setPhysTab] = useState("datos");
@@ -65,7 +66,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const [checkinModal, setCheckinModal] = useState(null);
   const [squadDate, setSquadDate] = useState(null);
-  const [tool, setTool] = useState(null); // "hiit" | "spaces"
+  const [tool, setTool] = useState(null); // "hiit" | "spaces" | "injury"
   const isNarrow = useMediaQuery("(max-width: 480px)");
   const isMid = useMediaQuery("(max-width: 768px)");
 
@@ -215,6 +216,14 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
               {kindDef.label} · {isNarrow ? "" : `Código: `}<span style={{ color: COLORS.lime, fontWeight: 600 }}>{team.code}</span> · {roster.length} {roster.length === 1 ? kindDef.memberLabel : kindDef.memberLabelPlural}
             </div>
           </div>
+          {/* Tool buttons — only on wider screens */}
+          {!isNarrow && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+              <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isMid ? "⚡" : "⚡ Prescriptor HIIT"}</button>
+              <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isMid ? "📐" : "📐 Calc. espacios"}</button>
+              <button onClick={() => setTool((t) => t === "injury" ? null : "injury")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "injury" ? COLORS.coral : COLORS.line}`, background: tool === "injury" ? COLORS.coralDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isMid ? "🩹" : "🩹 Índice lesional"}</button>
+            </div>
+          )}
           {/* Session button — always in top row */}
           {todaySession && (() => {
             const intensity = INTENSITY_LEVELS[todaySession.intensity];
@@ -252,6 +261,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
           <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
             <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⚡ HIIT</button>
             <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📐 Espacios</button>
+            <button onClick={() => setTool((t) => t === "injury" ? null : "injury")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "injury" ? COLORS.coral : COLORS.line}`, background: tool === "injury" ? COLORS.coralDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>🩹 Lesional</button>
           </div>
         )}
       </div>
@@ -477,6 +487,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       )}
       {tool === "hiit" && <HiitPrescriptorModal onClose={() => setTool(null)} />}
       {tool === "spaces" && <SpacesCalculatorModal onClose={() => setTool(null)} />}
+      {tool === "injury" && <InjuryIndexPanel team={team} roster={enrichedRosterForTeam} onClose={() => setTool(null)} onTeamUpdate={refreshData} canEdit={!readOnly} />}
     </div>
   );
 }

@@ -147,7 +147,7 @@ export default function SpacesCalculatorModal({ onClose }) {
   const tipoColW  = 72;
 
   return (
-    <DockPanel id="spaces" order={1} width={680} zIndex={55} onBackdrop={onClose} cardMaxWidth={700}>
+    <DockPanel id="spaces" title="Calc. Espacios" order={1} width={680} pct={0.44} minWidth={360} zIndex={55}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: COLORS.text }}>

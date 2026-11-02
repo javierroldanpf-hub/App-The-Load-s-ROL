@@ -333,6 +333,26 @@ function Calculadora() {
 
   const fmt = (n) => isNaN(n) || !isFinite(n) ? "—" : n.toFixed(2).replace(/\.?0+$/, "");
 
+  const [pace, setPace] = useState(null);   // texto mientras se escribe el ritmo
+  const [mmin, setMmin] = useState(null);   // texto mientras se escribe m/min
+  const kmhNow = target === "velocidad" ? (parseFloat(espacio) / parseFloat(tiempo)) * 3.6 : parseFloat(velocidad);
+  const okKmh = isFinite(kmhNow) && kmhNow > 0;
+  const paceStr = (kmh) => {
+    if (!isFinite(kmh) || kmh <= 0) return "—";
+    let min = Math.floor(60 / kmh), sec = Math.round((60 / kmh - min) * 60);
+    if (sec === 60) { min += 1; sec = 0; }
+    return `${min}:${String(sec).padStart(2, "0")}`;
+  };
+  const parsePace = (txt) => {
+    const t = String(txt).trim().replace(",", ".");
+    const m = t.match(/^(\d+):(\d{1,2})$/);
+    const minutes = m ? Number(m[1]) + Number(m[2]) / 60 : parseFloat(t);
+    return isFinite(minutes) && minutes > 0 ? minutes : null;
+  };
+  const trim2 = (n) => String(Math.round(n * 100) / 100);
+  const setFromPace = (txt) => { setPace(txt); const mins = parsePace(txt); if (mins) setVelocidad(trim2(60 / mins)); };
+  const setFromMmin = (txt) => { setMmin(txt); const v = parseFloat(String(txt).replace(",", ".")); if (isFinite(v) && v > 0) setVelocidad(trim2((v * 60) / 1000)); };
+
   // live-calculated value
   const calc = () => {
     const e = parseFloat(espacio);
@@ -412,9 +432,30 @@ function Calculadora() {
             );
           })}
         </div>
+        {/* ritmo y m/min */}
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginTop:14 }}>
+          {[
+            { label:"Ritmo", unit:"min/km", value: pace ?? paceStr(kmhNow), onChange:setFromPace, onBlur:()=>setPace(null), hint:"ej. 4:30" },
+            { label:"Velocidad", unit:"m/min", value: mmin ?? (okKmh ? fmt(kmhNow * 1000 / 60) : "—"), onChange:setFromMmin, onBlur:()=>setMmin(null), hint:"ej. 250" },
+          ].map(({ label, unit, value, onChange, onBlur, hint }) => {
+            const readOnly = target === "velocidad";
+            return (
+              <div key={unit} style={{ flex:"1 1 140px", display:"flex", flexDirection:"column", gap:6 }}>
+                <span style={{ fontSize:9, fontWeight:700, color: readOnly ? accent : T.muted, letterSpacing:0.5, textTransform:"uppercase" }}>{label} <span style={{ fontWeight:500, textTransform:"none", opacity:0.7 }}>({hint})</span></span>
+                <div style={{ display:"flex", alignItems:"center", background: readOnly ? T.panel : "#1a2540", border:`1.5px solid ${readOnly ? accent + "66" : T.line}`, borderRadius:8, overflow:"hidden" }}>
+                  <input
+                    type="text" inputMode="decimal" value={value} readOnly={readOnly} onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
+                    style={{ flex:1, padding:"10px 12px", background:"transparent", border:"none", fontFamily:"monospace", fontSize:20, fontWeight:700, color: readOnly ? accent : T.text, outline:"none", textAlign:"center", width:"100%" }}
+                  />
+                  <div style={{ padding:"0 10px", fontSize:9, fontWeight:700, color: readOnly ? accent + "99" : T.muted, borderLeft:`1px solid ${T.line}`, height:"100%", display:"flex", alignItems:"center" }}>{unit}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
         {/* formula hint */}
         <div style={{ marginTop:12, fontSize:8, color:T.muted, textAlign:"center", fontFamily:"monospace", letterSpacing:0.3 }}>
-          Espacio (m) = Velocidad (km/h) ÷ 3.6 × Tiempo (s)
+          Espacio (m) = Velocidad (km/h) ÷ 3.6 × Tiempo (s) · ritmo (min/km) = 60 ÷ km/h · m/min = km/h × 1000 ÷ 60
         </div>
       </div>
     </Section>
@@ -424,7 +465,7 @@ function Calculadora() {
 /* ── Modal ───────────────────────────────────────────────────────────────── */
 export default function HiitPrescriptorModal({ onClose }) {
   return (
-    <DockPanel id="hiit" order={1} width={700} zIndex={55} onBackdrop={onClose} cardMaxWidth={760}>
+    <DockPanel id="hiit" title="Prescriptor HIIT" order={1} width={700} pct={0.46} minWidth={380} zIndex={55}>
         {/* header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
