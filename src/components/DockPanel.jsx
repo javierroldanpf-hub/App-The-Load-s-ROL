@@ -29,7 +29,7 @@ const useVh = () => useSyncExternalStore(subscribeResize, () => window.innerHeig
 
 export const SIDE_MIN_VW = 760; // desde aquí, columnas a la derecha (iPad, móviles en horizontal)
 const BAR_H = 38;               // barra de un panel minimizado (móvil en vertical)
-const BOTTOM_SHARE = 0.6;       // fracción de la altura que pueden ocupar las hojas inferiores
+const BOTTOM_SHARE = 0.92;      // fracción de la altura que pueden ocupar las hojas inferiores
 
 const sideWidth = (info, vw) => Math.round(Math.min(info.width, Math.max(info.minWidth, vw * info.pct)));
 
