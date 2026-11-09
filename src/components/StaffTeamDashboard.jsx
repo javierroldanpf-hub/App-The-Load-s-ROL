@@ -208,23 +208,16 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       )}
 
       <div style={{ margin: "14px 0 20px" }}>
+        {/* Fila 1: avatar + nombre + sesión */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Avatar name={team.name} photoUrl={team.crestUrl} size={44} square />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: isNarrow ? 17 : 20, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{team.name}</div>
             <div style={{ fontSize: 11, color: COLORS.text }}>
-              {kindDef.label} · {isNarrow ? "" : `Código: `}<span style={{ color: COLORS.lime, fontWeight: 600 }}>{team.code}</span> · {roster.length} {roster.length === 1 ? kindDef.memberLabel : kindDef.memberLabelPlural}
+              {kindDef.label} · <span style={{ color: COLORS.lime, fontWeight: 600 }}>{team.code}</span> · {roster.length} {roster.length === 1 ? kindDef.memberLabel : kindDef.memberLabelPlural}
             </div>
           </div>
-          {/* Tool buttons — only on wider screens */}
-          {!isNarrow && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-              <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isMid ? "⚡" : "⚡ Prescriptor HIIT"}</button>
-              <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isMid ? "📐" : "📐 Calc. espacios"}</button>
-              <button onClick={() => setTool((t) => t === "injury" ? null : "injury")} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${tool === "injury" ? COLORS.coral : COLORS.line}`, background: tool === "injury" ? COLORS.coralDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isMid ? "🩹" : "🩹 Índice lesional"}</button>
-            </div>
-          )}
-          {/* Session button — always in top row */}
+          {/* Sesión hoy */}
           {todaySession && (() => {
             const intensity = INTENSITY_LEVELS[todaySession.intensity];
             const isTodayMatch = todaySession.isMatch || todaySession.sessionType === "MD(H)" || todaySession.sessionType === "MD(A)";
@@ -232,38 +225,25 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
             return (
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                 {!readOnly && isTodayMatch && isEquipo && (
-                  <button onClick={() => setSquadDate(todayStr())} style={{
-                    display: "flex", flexDirection: "column", alignItems: "center",
-                    background: "#1a2a1a", border: `1px solid ${COLORS.lime}66`,
-                    borderRadius: 10, padding: "6px 10px", cursor: "pointer",
-                  }}>
+                  <button onClick={() => setSquadDate(todayStr())} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "#1a2a1a", border: `1px solid ${COLORS.lime}66`, borderRadius: 10, padding: "6px 10px", cursor: "pointer" }}>
                     <span style={{ fontSize: 16 }}>📋</span>
                     {!isNarrow && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.lime, marginTop: 1 }}>Convocatoria</span>}
                   </button>
                 )}
-                <button onClick={() => setShowSessionDetail(true)} style={{
-                  display: "flex", flexDirection: "column", alignItems: "flex-end",
-                  background: intensity ? intensity.dark : COLORS.panelRaised,
-                  border: `1px solid ${intensity ? intensity.color : COLORS.line}`,
-                  borderRadius: 10, padding: "6px 12px", cursor: "pointer",
-                }}>
-                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: isNarrow ? 18 : 22, color: intensity ? intensity.color : COLORS.textDim, lineHeight: 1 }}>
-                    {todaySession.sessionType}
-                  </div>
+                <button onClick={() => setShowSessionDetail(true)} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", background: intensity ? intensity.dark : COLORS.panelRaised, border: `1px solid ${intensity ? intensity.color : COLORS.line}`, borderRadius: 10, padding: "6px 12px", cursor: "pointer" }}>
+                  <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: isNarrow ? 18 : 22, color: intensity ? intensity.color : COLORS.textDim, lineHeight: 1 }}>{todaySession.sessionType}</div>
                   {!isNarrow && <div style={{ fontSize: 10, color: COLORS.text, marginTop: 2, textTransform: "capitalize" }}>{fmtDateLong(todayStr())}</div>}
                 </button>
               </div>
             );
           })()}
         </div>
-        {/* Tool buttons row — only on narrow screens */}
-        {isNarrow && (
-          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-            <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⚡ HIIT</button>
-            <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📐 Espacios</button>
-            <button onClick={() => setTool((t) => t === "injury" ? null : "injury")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "injury" ? COLORS.coral : COLORS.line}`, background: tool === "injury" ? COLORS.coralDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>🩹 Lesional</button>
-          </div>
-        )}
+        {/* Fila 2: botones de herramientas — siempre debajo */}
+        <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+          <button onClick={() => setTool((t) => t === "hiit" ? null : "hiit")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "hiit" ? COLORS.lime : COLORS.line}`, background: tool === "hiit" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isNarrow ? "⚡ HIIT" : "⚡ Prescriptor HIIT"}</button>
+          <button onClick={() => setTool((t) => t === "spaces" ? null : "spaces")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "spaces" ? COLORS.lime : COLORS.line}`, background: tool === "spaces" ? COLORS.limeDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isNarrow ? "📐 Espacios" : "📐 Calc. espacios"}</button>
+          <button onClick={() => setTool((t) => t === "injury" ? null : "injury")} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${tool === "injury" ? COLORS.coral : COLORS.line}`, background: tool === "injury" ? COLORS.coralDark : COLORS.panelRaised, color: COLORS.text, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{isNarrow ? "🩹 Lesional" : "🩹 Índice lesional"}</button>
+        </div>
       </div>
 
       {/* Tabs principales */}
