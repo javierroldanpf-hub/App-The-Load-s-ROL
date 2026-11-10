@@ -37,7 +37,26 @@ function getBlockType(b) {
   return "CAMPO";
 }
 
+// Portapapeles vía localStorage para copiar bloques/tareas/ejercicios entre equipos y sesiones
+const CB_BLOCK = "clipboard_block";
+const CB_TASK  = "clipboard_task";
+const CB_EXER  = "clipboard_exercise";
+const cbSave = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
+const cbLoad = (key) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; } };
+const freshId = () => ({ id: Date.now() + Math.floor(Math.random() * 1000) });
+
 function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
+  const [cbBlock, setCbBlock] = useState(() => cbLoad(CB_BLOCK));
+  const [cbTask,  setCbTask]  = useState(() => cbLoad(CB_TASK));
+  const [cbExer,  setCbExer]  = useState(() => cbLoad(CB_EXER));
+
+  const copyBlock = (b) => { const c = { ...b, tasks: (b.tasks||[]).map(t=>({...t,...freshId()})), exercises: (b.exercises||[]).map(e=>({...e,...freshId()})) }; cbSave(CB_BLOCK, c); setCbBlock(c); };
+  const pasteBlock = () => { const c = cbLoad(CB_BLOCK); if (c) setBlocks((prev) => [...prev, { ...c, ...freshId() }]); };
+  const copyTask = (t) => { cbSave(CB_TASK, t); setCbTask({...t}); };
+  const pasteTask = (bi) => { const c = cbLoad(CB_TASK); if (c) setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, tasks: [...(b.tasks||[]), {...c,...freshId()}] } : b)); };
+  const copyExer = (e) => { cbSave(CB_EXER, e); setCbExer({...e}); };
+  const pasteExer = (bi) => { const c = cbLoad(CB_EXER); if (c) setBlocks((prev) => prev.map((b, idx) => idx === bi ? { ...b, exercises: [...(b.exercises||[]), {...c,...freshId()}] } : b)); };
+
   const addBlock = () => setBlocks((prev) => [...prev, { name: "CAMPO", blockType: "CAMPO", duration: "", content: "", tasks: [] }]);
   const updateBlock = (i, field, val) => setBlocks((prev) => prev.map((b, idx) => idx === i ? { ...b, [field]: val } : b));
   const removeBlock = (i) => setBlocks((prev) => prev.filter((_, idx) => idx !== i));
@@ -106,6 +125,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
               <input type="number" value={b.duration} onChange={(e) => updateBlock(i, "duration", e.target.value)} placeholder="Min" style={{ ...inputStyle, flex: 1, minWidth: 60, padding: "8px 10px", fontSize: 13 }} />
               <button onClick={() => moveBlock(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 8px", cursor: i === 0 ? "default" : "pointer", fontSize: 12, flexShrink: 0, opacity: i === 0 ? 0.3 : 1 }}>↑</button>
               <button onClick={() => moveBlock(i, 1)} disabled={i === blocks.length - 1} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 8px", cursor: i === blocks.length - 1 ? "default" : "pointer", fontSize: 12, flexShrink: 0, opacity: i === blocks.length - 1 ? 0.3 : 1 }}>↓</button>
+              <button onClick={() => copyBlock(b)} title="Copiar bloque" style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "6px 8px", cursor: "pointer", fontSize: 12, flexShrink: 0 }}>📋</button>
               <button onClick={() => removeBlock(i)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, flexShrink: 0 }}>✕</button>
             </div>
             <textarea value={b.content} onChange={(e) => updateBlock(i, "content", e.target.value)} placeholder="Contenido del bloque..." rows={3} style={{ ...inputStyle, resize: "vertical", fontSize: 13, padding: "8px 10px", lineHeight: 1.5, width: "100%", boxSizing: "border-box" }} />
@@ -120,6 +140,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                           <input value={t.name} onChange={(e) => updateTask(i, ti, "name", e.target.value)} placeholder="Nombre de la tarea..." style={{ ...inputStyle, flex: 1, padding: "5px 8px", fontSize: 12 }} />
                           <button onClick={() => moveTask(i, ti, -1)} disabled={ti === 0} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ti === 0 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ti === 0 ? 0.3 : 1 }}>↑</button>
                           <button onClick={() => moveTask(i, ti, 1)} disabled={ti === (b.tasks || []).length - 1} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ti === (b.tasks || []).length - 1 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ti === (b.tasks || []).length - 1 ? 0.3 : 1 }}>↓</button>
+                          <button onClick={() => copyTask(t)} title="Copiar tarea" style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>📋</button>
                           <button onClick={() => removeTask(i, ti)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 7px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>✕</button>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
@@ -142,7 +163,10 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                     ))}
                   </div>
                 )}
-                <button onClick={() => addTask(i)} style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir tarea</button>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => addTask(i)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir tarea</button>
+                  {cbTask && <button onClick={() => pasteTask(i)} title="Pegar tarea copiada" style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${COLORS.lime}`, background: COLORS.limeDark, color: COLORS.lime, fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>📋 Pegar</button>}
+                </div>
               </div>
             )}
             {STRENGTH_BLOCK_TYPES.includes(getBlockType(b)) && (
@@ -156,6 +180,7 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                           <input value={ex.name} onChange={(e) => updateExercise(i, ei, "name", e.target.value)} placeholder="Nombre del ejercicio..." style={{ ...inputStyle, flex: 1, padding: "5px 8px", fontSize: 12 }} />
                           <button onClick={() => moveExercise(i, ei, -1)} disabled={ei === 0} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ei === 0 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ei === 0 ? 0.3 : 1 }}>↑</button>
                           <button onClick={() => moveExercise(i, ei, 1)} disabled={ei === (b.exercises || []).length - 1} style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: ei === (b.exercises || []).length - 1 ? "default" : "pointer", fontSize: 11, flexShrink: 0, opacity: ei === (b.exercises || []).length - 1 ? 0.3 : 1 }}>↓</button>
+                          <button onClick={() => copyExer(ex)} title="Copiar ejercicio" style={{ background: "transparent", border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 6, padding: "4px 6px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>📋</button>
                           <button onClick={() => removeExercise(i, ei)} style={{ background: "transparent", border: `1px solid ${COLORS.coral}`, color: COLORS.coral, borderRadius: 6, padding: "4px 7px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>✕</button>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
@@ -172,13 +197,19 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                     ))}
                   </div>
                 )}
-                <button onClick={() => addExercise(i)} style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px dashed #a78bfa`, background: "transparent", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir ejercicio</button>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => addExercise(i)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: `1px dashed #a78bfa`, background: "transparent", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir ejercicio</button>
+                  {cbExer && <button onClick={() => pasteExer(i)} title="Pegar ejercicio copiado" style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid #a78bfa`, background: "#1e1535", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>📋 Pegar</button>}
+                </div>
               </div>
             )}
           </div>
         ))}
       </div>
-      <button onClick={addBlock} style={{ marginTop: 8, width: "100%", padding: "9px 0", borderRadius: 10, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>+ Añadir bloque</button>
+      <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+        <button onClick={addBlock} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: `1px dashed ${COLORS.lime}`, background: "transparent", color: COLORS.lime, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>+ Añadir bloque</button>
+        {cbBlock && <button onClick={pasteBlock} title="Pegar bloque copiado" style={{ padding: "9px 16px", borderRadius: 10, border: `1px solid ${COLORS.lime}`, background: COLORS.limeDark, color: COLORS.lime, fontWeight: 600, fontSize: 13, cursor: "pointer", flexShrink: 0 }}>📋 Pegar bloque</button>}
+      </div>
     </div>
   );
 }
