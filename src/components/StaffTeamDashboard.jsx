@@ -436,7 +436,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
       })()}
 
       {tab === "calendario" && (
-        <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly && !viewerCanEditCalendar} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} playerProfiles={playerProfiles} />
+        <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly && !viewerCanEditCalendar} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} playerProfiles={playerProfiles} coachUsername={team.coachUsername || user?.username || ""} />
       )}
 
       {tab === "mensajes" && (

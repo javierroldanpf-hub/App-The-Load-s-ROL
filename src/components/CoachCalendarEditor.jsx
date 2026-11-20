@@ -867,7 +867,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
   );
 }
 
-export default function CoachCalendarEditor({ team, sessions, onSessionsChange, readOnly = false, displayNames = {}, coachName = "", teamGender = "masculino", playerProfiles = {} }) {
+export default function CoachCalendarEditor({ team, sessions, onSessionsChange, readOnly = false, displayNames = {}, coachName = "", teamGender = "masculino", playerProfiles = {}, coachUsername: coachUsernameProp = "" }) {
   const [viewMode, setViewMode] = useState("week");
   const [showPdf, setShowPdf] = useState(false);
   const [mesocycles, setMesocycles] = useState([]);
@@ -1435,7 +1435,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           teamId={team.id || ""}
           teamName={team.name || ""}
           playerProfiles={playerProfiles}
-          coachUsername={team.coachUsername || ""}
+          coachUsername={coachUsernameProp || team.coachUsername || ""}
         />
       )}
       {viewDetail && sessionByDate[viewDetail] && (
