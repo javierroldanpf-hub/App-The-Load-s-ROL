@@ -21,20 +21,34 @@ function parseYouTubeId(url) {
 
 function ExerciseCard({ ex, onSelect, onEdit, onDelete, pickerMode, inputStyle }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const cardRef = useRef(null);
   const ytId = parseYouTubeId(ex.videoUrl);
+  const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null;
   const embedUrl = ytId
     ? `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&rel=0`
     : null;
+
+  // Solo cargar el iframe cuando la tarjeta está visible (evita bloqueo de autoplay por múltiples iframes)
+  useEffect(() => {
+    if (!embedUrl || typeof IntersectionObserver === "undefined") { setVisible(true); return; }
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.1 });
+    if (cardRef.current) observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [embedUrl]);
+
   return (
-    <div style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      {/* Vídeo en bucle automático o imagen */}
+    <div ref={cardRef} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      {/* Vídeo en bucle cuando está en pantalla, miniatura si no */}
       <div style={{ position: "relative", aspectRatio: "16/9", background: "#0d1017", flexShrink: 0 }}>
-        {embedUrl
+        {embedUrl && visible
           ? <iframe src={embedUrl} title={ex.name} allow="autoplay; encrypted-media" referrerPolicy="strict-origin-when-cross-origin"
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, pointerEvents: "none" }} />
-          : ex.imageBase64
-            ? <img src={ex.imageBase64} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-            : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, opacity: 0.3 }}>🏋️</div>}
+          : thumb
+            ? <img src={thumb} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            : ex.imageBase64
+              ? <img src={ex.imageBase64} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, opacity: 0.3 }}>🏋️</div>}
         <span style={{ position: "absolute", top: 5, left: 5, background: "rgba(0,0,0,0.7)", borderRadius: 5, padding: "2px 6px", fontSize: 10, color: T, fontWeight: 700 }}>
           {ex.blockType}
         </span>
