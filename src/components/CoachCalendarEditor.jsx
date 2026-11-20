@@ -10,6 +10,7 @@ import SessionDetailModal from "./SessionDetailModal";
 import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
 import SquadModal from "./SquadModal";
+import SessionTvModal from "./SessionTvModal";
 
 function parseMatchDesc(raw) {
   try {
@@ -400,8 +401,9 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
   );
 }
 
-function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onRepeatInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo", isEquipo = false, allSessions = [] }) {
+function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onRepeatInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo", isEquipo = false, allSessions = [], teamId = "", teamName = "", playerProfiles = {} }) {
   const roster = rosterRaw.map((u) => typeof u === "string" ? u : u.username);
+  const [tvOpen, setTvOpen] = useState(false);
   const availableTypes = isTrainingGroup ? GROUP_SESSION_TYPES : SESSION_TYPES;
   const [editorTab, setEditorTab] = useState(defaultTab);
 
@@ -496,8 +498,21 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
             <div style={{ fontSize: 13, color: COLORS.text, marginBottom: 2 }}>{weekdayLabel(date)}</div>
             <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 20 }}>{fmtDateLong(date)}</div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textDim, fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}>✕</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={() => setTvOpen(true)} title="Ver plantilla TV" style={{ background: "none", border: `1px solid ${COLORS.line}`, borderRadius: 7, color: COLORS.text, fontSize: 13, cursor: "pointer", padding: "3px 8px" }}>📺</button>
+            <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textDim, fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}>✕</button>
+          </div>
         </div>
+
+        {/* TV modal */}
+        {tvOpen && (() => {
+          const enrichedRoster = roster.map((u) => {
+            const prof = playerProfiles[u];
+            const dn = displayNames[u];
+            return { username: u, displayName: prof?.displayName || dn?.displayName || u, photoUrl: prof?.photoUrl || dn?.photoUrl || null };
+          });
+          return <SessionTvModal teamId={teamId} teamName={teamName} date={date} sessionType={sessionType} blocks={blocks} roster={enrichedRoster} onClose={() => setTvOpen(false)} />;
+        })()}
 
         {/* Pestañas */}
         <div style={{ display: "flex", gap: 4, marginBottom: 18, background: COLORS.panelRaised, borderRadius: 10, padding: 4 }}>
@@ -1380,6 +1395,9 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           roster={team.roster || []}
           displayNames={displayNames}
           allSessions={sessions}
+          teamId={team.id || ""}
+          teamName={team.name || ""}
+          playerProfiles={playerProfiles}
         />
       )}
       {viewDetail && sessionByDate[viewDetail] && (
