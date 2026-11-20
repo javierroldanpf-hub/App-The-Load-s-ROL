@@ -263,7 +263,7 @@ function TemplateDocument({ side, teamName, date, sessionType, blocks, roster, b
           <div style={{ display: "grid", gridTemplateColumns: playerCols, gap: 14, alignItems: "start" }}>
             {groupIds.map((g) => {
               const list = byGroup[g] || [];
-              const innerCols = side && list.length > 7 ? "1fr 1fr" : "1fr";
+              const innerCols = side && list.length > 3 ? "1fr 1fr" : "1fr";
               return (
                 <div key={g}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: `6px solid ${GROUP_COLORS[g] || "#888"}`, background: HEAD_BG, padding: "6px 10px", fontWeight: 700, fontSize: 15, marginBottom: 10, borderRadius: "0 6px 6px 0" }}>

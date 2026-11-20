@@ -158,7 +158,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
 
   if (selectedPlayer) {
     return (
-      <div style={{ minHeight: "100vh", padding: "0 1.25rem 4rem", maxWidth: 640, margin: "0 auto" }}>
+      <div style={{ minHeight: "100vh", padding: "0 1.25rem 4rem", maxWidth: isMid ? 640 : 1100, margin: "0 auto" }}>
         <StaffPlayerDetail
           player={selectedPlayer}
           wellness={wellness}
@@ -172,7 +172,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   }
 
   return (
-    <div style={{ minHeight: "100vh", padding: "1.5rem 1.25rem 4rem", maxWidth: 640, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", padding: "1.5rem 1.25rem 4rem", maxWidth: isMid ? 640 : 1100, margin: "0 auto" }}>
       <TopBar
         onBack={onBack}
         title={null}

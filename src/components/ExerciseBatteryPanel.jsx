@@ -21,34 +21,20 @@ function parseYouTubeId(url) {
 
 function ExerciseCard({ ex, onSelect, onEdit, onDelete, pickerMode, inputStyle }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const ytId = parseYouTubeId(ex.videoUrl);
-  const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null;
   const embedUrl = ytId
     ? `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&rel=0`
     : null;
-  const showVideo = hovered && embedUrl;
   return (
     <div style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      {/* Miniatura / vídeo al pasar el ratón */}
-      <div
-        style={{ position: "relative", aspectRatio: "16/9", background: "#0d1017", flexShrink: 0, cursor: embedUrl ? "pointer" : "default" }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        {showVideo
+      {/* Vídeo en bucle automático o imagen */}
+      <div style={{ position: "relative", aspectRatio: "16/9", background: "#0d1017", flexShrink: 0 }}>
+        {embedUrl
           ? <iframe src={embedUrl} title={ex.name} allow="autoplay; encrypted-media" referrerPolicy="strict-origin-when-cross-origin"
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, pointerEvents: "none" }} />
           : ex.imageBase64
             ? <img src={ex.imageBase64} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-            : thumb
-              ? <img src={thumb} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-              : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, opacity: 0.3 }}>🏋️</div>}
-        {embedUrl && !showVideo && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>▶</span>
-          </div>
-        )}
+            : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, opacity: 0.3 }}>🏋️</div>}
         <span style={{ position: "absolute", top: 5, left: 5, background: "rgba(0,0,0,0.7)", borderRadius: 5, padding: "2px 6px", fontSize: 10, color: T, fontWeight: 700 }}>
           {ex.blockType}
         </span>

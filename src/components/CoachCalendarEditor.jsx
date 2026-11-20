@@ -1534,6 +1534,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
 
       {editDate && (
         <SessionEditorModal
+          key={editDate}
           date={editDate}
           existing={existingSession}
           onClose={() => setEditDate(null)}
