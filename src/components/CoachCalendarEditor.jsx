@@ -3,7 +3,7 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { COLORS, INTENSITY_LEVELS, SESSION_TYPES, GROUP_SESSION_TYPES, MATCH_DEFAULT_DURATION, WEEKDAY_LABELS } from "@/lib/constants";
 import DockPanel from "./DockPanel";
 import { todayStr, mondayOf, addDays, fmtDateLong, fmtDateShort, weekdayLabel, weekDates, weekNumberFrom, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
-import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions, saveTeam } from "@/lib/db";
+import { getSession, saveSession, deleteSession, deleteGroupSessionResponses, ensureFirstMonday, updateRpeDurationForSession, updateRpeSessionTypeForSession, getTeamsByCoach, loadTeamSessions, saveTeam, syncExercisesToBattery } from "@/lib/db";
 import { getCycleWeek, CYCLE_WEEKS, LOAD_COLORS, getPlayerCycle, isCycleRelaxin, setPlayerCycle } from "@/lib/cycle";
 import ImageUploadButton from "./ImageUploadButton";
 import SessionDetailModal from "./SessionDetailModal";
@@ -11,6 +11,7 @@ import MesocyclePanel, { MesoWeekInline } from "./MesocyclePanel";
 import CalendarPdfExport from "./CalendarPdfExport";
 import SquadModal from "./SquadModal";
 import SessionTvModal from "./SessionTvModal";
+import ExerciseBatteryPanel from "./ExerciseBatteryPanel";
 
 function parseMatchDesc(raw) {
   try {
@@ -46,10 +47,11 @@ const cbSave = (key, val) => { try { localStorage.setItem(key, JSON.stringify(va
 const cbLoad = (key) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; } };
 const freshId = () => ({ id: Date.now() + Math.floor(Math.random() * 1000) });
 
-function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
+function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo, coachUsername }) {
   const [cbBlock, setCbBlock] = useState(() => cbLoad(CB_BLOCK));
   const [cbTask,  setCbTask]  = useState(() => cbLoad(CB_TASK));
   const [cbExer,  setCbExer]  = useState(() => cbLoad(CB_EXER));
+  const [batteryBlock, setBatteryBlock] = useState(null); // block index where picker is open
 
   const copyBlock = (b) => { const c = { ...b, tasks: (b.tasks||[]).map(t=>({...t,...freshId()})), exercises: (b.exercises||[]).map(e=>({...e,...freshId()})) }; cbSave(CB_BLOCK, c); setCbBlock(c); };
   const pasteBlock = () => { const c = cbLoad(CB_BLOCK); if (c) setBlocks((prev) => [...prev, { ...c, ...freshId() }]); };
@@ -198,10 +200,40 @@ function SessionBlocksEditor({ blocks, setBlocks, inputStyle, isEquipo }) {
                     ))}
                   </div>
                 )}
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={() => addExercise(i)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: `1px dashed #a78bfa`, background: "transparent", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Añadir ejercicio</button>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <button onClick={() => addExercise(i)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: `1px dashed #a78bfa`, background: "transparent", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Nuevo ejercicio</button>
+                  {coachUsername && (
+                    <button onClick={() => setBatteryBlock(batteryBlock === i ? null : i)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid #a78bfa`, background: batteryBlock === i ? "#1e1535" : "transparent", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>🔍 Batería</button>
+                  )}
                   {cbExer && <button onClick={() => pasteExer(i)} title="Pegar ejercicio copiado" style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid #a78bfa`, background: "#1e1535", color: "#a78bfa", fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>📋 Pegar</button>}
                 </div>
+                {batteryBlock === i && coachUsername && (
+                  <div style={{ marginTop: 10, background: "#1a1a2e", border: "1px solid #a78bfa44", borderRadius: 10, padding: 12, maxHeight: 420, overflowY: "auto" }}>
+                    <ExerciseBatteryPanel
+                      coachUsername={coachUsername}
+                      pickerMode
+                      filterBlockType={b.blockType || null}
+                      inputStyle={inputStyle}
+                      onSelect={(ex) => {
+                        setBlocks((prev) => prev.map((bl, idx) => idx !== i ? bl : {
+                          ...bl,
+                          exercises: [...(bl.exercises || []), {
+                            id: Date.now() + Math.floor(Math.random() * 1000),
+                            name: ex.name,
+                            series: "",
+                            repeticiones: "",
+                            intensidad: "",
+                            recuperacion: "",
+                            videoUrl: ex.videoUrl || "",
+                            imageBase64: ex.imageBase64 || "",
+                          }],
+                        }));
+                        setBatteryBlock(null);
+                      }}
+                      onClose={() => setBatteryBlock(null)}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -401,7 +433,7 @@ function CycleWeekPanel({ team, weekMonday, playerProfiles, displayNames, onPrev
   );
 }
 
-function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onRepeatInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo", isEquipo = false, allSessions = [], teamId = "", teamName = "", playerProfiles = {} }) {
+function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, onRepeatInd, onDelete, defaultMatchDuration, isTrainingGroup, isIndividualAthlete = false, mesocycles = [], roster: rosterRaw = [], displayNames = {}, defaultTab = "grupo", isEquipo = false, allSessions = [], teamId = "", teamName = "", playerProfiles = {}, coachUsername = "" }) {
   const roster = rosterRaw.map((u) => typeof u === "string" ? u : u.username);
   const [tvOpen, setTvOpen] = useState(false);
   const availableTypes = isTrainingGroup ? GROUP_SESSION_TYPES : SESSION_TYPES;
@@ -481,6 +513,11 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
         ? JSON.stringify({ rivalText: description, rivalPhoto, scoreHome: scoreHome !== "" ? scoreHome : undefined, scoreAway: scoreAway !== "" ? scoreAway : undefined, resultText: resultText || undefined })
         : JSON.stringify({ blocks: allBlocks });
       await onSaveGroup({ sessionType, intensity, duration: parseInt(duration) || 0, description: finalDesc, isRest, isMatch, allowPlayerNote }, extraDates);
+      // Auto-sync exercises to global battery
+      if (coachUsername && !isMatch) {
+        const allEx = allBlocks.flatMap((b) => (b.exercises || []).map((e) => ({ ...e, blockType: b.blockType || b.name || "OTRO" })));
+        syncExercisesToBattery(coachUsername, allEx).catch(() => {});
+      }
     } finally { setSaving(false); }
   };
 
@@ -605,7 +642,7 @@ function SessionEditorModal({ date, existing, onClose, onSaveGroup, onSaveInd, o
                     )}
                   </div>
                 ) : (
-                  <SessionBlocksEditor blocks={blocks} setBlocks={setBlocks} inputStyle={inputStyle} isEquipo={isEquipo} />
+                  <SessionBlocksEditor blocks={blocks} setBlocks={setBlocks} inputStyle={inputStyle} isEquipo={isEquipo} coachUsername={coachUsername} />
                 )}
                 {mesoOptions.length > 0 && !isMatch && (
                   <div style={{ marginBottom: 16 }}>
@@ -1398,6 +1435,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           teamId={team.id || ""}
           teamName={team.name || ""}
           playerProfiles={playerProfiles}
+          coachUsername={team.coachUsername || ""}
         />
       )}
       {viewDetail && sessionByDate[viewDetail] && (

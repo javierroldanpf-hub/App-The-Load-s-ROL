@@ -952,3 +952,114 @@ function dbProfileToApp(r) {
     ts: r.ts,
   };
 }
+
+// ─── BATERÍA DE EJERCICIOS ────────────────────────────────────────────────────
+
+export async function getExercises(coachUsername) {
+  if (!coachUsername) return [];
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from("exercises")
+      .select("*")
+      .eq("coach_username", coachUsername)
+      .order("name", { ascending: true });
+    if (error) return [];
+    return (data || []).map(dbExerciseToApp);
+  } catch { return []; }
+}
+
+export async function saveExercise(ex) {
+  const sb = getSupabase();
+  if (ex.id) {
+    const { error } = await sb
+      .from("exercises")
+      .update({
+        name: ex.name,
+        block_type: ex.blockType || "OTRO",
+        video_url: ex.videoUrl || null,
+        image_base64: ex.imageBase64 || null,
+        notes: ex.notes || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", ex.id);
+    if (error) throw error;
+    return ex;
+  } else {
+    const { data, error } = await sb
+      .from("exercises")
+      .insert({
+        coach_username: ex.coachUsername,
+        name: ex.name,
+        block_type: ex.blockType || "OTRO",
+        video_url: ex.videoUrl || null,
+        image_base64: ex.imageBase64 || null,
+        notes: ex.notes || null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return dbExerciseToApp(data);
+  }
+}
+
+export async function deleteExercise(id) {
+  const sb = getSupabase();
+  const { error } = await sb.from("exercises").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Auto-sync: upsert each exercise by name (case-insensitive).
+// Called when a session is saved — exercises with a name are silently saved to the battery.
+export async function syncExercisesToBattery(coachUsername, exercises) {
+  if (!coachUsername || !exercises?.length) return;
+  try {
+    const sb = getSupabase();
+    const names = exercises.map((e) => e.name?.trim()).filter(Boolean);
+    if (!names.length) return;
+    const { data: existing } = await sb
+      .from("exercises")
+      .select("id, name, video_url, image_base64")
+      .eq("coach_username", coachUsername)
+      .in("name", names);
+    const existingMap = {};
+    (existing || []).forEach((r) => { existingMap[r.name.toLowerCase()] = r; });
+    for (const ex of exercises) {
+      const n = ex.name?.trim();
+      if (!n) continue;
+      const found = existingMap[n.toLowerCase()];
+      if (!found) {
+        await sb.from("exercises").insert({
+          coach_username: coachUsername,
+          name: n,
+          block_type: ex.blockType || "OTRO",
+          video_url: ex.videoUrl || null,
+          image_base64: ex.imageBase64 || null,
+        });
+      } else {
+        // Update video/image only if the new one has data and the existing doesn't
+        const patch = {};
+        if (ex.videoUrl && !found.video_url) patch.video_url = ex.videoUrl;
+        if (ex.imageBase64 && !found.image_base64) patch.image_base64 = ex.imageBase64;
+        if (Object.keys(patch).length) {
+          patch.updated_at = new Date().toISOString();
+          await sb.from("exercises").update(patch).eq("id", found.id);
+        }
+      }
+    }
+  } catch {}
+}
+
+function dbExerciseToApp(r) {
+  return {
+    id: r.id,
+    coachUsername: r.coach_username,
+    name: r.name,
+    blockType: r.block_type || "OTRO",
+    videoUrl: r.video_url || "",
+    imageBase64: r.image_base64 || "",
+    notes: r.notes || "",
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
