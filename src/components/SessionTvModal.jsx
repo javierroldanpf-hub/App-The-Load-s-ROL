@@ -259,19 +259,18 @@ function TemplateDocument({ side, teamName, date, sessionType, blocks, roster, b
             </div>
           )}
 
-          {/* Tres columnas de grupos, una por grupo */}
-          <div style={{ display: "grid", gridTemplateColumns: playerCols, gap: 12, alignItems: "start" }}>
+          {/* Grupos: 3 columnas en wide. Dentro de cada grupo, 2 columnas si >6 jugadores */}
+          <div style={{ display: "grid", gridTemplateColumns: playerCols, gap: 14, alignItems: "start" }}>
             {groupIds.map((g) => {
               const list = byGroup[g] || [];
+              const innerCols = side && list.length > 7 ? "1fr 1fr" : "1fr";
               return (
                 <div key={g}>
-                  {/* Cabecera del grupo */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: `6px solid ${GROUP_COLORS[g] || "#888"}`, background: HEAD_BG, padding: "6px 10px", fontWeight: 700, fontSize: 14, marginBottom: 8, borderRadius: "0 6px 6px 0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: `6px solid ${GROUP_COLORS[g] || "#888"}`, background: HEAD_BG, padding: "6px 10px", fontWeight: 700, fontSize: 15, marginBottom: 10, borderRadius: "0 6px 6px 0" }}>
                     <span>{g === NO_GROUP ? "SIN GRUPO" : GROUP_NAMES[g]}</span>
-                    <span style={{ opacity: 0.7, fontSize: 13 }}>{list.length}</span>
+                    <span style={{ opacity: 0.6, fontSize: 13 }}>{list.length}</span>
                   </div>
-                  {/* Tarjetas de jugadores — siempre 1 columna dentro del grupo */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: innerCols, gap: 8 }}>
                     {list.map((u) => {
                       const p = rosterBy(u);
                       if (!p) return null;

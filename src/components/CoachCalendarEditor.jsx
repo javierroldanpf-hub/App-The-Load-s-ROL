@@ -1253,12 +1253,130 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
         <button onClick={() => setShowPdf(true)} title="Exportar PDF" style={{ padding: "7px 12px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>↓ PDF</button>
       </div>
 
-      {viewMode === "mesociclo" && (
-        <>
-          <MesocyclePanel team={team} roster={team.roster || []} displayNames={displayNames} onMesocyclesChange={setMesocycles} readOnly={readOnly} teamGender={teamGender} />
-          <MesoWeekInline mesocycles={mesocycles} weekMonday={weekMonday} onMesocyclesChange={setMesocycles} readOnly={true} sjPercentages={team.sjPercentages || null} customTemplates={team.customMesoTemplates || []} />
-        </>
-      )}
+      {viewMode === "mesociclo" && (() => {
+        const WEEK_TYPE_COLORS = { carga: "#ff9f40", sobrecarga: "#ff5a5f", descarga: "#60a5fa" };
+        const MesoYearCalendar = () => {
+          const [year, setYear] = React.useState(Number(today.slice(0, 4)));
+          const months = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}-01`);
+          // Leyenda: mesociclos y tipos de semana presentes en el año
+          const mesoLegend = [];
+          const seenMeso = new Set();
+          const typeLegend = [];
+          const seenType = new Set();
+          months.forEach((m) => monthGridDates(m).filter((c) => c.inMonth).forEach(({ date }) => {
+            mesocycles.forEach((mc) => {
+              if (date < mc.startDate || date > mc.endDate) return;
+              if (!seenMeso.has(mc.id)) { seenMeso.add(mc.id); mesoLegend.push({ color: mc.color, label: mc.name || "Mesociclo" }); }
+              const week = (mc.weeks || []).find((w) => date >= w.weekStart && date <= w.weekEnd);
+              if (week?.type && !seenType.has(week.type)) {
+                seenType.add(week.type);
+                typeLegend.push({ type: week.type, color: WEEK_TYPE_COLORS[week.type], label: week.type.charAt(0).toUpperCase() + week.type.slice(1) });
+              }
+            });
+          }));
+          return (
+            <div style={{ marginTop: 20 }}>
+              {/* Navegación año */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <button onClick={() => setYear((y) => y - 1)} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 16 }}>←</button>
+                <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.lime }}>{year}</div>
+                <button onClick={() => setYear((y) => y + 1)} style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 16 }}>→</button>
+              </div>
+              {/* Leyenda */}
+              {(mesoLegend.length > 0 || typeLegend.length > 0) && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", alignItems: "center", marginBottom: 14, padding: "8px 12px", background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 10 }}>
+                  {mesoLegend.map((m, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: m.color || COLORS.line, flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: COLORS.text }}>{m.label}</span>
+                    </div>
+                  ))}
+                  {mesoLegend.length > 0 && typeLegend.length > 0 && <span style={{ width: 1, height: 14, background: COLORS.line }} />}
+                  {typeLegend.map((t) => (
+                    <div key={t.type} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 18, height: 4, borderRadius: 2, background: t.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: COLORS.text }}>{t.label}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ padding: "1px 4px", borderRadius: 3, border: `1px solid ${INTENSITY_LEVELS.naranja?.color || "#f97316"}`, background: INTENSITY_LEVELS.naranja?.dark || "#431407", color: INTENSITY_LEVELS.naranja?.color || "#f97316", fontSize: 8, fontWeight: 700, fontFamily: "'Oswald', sans-serif" }}>MD-3</span>
+                    <span style={{ fontSize: 11, color: COLORS.text }}>Entreno (tipo y color intensidad)</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ padding: "1px 4px", borderRadius: 3, border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 8, fontWeight: 700, fontFamily: "'Oswald', sans-serif" }}>REST</span>
+                    <span style={{ fontSize: 11, color: COLORS.text }}>Descanso</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ fontSize: 11 }}>🛡️</span>
+                    <span style={{ fontSize: 11, color: COLORS.text }}>Partido</span>
+                  </div>
+                </div>
+              )}
+              {/* Grid 12 meses */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+                {months.map((m) => (
+                  <div key={m}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: m === firstOfMonth(today) ? COLORS.lime : COLORS.text, textTransform: "capitalize", marginBottom: 5 }}>
+                      {monthLabel(m).split(" de")[0]}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1 }}>
+                      {["L","M","X","J","V","S","D"].map((d) => (
+                        <div key={d} style={{ textAlign: "center", fontSize: 7, color: COLORS.text, opacity: 0.4, fontWeight: 600, paddingBottom: 2 }}>{d}</div>
+                      ))}
+                      {monthGridDates(m).map(({ date, inMonth }) => {
+                        const meso = mesocycles.find((mc) => date >= mc.startDate && date <= mc.endDate);
+                        const week = meso ? (meso.weeks || []).find((w) => date >= w.weekStart && date <= w.weekEnd) : null;
+                        const session = sessionByDate[date];
+                        const isMatch = !!session?.isMatch;
+                        const isRest  = !!session?.isRest;
+                        const isTraining = !!session && !isMatch && !isRest;
+                        const lvl = isTraining ? (INTENSITY_LEVELS[session.intensity] || INTENSITY_LEVELS.amarillo) : isRest ? INTENSITY_LEVELS.descanso : isMatch ? (INTENSITY_LEVELS[session.intensity] || INTENSITY_LEVELS["rojo+"]) : null;
+                        const isToday = date === today;
+                        const rivalPhoto = (() => { try { const p = JSON.parse(session?.description || "{}"); return p.rivalPhoto || ""; } catch { return ""; } })();
+                        return (
+                          <div key={date} onClick={() => !readOnly && setEditDate(date)} title={fmtDateShort(date)}
+                            style={{
+                              position: "relative", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center",
+                              opacity: inMonth ? 1 : 0.2, cursor: !readOnly || session ? "pointer" : "default",
+                              background: isToday ? COLORS.lime : meso?.color ? `${meso.color}35` : "transparent",
+                              borderRadius: isToday ? "50%" : 2,
+                              borderBottom: !isToday && week?.type && WEEK_TYPE_COLORS[week.type] ? `2px solid ${WEEK_TYPE_COLORS[week.type]}` : "2px solid transparent",
+                              boxSizing: "border-box", overflow: "hidden",
+                            }}>
+                            {isMatch && rivalPhoto
+                              ? <img src={rivalPhoto} alt="" style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+                              : <span style={{ fontSize: 7.5, fontWeight: isToday ? 700 : 400, color: isToday ? COLORS.bg : COLORS.text, position: lvl ? "absolute" : undefined, top: lvl ? 2 : undefined, left: 0, right: 0, textAlign: "center", lineHeight: 1 }}>
+                                  {new Date(`${date}T00:00:00`).getDate()}
+                                </span>}
+                            {lvl && (
+                              <span style={{
+                                position: "absolute", left: 2, right: 2, bottom: 2, height: "42%",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                borderRadius: 2, border: `1px solid ${lvl.color}`, background: isToday ? COLORS.bg : lvl.dark,
+                                color: isRest ? COLORS.text : lvl.color, fontSize: 6, fontWeight: 700, lineHeight: 1,
+                                fontFamily: "'Oswald', sans-serif", boxSizing: "border-box", overflow: "hidden",
+                              }}>
+                                {isRest ? "REST" : session.sessionType || "MD"}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        };
+        return (
+          <>
+            <MesocyclePanel team={team} roster={team.roster || []} displayNames={displayNames} onMesocyclesChange={setMesocycles} readOnly={readOnly} teamGender={teamGender} />
+            <MesoWeekInline mesocycles={mesocycles} weekMonday={weekMonday} onMesocyclesChange={setMesocycles} readOnly={true} sjPercentages={team.sjPercentages || null} customTemplates={team.customMesoTemplates || []} />
+            <MesoYearCalendar />
+          </>
+        );
+      })()}
 
       {viewMode === "week" ? (
         <>
