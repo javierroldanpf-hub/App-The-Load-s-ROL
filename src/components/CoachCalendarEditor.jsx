@@ -27,6 +27,16 @@ function scoreLabel(info, sessionType) {
   const isAway = sessionType === "MD(A)";
   return isAway ? `${info.scoreAway} – ${info.scoreHome}` : `${info.scoreHome} – ${info.scoreAway}`;
 }
+// Victoria=#4ade80 empate=#fbbf24 derrota=#f87171
+function scoreResultColor(info, sessionType) {
+  if (info.scoreHome === "" || info.scoreAway === "") return COLORS.text;
+  const isAway = sessionType === "MD(A)";
+  const ours   = Number(isAway ? info.scoreAway : info.scoreHome);
+  const theirs = Number(isAway ? info.scoreHome : info.scoreAway);
+  if (ours > theirs) return "#4ade80";
+  if (ours === theirs) return "#fbbf24";
+  return "#f87171";
+}
 
 const BLOCK_TYPES = ["CAMPO", "PISTA", "FUERZA", "CARRERA", "METABÓLICO", "HIIT", "EMOM", "AMRAP", "CALENTAMIENTO", "MOVEMENT PREP", "OTRO"];
 const STRENGTH_BLOCK_TYPES = ["FUERZA", "HIIT", "EMOM", "AMRAP", "MOVEMENT PREP"];
@@ -940,6 +950,8 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
   const [existingSession, setExistingSession] = useState(null);
   const [viewDetail, setViewDetail] = useState(null);
   const [squadDate, setSquadDate] = useState(null);
+  const [sessionChoiceDate, setSessionChoiceDate] = useState(null);
+  const [showBattery, setShowBattery] = useState(false);
 
   // Si hay sesiones pero firstMonday no está fijado, lo fijamos ahora
   useEffect(() => {
@@ -1093,7 +1105,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
             const hasResult = matchInfo && matchInfo.resultText;
             return (
           <div style={{ borderRadius: 7, overflow: "hidden", background: intensity ? intensity.dark : COLORS.panelRaised }}>
-            <div onClick={() => openEditor(date)} style={{ padding: "6px 6px", cursor: "pointer", minHeight: 32 }}>
+            <div onClick={() => setSessionChoiceDate(date)} style={{ padding: "6px 6px", cursor: "pointer", minHeight: 32 }}>
               <div style={{ fontSize: viewMode === "week" ? 12 : 10, fontWeight: 700, color: intensity ? intensity.color : COLORS.textFaint, fontFamily: "'Oswald', sans-serif" }}>
                 {session.isRest ? "Descanso" : session.sessionType}
               </div>
@@ -1101,7 +1113,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                 <>
                   {matchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4, marginBottom: 2 }}><img src={matchInfo.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }} /></div>}
                   {matchInfo?.rivalText && <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>vs {matchInfo.rivalText}</div>}
-                  {(() => { const sl = matchInfo ? scoreLabel(matchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 9, color: COLORS.text, fontWeight: 700, marginTop: 1 }}>{sl}</div> : null; })()}
+                  {(() => { const sl = matchInfo ? scoreLabel(matchInfo, session.sessionType) : null; const rc = sl ? scoreResultColor(matchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 9, color: rc, fontWeight: 700, marginTop: 1 }}>{sl}</div> : null; })()}
                 </>
               ) : (
                 <>
@@ -1250,6 +1262,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           ))}
         </div>
         {!readOnly && <button onClick={() => setShowCopyWeek(true)} title="Copiar semana a otro equipo" style={{ padding: "7px 12px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>⧉ Copiar</button>}
+        <button onClick={() => setShowBattery((v) => !v)} title="Batería de ejercicios" style={{ padding: "7px 12px", borderRadius: 9, border: `1px solid ${showBattery ? COLORS.lime : COLORS.line}`, background: showBattery ? COLORS.limeDark : COLORS.panelRaised, color: showBattery ? COLORS.lime : COLORS.text, fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>🏋️ Batería</button>
         <button onClick={() => setShowPdf(true)} title="Exportar PDF" style={{ padding: "7px 12px", borderRadius: 9, border: "none", background: COLORS.lime, color: "#14171c", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>↓ PDF</button>
       </div>
 
@@ -1443,13 +1456,13 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                     const wkHasScore = wkMatchInfo && (wkMatchInfo.scoreHome !== "" || wkMatchInfo.scoreAway !== "");
                     return (
                     <div style={{ borderRadius: 6, overflow: "hidden", width: "100%", background: intensity ? intensity.dark : COLORS.panelRaised }}>
-                      <div onClick={() => openEditor(date)} style={{ padding: "5px 3px", textAlign: "center", cursor: "pointer" }}>
+                      <div onClick={() => setSessionChoiceDate(date)} style={{ padding: "5px 3px", textAlign: "center", cursor: "pointer" }}>
                         <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 11, fontWeight: 600, color: intensity ? intensity.color : COLORS.textFaint }}>{session.isRest ? "Descanso" : session.sessionType}</div>
                         {(team.kind || "equipo") === "equipo" ? (
                           <>
                             {wkMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} /></div>}
                             {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>vs {wkMatchInfo.rivalText}</div>}
-                            {(() => { const sl = wkMatchInfo ? scoreLabel(wkMatchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 8, color: COLORS.text, fontWeight: 700 }}>{sl}</div> : null; })()}
+                            {(() => { const sl = wkMatchInfo ? scoreLabel(wkMatchInfo, session.sessionType) : null; const rc = sl ? scoreResultColor(wkMatchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 8, color: rc, fontWeight: 700 }}>{sl}</div> : null; })()}
                           </>
                         ) : (
                           <>
@@ -1530,6 +1543,33 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
           sjPercentages={team.sjPercentages || null}
           customTemplates={team.customMesoTemplates || []}
         />
+      )}
+
+      {/* Diálogo Ver / Editar sesión */}
+      {sessionChoiceDate && (() => {
+        const choiceSess = sessionByDate[sessionChoiceDate];
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 150, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setSessionChoiceDate(null)}>
+            <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, padding: "20px 22px", minWidth: 240, maxWidth: 320, width: "100%" }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 16, color: COLORS.text, marginBottom: 4 }}>
+                {choiceSess?.sessionType || "Sesión"} · {fmtDateLong(sessionChoiceDate)}
+              </div>
+              <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.6, marginBottom: 18 }}>{weekdayLabel(sessionChoiceDate)}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button onClick={() => { setViewDetail(sessionChoiceDate); setSessionChoiceDate(null); }} style={{ padding: "12px 0", borderRadius: 10, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: COLORS.text, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>👁 Ver sesión</button>
+                {!readOnly && <button onClick={() => { openEditor(sessionChoiceDate); setSessionChoiceDate(null); }} style={{ padding: "12px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>✎ Editar</button>}
+                <button onClick={() => setSessionChoiceDate(null)} style={{ padding: "10px 0", borderRadius: 10, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontSize: 13, cursor: "pointer" }}>✕ Cancelar</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Panel batería desde planificación */}
+      {showBattery && (
+        <DockPanel id="battery-view" title="🏋️ Batería" order={2} width={440} pct={0.42} minWidth={320} zIndex={50}>
+          <ExerciseBatteryPanel coachUsername={coachUsernameProp || team.coachUsername || ""} onClose={() => setShowBattery(false)} />
+        </DockPanel>
       )}
 
       {editDate && (
