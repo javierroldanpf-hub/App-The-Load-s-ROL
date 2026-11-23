@@ -4,6 +4,7 @@ import { COLORS, TEAM_KINDS, DEFAULT_POSITIONS } from "@/lib/constants";
 import { genTeamCode } from "@/lib/utils";
 import { inputStyle, primaryBtn, ghostBtn } from "@/lib/utils";
 import { getTeam, saveTeam, getTeamIdByCode, saveUser } from "@/lib/db";
+import { SPORTS } from "@/lib/pitchPositions";
 import TopBar from "./TopBar";
 import Avatar from "./Avatar";
 import ImageUploadButton from "./ImageUploadButton";
@@ -94,6 +95,13 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
     await loadTeams();
   };
 
+  const handleUpdateSport = async (teamId, sport) => {
+    const team = await getTeam(teamId);
+    if (!team) return;
+    await saveTeam({ ...team, sport: sport || null });
+    await loadTeams();
+  };
+
   const handleSavePositions = async (teamId, positions) => {
     const team = await getTeam(teamId);
     if (!team) return;
@@ -167,6 +175,19 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
                         }}>{def.label}</button>
                       ))}
                     </div>
+                    {/* Deporte (solo para equipos) */}
+                    {(t.kind || "equipo") === "equipo" && (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ fontSize: 11, color: COLORS.text, opacity: 0.6, marginBottom: 6 }}>Deporte</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                          {SPORTS.map((s) => (
+                            <button key={s} onClick={() => handleUpdateSport(t.teamId, t.sport === s ? null : s)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${t.sport === s ? COLORS.lime : COLORS.line}`, background: t.sport === s ? COLORS.limeDark : "transparent", color: t.sport === s ? COLORS.lime : COLORS.text, fontSize: 11, fontWeight: t.sport === s ? 700 : 400, cursor: "pointer" }}>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div style={{ display: "flex", gap: 8 }}>
                       <ImageUploadButton label={(t.kind || "equipo") === "equipo" ? "Cambiar escudo" : "Cambiar foto"} onUploaded={(dataUrl) => handleUpdateCrest(t.teamId, dataUrl)} />
                       {(t.kind || "equipo") === "equipo" && (
