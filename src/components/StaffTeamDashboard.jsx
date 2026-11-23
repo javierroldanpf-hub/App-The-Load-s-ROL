@@ -21,6 +21,7 @@ import HelpPanel from "./HelpPanel";
 import PrintableReportModal from "./PrintableReportModal";
 import SettingsPanel from "./SettingsPanel";
 import SquadModal from "./SquadModal";
+import SquadTab from "./SquadTab";
 import HiitPrescriptorModal from "./HiitPrescriptorModal";
 import SpacesCalculatorModal from "./SpacesCalculatorModal";
 import InjuryIndexPanel from "./InjuryIndexPanel";
@@ -142,6 +143,7 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
   const viewerCanSeeMessages = readOnly && (viewerPerms.canSeeMessages ?? team.allowViewerSeeMessages ?? false);
 
   const mainTabs = [
+    ...(teamKind === "equipo" ? [{ id: "plantilla", label: "Plantilla" }] : []),
     { id: "resumen", label: "Datos de Carga" },
     { id: "calendario", label: "Planificación" },
     ...(!readOnly || viewerCanSeeMessages ? [{ id: "mensajes", label: "Avisos", badge: unreadCount > 0 ? unreadCount : null }] : []),
@@ -434,6 +436,10 @@ export default function StaffTeamDashboard({ user, teamId, onBack, onLogout, rea
         </>
         );
       })()}
+
+      {tab === "plantilla" && (
+        <SquadTab team={team} teamId={teamId} players={enrichedRosterForTeam} onPlayersUpdate={refreshData} readOnly={readOnly} />
+      )}
 
       {tab === "calendario" && (
         <CoachCalendarEditor team={teamWithPhotos} sessions={sessions} onSessionsChange={refreshData} readOnly={readOnly && !viewerCanEditCalendar} displayNames={displayNames} coachName={user?.display_name || user?.displayName || user?.username || ""} teamGender={teamGender} playerProfiles={playerProfiles} coachUsername={team.coachUsername || user?.username || ""} />

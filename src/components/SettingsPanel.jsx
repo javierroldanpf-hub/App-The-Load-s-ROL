@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/constants";
 import { saveTeam, saveTeamRosterDirect, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam, getUser, saveUser, getTeamViewers } from "@/lib/db";
 import { simpleHash } from "@/lib/utils";
+import { SPORTS } from "@/lib/pitchPositions";
 import Avatar from "./Avatar";
 
 const inp = { padding: "9px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
@@ -681,6 +682,10 @@ export default function SettingsPanel({ team, teamWithPhotos, onTeamUpdate, sess
       </Accordion>}
 
       {/* ── SEXO DEL EQUIPO (solo equipo, no grupo ni individual) ── */}
+      {(team.kind || "equipo") === "equipo" && (
+        <SportSelectorSection team={team} save={save} />
+      )}
+
       {(team.kind || "equipo") === "equipo" && (
         <Accordion title="Sexo del equipo">
           <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 12 }}>Indica el sexo del equipo para adaptar el lenguaje en las estadísticas y el PDF.</div>
@@ -1555,6 +1560,29 @@ function NotifSection({ coachUsername, team = {}, teamWithPhotos = {} }) {
         {saved ? "✓ Guardado" : saving ? "Guardando..." : "Guardar"}
       </button>
     </div>
+  );
+}
+
+function SportSelectorSection({ team, save }) {
+  const [sport, setSport] = useState(team.sport || "");
+  const [savedKey, setSavedKey] = useState(null);
+  const handleSave = async () => {
+    await save({ sport: sport || null }, "sport");
+    setSavedKey("sport");
+    setTimeout(() => setSavedKey(null), 1800);
+  };
+  return (
+    <Accordion title="Deporte">
+      <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 12 }}>Selecciona el deporte para el campograma de plantilla.</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+        {SPORTS.map((s) => (
+          <button key={s} onClick={() => setSport(sport === s ? "" : s)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${sport === s ? COLORS.lime : COLORS.line}`, background: sport === s ? COLORS.limeDark : "transparent", color: sport === s ? COLORS.lime : COLORS.text, fontSize: 12, fontWeight: sport === s ? 700 : 400, cursor: "pointer" }}>
+            {s}
+          </button>
+        ))}
+      </div>
+      <button onClick={handleSave} style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>{savedKey === "sport" ? "✓ Guardado" : "Guardar"}</button>
+    </Accordion>
   );
 }
 
