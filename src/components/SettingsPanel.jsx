@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { COLORS } from "@/lib/constants";
 import { saveTeam, saveTeamRosterDirect, getTeamsByCoach, transferPlayerData, deletePlayerData, updateRpeDurationForMatch, getCoachNotifSettings, saveCoachNotifSettings, deleteTeam, expelPlayer, setPlayerTeam, getUser, saveUser, getTeamViewers } from "@/lib/db";
 import { simpleHash } from "@/lib/utils";
-import { SPORTS } from "@/lib/pitchPositions";
+import { SPORTS, SPORT_EMOJIS as SPORT_ICONS } from "@/lib/pitchPositions";
 import Avatar from "./Avatar";
 
 const inp = { padding: "9px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 13, outline: "none", boxSizing: "border-box" };
@@ -1577,7 +1577,7 @@ function SportSelectorSection({ team, save }) {
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
         {SPORTS.map((s) => (
           <button key={s} onClick={() => setSport(sport === s ? "" : s)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${sport === s ? COLORS.lime : COLORS.line}`, background: sport === s ? COLORS.limeDark : "transparent", color: sport === s ? COLORS.lime : COLORS.text, fontSize: 12, fontWeight: sport === s ? 700 : 400, cursor: "pointer" }}>
-            {s}
+            {SPORT_ICONS[s] || ""} {s}
           </button>
         ))}
       </div>

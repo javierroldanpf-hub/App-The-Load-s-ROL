@@ -4,7 +4,7 @@ import { COLORS, TEAM_KINDS, DEFAULT_POSITIONS } from "@/lib/constants";
 import { genTeamCode } from "@/lib/utils";
 import { inputStyle, primaryBtn, ghostBtn } from "@/lib/utils";
 import { getTeam, saveTeam, getTeamIdByCode, saveUser } from "@/lib/db";
-import { SPORTS } from "@/lib/pitchPositions";
+import { SPORTS, SPORT_EMOJIS } from "@/lib/pitchPositions";
 import TopBar from "./TopBar";
 import Avatar from "./Avatar";
 import ImageUploadButton from "./ImageUploadButton";
@@ -182,7 +182,7 @@ export default function CoachTeamPicker({ user, onUserUpdate, onEnterTeam, onLog
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                           {SPORTS.map((s) => (
                             <button key={s} onClick={() => handleUpdateSport(t.teamId, t.sport === s ? null : s)} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${t.sport === s ? COLORS.lime : COLORS.line}`, background: t.sport === s ? COLORS.limeDark : "transparent", color: t.sport === s ? COLORS.lime : COLORS.text, fontSize: 11, fontWeight: t.sport === s ? 700 : 400, cursor: "pointer" }}>
-                              {s}
+                              {SPORT_EMOJIS[s] || ""} {s}
                             </button>
                           ))}
                         </div>

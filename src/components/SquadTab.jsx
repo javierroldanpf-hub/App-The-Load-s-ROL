@@ -1,45 +1,80 @@
 "use client";
 import { useState } from "react";
 import { COLORS } from "@/lib/constants";
-import { pitchProfile, SPORTS } from "@/lib/pitchPositions";
+import { pitchProfile, SPORT_EMOJIS } from "@/lib/pitchPositions";
 import { savePlayerProfile } from "@/lib/db";
-import PitchField from "./PitchField";
 import Avatar from "./Avatar";
 
 const T = COLORS.text;
 
-// ─── Token de jugador sobre el campo ─────────────────────────────────────────
-function PlayerToken({ player, size = 36 }) {
+// ─── Tarjeta de jugador en el campograma ──────────────────────────────────────
+function PlayerCard({ player, injured = false, size = 44 }) {
   const initials = (player.displayName || player.username || "?").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const firstName = (player.displayName || player.username || "").split(" ")[0];
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-      <div style={{ width: size, height: size, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.9)", overflow: "hidden", background: COLORS.panelRaised, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {player.photoUrl
-          ? <img src={player.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          : <span style={{ fontSize: size * 0.36, fontWeight: 700, color: T, lineHeight: 1 }}>{initials}</span>}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: size + 8 }}>
+      <div style={{ position: "relative" }}>
+        <div style={{ width: size, height: size, borderRadius: "50%", border: `2px solid ${injured ? "#ef4444" : "rgba(255,255,255,0.85)"}`, overflow: "hidden", background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          {player.photoUrl
+            ? <img src={player.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <span style={{ fontSize: size * 0.33, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{initials}</span>}
+        </div>
+        {injured && <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 11 }}>🩹</span>}
       </div>
-      <span style={{ fontSize: 9, color: "#fff", fontWeight: 700, background: "rgba(0,0,0,0.65)", borderRadius: 4, padding: "1px 4px", whiteSpace: "nowrap", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis" }}>
-        {(player.displayName || player.username || "").split(" ")[0]}
-      </span>
+      <span style={{ fontSize: 9, color: "#fff", fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.9)", whiteSpace: "nowrap", maxWidth: size + 20, overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{firstName}</span>
+      {player.position && <span style={{ fontSize: 8, color: "rgba(255,255,255,0.7)", textShadow: "0 1px 2px rgba(0,0,0,0.9)", whiteSpace: "nowrap", maxWidth: size + 20, overflow: "hidden", textOverflow: "ellipsis", textAlign: "center" }}>{player.position}</span>}
     </div>
   );
 }
 
 // ─── Campograma ───────────────────────────────────────────────────────────────
+const FIELD_BG = {
+  football: "repeating-linear-gradient(90deg, #2d7a38 0px, #2d7a38 55px, #27702f 55px, #27702f 110px)",
+  hockey:   "repeating-linear-gradient(90deg, #2a78a0 0px, #2a78a0 55px, #256e94 55px, #256e94 110px)",
+  futsal:   "#2f6fb5",
+  basketball: "#c68a4b",
+  handball: "#3a78b8",
+  volleyball: "#2c6fa8",
+  rugby:    "repeating-linear-gradient(90deg, #2d7a38 0px, #2d7a38 55px, #27702f 55px, #27702f 110px)",
+};
+const LINE_LABELS = {
+  gk: "Portero", def: "Defensa", mcd: "Pivote", mc: "Medio", mp: "Media\npunta", att: "Ataque",
+  base: "Base", wing: "Alero", piv: "Pívot",
+  front: "Delantera", back: "Zaguera",
+  fr: "Delantera", sl: "2ª línea", tr: "3ª línea", hv: "Medio", tq: "Tres cuartos", fb: "Zaguero",
+};
+
 function CampoView({ players, team }) {
   const profile = pitchProfile(team);
   const [formationId, setFormationId] = useState(profile.defaultFormation);
-  const formation = profile.formations.find((f) => f.id === formationId) || profile.formations[0];
+  const injuredPlayers = team.injuredPlayers || [];
 
-  // Classify all players into lines
+  // GPS/App: sin campo, mostrar lista simple
+  if (!profile.field) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {players.map((pl) => (
+          <div key={pl.username} style={{ display: "flex", alignItems: "center", gap: 10, background: COLORS.panelRaised, borderRadius: 10, padding: "10px 12px" }}>
+            <Avatar name={pl.displayName || pl.username} photoUrl={pl.photoUrl} size={36} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T }}>{pl.displayName || pl.username}</div>
+              {pl.position && <div style={{ fontSize: 11, color: T, opacity: 0.6 }}>{pl.position}</div>}
+            </div>
+            {injuredPlayers.includes(pl.username) && <span style={{ fontSize: 14 }}>🩹</span>}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Classify players into lines (preserving order within each line)
   const lineMap = {};
   const unassigned = [];
   for (const pl of players) {
     const slot = profile.classify(pl.position || "");
     if (slot) {
-      const key = slot.line;
-      if (!lineMap[key]) lineMap[key] = [];
-      lineMap[key].push({ pl, order: slot.order });
+      if (!lineMap[slot.line]) lineMap[slot.line] = [];
+      lineMap[slot.line].push({ pl, order: slot.order });
     } else {
       unassigned.push(pl);
     }
@@ -48,15 +83,18 @@ function CampoView({ players, team }) {
     lineMap[k] = lineMap[k].sort((a, b) => a.order - b.order).map((x) => x.pl);
   }
 
-  // Build ordered lines from profile (bottom = gk, top = attack)
-  const orderedLines = [...profile.lines].reverse(); // display: gk bottom → att top
+  // Lines displayed left→right: gk first, attack last (like a horizontal pitch)
+  const activeLinesOrdered = profile.lines; // already gk→att order in the profile
+
+  const fieldBg = FIELD_BG[profile.field] || FIELD_BG.football;
+  const hasPlayers = activeLinesOrdered.some((l) => (lineMap[l] || []).length > 0);
 
   return (
     <div>
       {/* Formation selector */}
       {profile.formations.length > 1 && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, color: T, opacity: 0.6, alignSelf: "center" }}>Formación:</span>
+        <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: T, opacity: 0.6 }}>Formación:</span>
           {profile.formations.map((f) => (
             <button key={f.id} onClick={() => setFormationId(f.id)} style={{ padding: "4px 10px", borderRadius: 7, border: `1px solid ${formationId === f.id ? COLORS.lime : COLORS.line}`, background: formationId === f.id ? COLORS.limeDark : "transparent", color: formationId === f.id ? COLORS.lime : T, fontSize: 11, fontWeight: formationId === f.id ? 700 : 400, cursor: "pointer" }}>
               {f.id}
@@ -65,23 +103,38 @@ function CampoView({ players, team }) {
         </div>
       )}
 
-      {/* Campo */}
-      <div style={{ position: "relative", width: "100%", paddingBottom: "150%", borderRadius: 10, overflow: "hidden" }}>
-        <PitchField field={profile.field} />
-        {/* Lines overlay */}
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", padding: "8px 4px" }}>
-          {orderedLines.map((lineId) => {
-            const linePlayers = lineMap[lineId] || [];
-            if (linePlayers.length === 0) return <div key={lineId} style={{ flex: 1 }} />;
-            return (
-              <div key={lineId} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-around" }}>
-                {linePlayers.map((pl) => (
-                  <PlayerToken key={pl.username} player={pl} size={32} />
-                ))}
-              </div>
-            );
-          })}
-        </div>
+      {/* Tactical board – horizontal layout */}
+      <div style={{ background: fieldBg, borderRadius: 12, border: "2px solid rgba(255,255,255,0.15)", overflow: "hidden", position: "relative" }}>
+        {/* White pitch border lines */}
+        <div style={{ position: "absolute", inset: "6px", border: "2px solid rgba(255,255,255,0.4)", borderRadius: 2, pointerEvents: "none" }} />
+        {/* Center circle decoration */}
+        <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: 60, height: 60, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.25)", pointerEvents: "none" }} />
+
+        {!hasPlayers ? (
+          <div style={{ padding: "32px 16px", textAlign: "center", color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
+            Asigna posiciones en la pestaña <strong style={{ color: "rgba(255,255,255,0.9)" }}>✎ Posiciones</strong> para ver los jugadores en el campo
+          </div>
+        ) : (
+          <div style={{ display: "flex", minHeight: 240, padding: "12px 8px" }}>
+            {activeLinesOrdered.map((lineId) => {
+              const linePlayers = lineMap[lineId] || [];
+              const label = LINE_LABELS[lineId] || lineId.toUpperCase();
+              return (
+                <div key={lineId} style={{ flex: linePlayers.length > 0 ? Math.max(1, linePlayers.length) : 1, display: "flex", flexDirection: "column", alignItems: "center", borderRight: "1px solid rgba(255,255,255,0.1)", padding: "0 4px", minWidth: 60 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10, textAlign: "center", whiteSpace: "pre-line" }}>{label}</div>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-around", alignItems: "center", gap: 8 }}>
+                    {linePlayers.length === 0
+                      ? <div style={{ width: 36, height: 36, borderRadius: "50%", border: "1.5px dashed rgba(255,255,255,0.2)" }} />
+                      : linePlayers.map((pl) => (
+                          <PlayerCard key={pl.username} player={pl} injured={injuredPlayers.includes(pl.username)} size={40} />
+                        ))
+                    }
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Unassigned */}

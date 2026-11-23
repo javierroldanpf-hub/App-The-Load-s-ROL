@@ -169,8 +169,18 @@ const VOLLEY = {
   positions: ["Colocador", "Opuesto", "Receptor", "Central", "Líbero"],
 };
 
-const PROFILE_BY_SPORT = { "Fútbol": FOOTBALL, "Hockey": HOCKEY, "Fútbol sala": FUTSAL, "Baloncesto": BASKETBALL, "Balonmano": HANDBALL, "Rugby": RUGBY, "Voleibol": VOLLEY };
+const GPS_APP = {
+  id: "gps", field: null, lines: [], gkLine: null, defLine: null, defaultFormation: null,
+  classify: () => null,
+  formations: [],
+  slotLabel: () => "",
+  positions: [],
+};
+
+const PROFILE_BY_SPORT = { "Fútbol": FOOTBALL, "Hockey": HOCKEY, "Fútbol sala": FUTSAL, "Baloncesto": BASKETBALL, "Balonmano": HANDBALL, "Rugby": RUGBY, "Voleibol": VOLLEY, "GPS/App": GPS_APP };
 for (const pr of Object.values(PROFILE_BY_SPORT)) pr.lineIdx = idxOf(pr.lines);
+
+export const SPORT_EMOJIS = { "Fútbol": "⚽", "Hockey": "🏑", "Fútbol sala": "🏃", "Baloncesto": "🏀", "Balonmano": "🤾", "Rugby": "🏉", "Voleibol": "🏐", "GPS/App": "📡" };
 
 export const SPORTS = Object.keys(PROFILE_BY_SPORT);
 
