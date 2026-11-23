@@ -4,6 +4,13 @@ import { COLORS, WEEKDAY_LABELS } from "@/lib/constants";
 import { weekDates, mondayOf, addWeeks, addMonths, monthGridDates, weekNumberFrom, addDays } from "@/lib/utils";
 import Avatar from "./Avatar";
 
+function fmtSeriesReps(series, reps) {
+  if (series && reps) return `${series}x${reps}`;
+  if (series) return `${series}s`;
+  if (reps) return `${reps}r`;
+  return null;
+}
+
 function monthLabel(d) {
   return new Date(d + "T00:00:00").toLocaleDateString("es-ES", { month: "long", year: "numeric" });
 }
@@ -166,7 +173,7 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                         ) : (
                           <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
                         )}
-                        {[ex.series && `${ex.series}s`, ex.repeticiones && `${ex.repeticiones}r`, ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
+                        {[fmtSeriesReps(ex.series, ex.repeticiones), ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
                           <span key={si} style={{ color: D.text, marginLeft: 4 }}>{seg}</span>
                         ))}
                       </div>
@@ -217,7 +224,7 @@ function SessionCard({ session, showGroup, showInd, compact = false, displayName
                         ) : (
                           <span style={{ color: "#a78bfa", fontWeight: 700 }}>E{ei + 1}. {ex.name}</span>
                         )}
-                        {[ex.series && `${ex.series}s`, ex.repeticiones && `${ex.repeticiones}r`, ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
+                        {[fmtSeriesReps(ex.series, ex.repeticiones), ex.intensidad && ex.intensidad, ex.recuperacion && `↺ ${ex.recuperacion}`].filter(Boolean).map((seg, si) => (
                           <span key={si} style={{ color: D.text, marginLeft: 4 }}>{seg}</span>
                         ))}
                       </div>
@@ -525,7 +532,7 @@ function SessionContent({ team, session, date, coachName }) {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                   <thead>
                     <tr style={{ background: D.bg }}>
-                      {["#", "Ejercicio", "Series", "Reps", "Intensidad", "Recup."].map((h) => (
+                      {["#", "Ejercicio", "Series x Reps", "Intensidad", "Recup."].map((h) => (
                         <th key={h} style={{ padding: "5px 8px", textAlign: "left", color: D.text, fontWeight: 700, borderBottom: `1px solid ${D.line}` }}>{h}</th>
                       ))}
                     </tr>
@@ -541,8 +548,7 @@ function SessionContent({ team, session, date, coachName }) {
                             <span style={{ color: D.text }}>{ex.name}</span>
                           )}
                         </td>
-                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.series}</td>
-                        <td style={{ padding: "5px 8px", color: D.text }}>{ex.repeticiones}</td>
+                        <td style={{ padding: "5px 8px", color: D.text }}>{fmtSeriesReps(ex.series, ex.repeticiones)}</td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.intensidad}</td>
                         <td style={{ padding: "5px 8px", color: D.text }}>{ex.recuperacion}</td>
                       </tr>
