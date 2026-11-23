@@ -28,11 +28,11 @@ function scoreLabel(info, sessionType) {
   return isAway ? `${info.scoreAway} – ${info.scoreHome}` : `${info.scoreHome} – ${info.scoreAway}`;
 }
 // Victoria=#4ade80 empate=#fbbf24 derrota=#f87171
-function scoreResultColor(info, sessionType) {
+// scoreHome = Tu equipo, scoreAway = Rival (siempre, independiente de MD(H)/MD(A))
+function scoreResultColor(info) {
   if (info.scoreHome === "" || info.scoreAway === "") return COLORS.text;
-  const isAway = sessionType === "MD(A)";
-  const ours   = Number(isAway ? info.scoreAway : info.scoreHome);
-  const theirs = Number(isAway ? info.scoreHome : info.scoreAway);
+  const ours   = Number(info.scoreHome);
+  const theirs = Number(info.scoreAway);
   if (ours > theirs) return "#4ade80";
   if (ours === theirs) return "#fbbf24";
   return "#f87171";
@@ -1113,7 +1113,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                 <>
                   {matchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 4, marginBottom: 2 }}><img src={matchInfo.rivalPhoto} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }} /></div>}
                   {matchInfo?.rivalText && <div style={{ fontSize: 9, color: "#f87171", fontWeight: 700, marginTop: 2, wordBreak: "break-word", lineHeight: 1.2 }}>vs {matchInfo.rivalText}</div>}
-                  {(() => { const sl = matchInfo ? scoreLabel(matchInfo, session.sessionType) : null; const rc = sl ? scoreResultColor(matchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 9, color: rc, fontWeight: 700, marginTop: 1 }}>{sl}</div> : null; })()}
+                  {(() => { const sl = matchInfo ? scoreLabel(matchInfo, session.sessionType) : null; const rc = sl ? scoreResultColor(matchInfo) : null; return sl ? <div style={{ fontSize: 9, color: rc, fontWeight: 700, marginTop: 1 }}>{sl}</div> : null; })()}
                 </>
               ) : (
                 <>
@@ -1462,7 +1462,7 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
                           <>
                             {wkMatchInfo?.rivalPhoto && <div style={{ display: "flex", justifyContent: "center", marginTop: 3 }}><img src={wkMatchInfo.rivalPhoto} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 3 }} /></div>}
                             {wkMatchInfo?.rivalText && <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, marginTop: 1, wordBreak: "break-word", lineHeight: 1.2 }}>vs {wkMatchInfo.rivalText}</div>}
-                            {(() => { const sl = wkMatchInfo ? scoreLabel(wkMatchInfo, session.sessionType) : null; const rc = sl ? scoreResultColor(wkMatchInfo, session.sessionType) : null; return sl ? <div style={{ fontSize: 8, color: rc, fontWeight: 700 }}>{sl}</div> : null; })()}
+                            {(() => { const sl = wkMatchInfo ? scoreLabel(wkMatchInfo, session.sessionType) : null; const rc = sl ? scoreResultColor(wkMatchInfo) : null; return sl ? <div style={{ fontSize: 8, color: rc, fontWeight: 700 }}>{sl}</div> : null; })()}
                           </>
                         ) : (
                           <>
