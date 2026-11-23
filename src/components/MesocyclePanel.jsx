@@ -555,6 +555,7 @@ function WeekEditor({ week, onSave, onClose, isSJ = false }) {
   const [contenidos, setContenidos] = useState(week.contenidos || "");
   const [sjDays, setSjDays]       = useState(String(week.sjDays ?? 4));
   const [sjBaseMin, setSjBaseMin] = useState(String(week.sjBaseMinutes ?? 100));
+  const [sjWeekAlias, setSjWeekAlias] = useState(String(week.sjWeekAlias ?? ""));
 
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, background: "#1c2128", border: `1px solid ${COLORS.line}`, color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" };
 
@@ -583,16 +584,32 @@ function WeekEditor({ week, onSave, onClose, isSJ = false }) {
         </div>
 
         {isSJ && (
-          <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Días semana tipo</div>
-              <input type="number" inputMode="numeric" min={1} max={7} value={sjDays} onChange={(e) => setSjDays(e.target.value)} style={{ ...inputStyle, color: "#38bdf8" }} />
+          <>
+            <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Días semana tipo</div>
+                <input type="number" inputMode="numeric" min={1} max={7} value={sjDays} onChange={(e) => setSjDays(e.target.value)} style={{ ...inputStyle, color: "#38bdf8" }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Min. semana tipo</div>
+                <input type="number" inputMode="numeric" min={0} value={sjBaseMin} onChange={(e) => setSjBaseMin(e.target.value)} style={{ ...inputStyle, color: "#38bdf8" }} />
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Min. semana tipo</div>
-              <input type="number" inputMode="numeric" min={0} value={sjBaseMin} onChange={(e) => setSjBaseMin(e.target.value)} style={{ ...inputStyle, color: "#38bdf8" }} />
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>Tendencia (% de semana canónica)</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {["Por defecto", "S1", "S2", "S3", "S4", "S5", "S6"].map((label, idx) => {
+                  const val = idx === 0 ? "" : String(idx);
+                  const active = sjWeekAlias === val;
+                  return (
+                    <button key={label} onClick={() => setSjWeekAlias(val)} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${active ? "#38bdf8" : COLORS.line}`, background: active ? "#38bdf822" : "transparent", color: active ? "#38bdf8" : COLORS.text, fontSize: 12, fontWeight: active ? 700 : 400, cursor: "pointer" }}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
@@ -617,7 +634,7 @@ function WeekEditor({ week, onSave, onClose, isSJ = false }) {
 
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1px solid ${COLORS.line}`, background: "transparent", color: COLORS.text, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-          <button onClick={() => onSave({ name, type, volume: Number(volume) || 0, intensity: Number(intensity) || 0, contenidos, ...(isSJ ? { sjDays: Number(sjDays) || 4, sjBaseMinutes: Number(sjBaseMin) || 100 } : {}) })} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Guardar</button>
+          <button onClick={() => onSave({ name, type, volume: Number(volume) || 0, intensity: Number(intensity) || 0, contenidos, ...(isSJ ? { sjDays: Number(sjDays) || 4, sjBaseMinutes: Number(sjBaseMin) || 100, sjWeekAlias: sjWeekAlias ? Number(sjWeekAlias) : null } : {}) })} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "none", background: COLORS.lime, color: "#14171c", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Guardar</button>
         </div>
       </div>
     </div>
@@ -1265,7 +1282,8 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
 
           if (meso.isSituacionesJugadas) {
             const activePct = (sjPercentages && sjPercentages.length >= 6) ? sjPercentages : SJ_PERCENTAGES;
-            const pct = activePct[i] || activePct[activePct.length - 1];
+            const pctIdx = w.sjWeekAlias ? (w.sjWeekAlias - 1) : i;
+            const pct = activePct[pctIdx] || activePct[activePct.length - 1];
             const unitShort = MESO_UNITS.find((u) => u.id === mesoUnit)?.short || "min";
             const edit = sjEdits[w.weekStart];
             const curDays = edit ? edit.days : String(w.sjDays ?? 4);
@@ -1276,7 +1294,7 @@ function MesoDetail({ meso, onUpdate, onDelete, onBack, readOnly = false, roster
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                   <div>
                     <div style={{ fontSize: 11, color: COLORS.text, marginBottom: 2 }}>Microciclo {i + 1} · {fmtDateShort(w.weekStart)} – {fmtDateShort(w.weekEnd)}</div>
-                    <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: "#38bdf8" }}>{w.name || `Microciclo ${i + 1}`}</div>
+                    <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 600, fontSize: 14, color: "#38bdf8" }}>{w.name || `Microciclo ${i + 1}`}{w.sjWeekAlias ? <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#fb923c", background: "#fb923c22", borderRadius: 6, padding: "2px 7px" }}>S{w.sjWeekAlias}</span> : null}</div>
                   </div>
                   {!readOnly && <button onClick={() => setEditingWeek(w)} style={{ background: COLORS.panelRaised, border: `1px solid ${COLORS.line}`, color: COLORS.text, borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 11 }}>Editar</button>}
                 </div>
@@ -1818,7 +1836,8 @@ export function MesoWeekInline({ mesocycles, weekMonday, onMesocyclesChange, rea
   const pct = (() => {
     if (!isSJ) return {};
     const activePct = (sjPercentages && sjPercentages.length >= 6) ? sjPercentages : SJ_PERCENTAGES;
-    return activePct[weekIdx] || activePct[activePct.length - 1];
+    const pctIdx = week.sjWeekAlias ? (week.sjWeekAlias - 1) : weekIdx;
+    return activePct[pctIdx] || activePct[activePct.length - 1];
   })();
 
   const handleSave = async (data) => {
