@@ -147,18 +147,19 @@ function applyOverrides(auto, overrides, all) {
   return groups;
 }
 
-function PlayerCard({ player, group, onMove }) {
+function PlayerCard({ player, group, onMove, isMe = false }) {
   const initials = (player.displayName || player.username || "?")
     .split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
   const photoSz = { width: 56, height: 68, borderRadius: 5, border: "2px solid rgba(255,255,255,0.85)", flexShrink: 0, objectFit: "cover", display: "block" };
   return (
-    <div style={{ display: "flex", gap: 10, alignItems: "center", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px", minWidth: 0 }}>
+    <div style={{ display: "flex", gap: 10, alignItems: "center", background: isMe ? "rgba(166,230,77,0.12)" : "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px", minWidth: 0, border: isMe ? `1px solid ${COLORS.lime}66` : "none" }}>
       {player.photoUrl
         ? <img src={player.photoUrl} alt="" style={photoSz} />
         : <div style={{ ...photoSz, background: LABEL_BG, color: T, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18 }}>{initials}</div>}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ color: T, fontSize: 14, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, marginBottom: 5 }}>
+        <div style={{ color: isMe ? COLORS.lime : T, fontSize: 14, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2, marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}>
           {player.displayName || player.username}
+          {isMe && <span style={{ fontSize: 10, background: COLORS.lime, color: "#14171c", borderRadius: 4, padding: "1px 5px", fontWeight: 800, flexShrink: 0 }}>YO</span>}
         </div>
         <select value={group} onChange={(e) => onMove(Number(e.target.value))} aria-label={`Grupo de ${player.displayName}`}
           style={{ background: LABEL_BG, color: T, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 5, padding: "2px 4px", fontSize: 11, opacity: 0.75 }}>
@@ -189,7 +190,7 @@ function detectLifts(blocks) {
 // ── Documento ────────────────────────────────────────────────────────────────
 // La columna de grupos usa columnas internas: cada grupo = una columna vertical de tarjetas.
 // Si hay muchos jugadores, las tarjetas se hacen más compactas automáticamente.
-function TemplateDocument({ side, teamName, date, sessionType, blocks, roster, byGroup, lifts, still, prefs, onTogglePref, onMove }) {
+function TemplateDocument({ side, teamName, date, sessionType, blocks, roster, byGroup, lifts, still, prefs, onTogglePref, onMove, myUsername }) {
   const rosterBy   = (u) => roster.find((p) => p.username === u);
   const nEx        = blocks.reduce((n, b) => n + (b.exercises || []).length, 0);
   const exCols     = side
@@ -274,7 +275,7 @@ function TemplateDocument({ side, teamName, date, sessionType, blocks, roster, b
                     {list.map((u) => {
                       const p = rosterBy(u);
                       if (!p) return null;
-                      return <PlayerCard key={u} player={p} group={g} onMove={(ng) => onMove(u, ng)} />;
+                      return <PlayerCard key={u} player={p} group={g} onMove={(ng) => onMove(u, ng)} isMe={myUsername && u === myUsername} />;
                     })}
                   </div>
                 </div>
@@ -289,7 +290,7 @@ function TemplateDocument({ side, teamName, date, sessionType, blocks, roster, b
 }
 
 // ── Modal principal ──────────────────────────────────────────────────────────
-export default function SessionTvModal({ teamId, teamName = "", date, sessionType = "", blocks = [], roster = [], onClose }) {
+export default function SessionTvModal({ teamId, teamName = "", date, sessionType = "", blocks = [], roster = [], myUsername = null, onClose }) {
   const [overrides, setOverrides] = useState(() => lsGet(`tvTpl:groups:${teamId}`, {}));
   const [prefs,     setPrefs]     = useState(() => lsGet(`tvTpl:media:${teamId}`,  {}));
   const [allStill,  setAllStill]  = useState(false);
@@ -334,7 +335,7 @@ export default function SessionTvModal({ teamId, teamName = "", date, sessionTyp
   const hasOverrides = Object.keys(overrides).length > 0;
 
   const btn = { padding: "7px 11px", borderRadius: 9, border: `1px solid ${COLORS.line}`, background: COLORS.panelRaised, color: T, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" };
-  const docProps = { side: wide, teamName, date, sessionType, blocks, roster, byGroup, lifts, prefs, still: allStill, onTogglePref: togglePref, onMove: move };
+  const docProps = { side: wide, teamName, date, sessionType, blocks, roster, byGroup, lifts, prefs, still: allStill, onTogglePref: togglePref, onMove: move, myUsername };
 
   const modal = (
     <div style={{ position: "fixed", inset: 0, background: "#000", zIndex: 200, display: "flex", flexDirection: "column" }}>

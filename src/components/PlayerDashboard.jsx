@@ -2,13 +2,14 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { COLORS, TEAM_KINDS, INTENSITY_LEVELS, WEEKDAY_LABELS } from "@/lib/constants";
 import { todayStr, addDays, mondayOf, weekDates, weekNumberFrom, fmtDateLong, fmtDateShort, weekdayLabel, firstOfMonth, addMonths, monthLabel, monthGridDates } from "@/lib/utils";
-import { getTeam, getPlayerProfile, loadPlayerWellness, loadPlayerRpe, loadTeamSessions, getReminderSettings, saveReminderSettings, loadMesocycles, getPlayerAlertsForPlayer, dismissPlayerAlert } from "@/lib/db";
+import { getTeam, getPlayerProfile, loadPlayerWellness, loadPlayerRpe, loadTeamSessions, getReminderSettings, saveReminderSettings, loadMesocycles, getPlayerAlertsForPlayer, dismissPlayerAlert, getAllPlayerProfiles, getUsersDisplayNames } from "@/lib/db";
 import TopBar from "./TopBar";
 import Avatar from "./Avatar";
 import WellnessForm from "./WellnessForm";
 import RpeForm from "./RpeForm";
 import SessionDetailModal from "./SessionDetailModal";
 import PlayerMyData from "./PlayerMyData";
+import SessionTvModal from "./SessionTvModal";
 
 function parseMatchDesc(raw) {
   try {
@@ -34,6 +35,7 @@ export default function PlayerDashboard({ user, onLogout }) {
   const [rpe, setRpe] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [enrichedRoster, setEnrichedRoster] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const teamId = user.team_id || user.teamId;
@@ -53,6 +55,10 @@ export default function PlayerDashboard({ user, onLogout }) {
     setWellness(w);
     setRpe(r);
     setSessions(s);
+    if (t?.roster?.length) {
+      const [profs, names] = await Promise.all([getAllPlayerProfiles(teamId), getUsersDisplayNames(t.roster, teamId)]);
+      setEnrichedRoster(t.roster.map((u) => ({ username: u, displayName: profs[u]?.displayName || names[u]?.displayName || u, photoUrl: profs[u]?.photoUrl || names[u]?.photoUrl || null })));
+    }
   }, [teamId, user.username]);
 
   useEffect(() => { refreshAlerts(); }, [refreshAlerts]);
@@ -118,8 +124,8 @@ export default function PlayerDashboard({ user, onLogout }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 20, background: COLORS.panel, borderRadius: 12, padding: 4 }}>
-        {[{ id: "today", label: "Hoy" }, { id: "calendar", label: "Planificación" }, { id: "mydata", label: "Mis datos" }, { id: "settings", label: "Notificaciones" }].map((t) => (
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, background: COLORS.panel, borderRadius: 12, padding: 4, overflowX: "auto", scrollbarWidth: "none" }}>
+        {[{ id: "today", label: "Hoy" }, { id: "sesiones", label: "📺 Sesiones" }, { id: "calendar", label: "Planificación" }, { id: "mydata", label: "Mis datos" }, { id: "settings", label: "Notificaciones" }].map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             flex: 1, padding: "8px 0", borderRadius: 9, border: "none", fontSize: 12, fontWeight: 600,
             background: tab === t.id ? COLORS.panelRaised : "transparent",
@@ -149,6 +155,7 @@ export default function PlayerDashboard({ user, onLogout }) {
           existingYesterdayRpe={myRpe.find((e) => e.date === yesterdayStr)}
         />
       )}
+      {tab === "sesiones" && <PlayerSessionsView sessions={sessions} team={team} roster={enrichedRoster} myUsername={user.username} />}
       {tab === "calendar" && <PlayerCalendar sessions={sessions} team={team} user={user} rpe={rpe} refreshData={refreshData} profile={profile} />}
       {tab === "mydata" && <PlayerMyData user={user} team={team} onProfileUpdate={(p) => { setProfile(p); refreshData(); }} />}
       {tab === "settings" && <ReminderSettings username={user.username} />}
@@ -436,6 +443,73 @@ function PlayerStepCard({ stepNumber, title, subtitle, done, locked, lockedMessa
         {!locked && <span style={{ color: COLORS.text, fontSize: 13 }}>{open ? "▲" : "▼"}</span>}
       </button>
       {open && !locked && <div style={{ padding: "0 1.25rem 1.25rem" }}>{children}</div>}
+    </div>
+  );
+}
+
+// ── Vista de sesiones en formato TV para el jugador ──────────────────────────
+function getSessionBlocks(session) {
+  if (!session?.description) return [];
+  try {
+    const p = JSON.parse(session.description);
+    return p.blocks || [];
+  } catch { return []; }
+}
+
+function PlayerSessionsView({ sessions, team, roster, myUsername }) {
+  const [openDate, setOpenDate] = useState(null);
+  const today = todayStr();
+
+  // Sesiones con contenido (bloques o descripción), ordenadas de más reciente a más antigua
+  const withContent = sessions
+    .filter((s) => !s.isRest && s.date && (getSessionBlocks(s).length > 0 || s.description))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const openSession = withContent.find((s) => s.date === openDate);
+
+  if (withContent.length === 0) {
+    return <div style={{ color: COLORS.text, fontSize: 14, textAlign: "center", padding: "2rem 0", opacity: 0.6 }}>Aún no hay sesiones guardadas con contenido.</div>;
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.6, marginBottom: 12 }}>
+        {withContent.length} {withContent.length === 1 ? "sesión guardada" : "sesiones guardadas"}. Pulsa cualquiera para verla en formato TV.
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {withContent.map((s) => {
+          const isToday = s.date === today;
+          const blocks = getSessionBlocks(s);
+          const nEx = blocks.reduce((n, b) => n + (b.exercises || []).length, 0);
+          return (
+            <button key={s.date} onClick={() => setOpenDate(s.date)}
+              style={{ display: "flex", alignItems: "center", gap: 12, background: isToday ? COLORS.limeDark : COLORS.panelRaised, border: `1px solid ${isToday ? COLORS.lime : COLORS.line}`, borderRadius: 12, padding: "12px 14px", cursor: "pointer", textAlign: "left", width: "100%" }}>
+              <span style={{ fontSize: 22 }}>📺</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 15, color: isToday ? COLORS.lime : COLORS.text }}>
+                  {s.sessionType || "Sesión"}{isToday ? " · HOY" : ""}
+                </div>
+                <div style={{ fontSize: 12, color: COLORS.text, opacity: 0.7 }}>{fmtDateLong(s.date)}</div>
+                {nEx > 0 && <div style={{ fontSize: 11, color: COLORS.text, opacity: 0.5, marginTop: 2 }}>{blocks.length} bloque{blocks.length !== 1 ? "s" : ""} · {nEx} ejercicio{nEx !== 1 ? "s" : ""}</div>}
+              </div>
+              <span style={{ fontSize: 18, opacity: 0.5 }}>›</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {openDate && openSession && (
+        <SessionTvModal
+          teamId={team.teamId}
+          teamName={team.name}
+          date={openDate}
+          sessionType={openSession.sessionType || ""}
+          blocks={getSessionBlocks(openSession)}
+          roster={roster}
+          myUsername={myUsername}
+          onClose={() => setOpenDate(null)}
+        />
+      )}
     </div>
   );
 }
