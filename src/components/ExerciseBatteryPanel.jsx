@@ -179,8 +179,8 @@ export default function ExerciseBatteryPanel({ coachUsername, onSelect, onClose,
   return (
     <div style={panelStyle}>
       {/* Cabecera */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: pickerMode ? "0 0 12px" : "14px 16px", borderBottom: pickerMode ? `1px solid ${COLORS.line}` : "none", flexWrap: "wrap" }}>
-        {!pickerMode && <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 17, color: T, marginRight: "auto" }}>🏋️ Batería de ejercicios</div>}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: pickerMode ? "0 0 12px" : "16px 20px", borderBottom: `1px solid ${COLORS.line}`, flexWrap: "wrap" }}>
+        {!pickerMode && <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: T, marginRight: "auto" }}>🏋️ Batería de ejercicios{exercises.length > 0 ? <span style={{ fontWeight: 400, fontSize: 14, opacity: 0.5, marginLeft: 8 }}>· {exercises.length}</span> : null}</div>}
         {pickerMode && <div style={{ fontWeight: 700, fontSize: 14, color: T, flex: 1 }}>🔍 Buscar en batería</div>}
         <button
           onClick={() => setEditing("new")}
@@ -208,7 +208,7 @@ export default function ExerciseBatteryPanel({ coachUsername, onSelect, onClose,
       )}
 
       {/* Filtros */}
-      <div style={{ padding: pickerMode ? "10px 0" : "10px 16px", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ padding: pickerMode ? "10px 0" : "12px 20px", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -225,7 +225,7 @@ export default function ExerciseBatteryPanel({ coachUsername, onSelect, onClose,
       </div>
 
       {/* Grid de ejercicios */}
-      <div style={{ padding: pickerMode ? "0" : "0 16px 16px", overflowY: "auto", flex: 1, minHeight: 0 }}>
+      <div style={{ padding: pickerMode ? "0" : "0 20px 20px", overflowY: "auto", flex: 1, minHeight: 0 }}>
         {loading && <div style={{ color: T, fontSize: 13, padding: "12px 0", textAlign: "center", opacity: 0.6 }}>Cargando…</div>}
         {!loading && filtered.length === 0 && (
           <div style={{ color: T, fontSize: 13, opacity: 0.5, padding: "16px 0", textAlign: "center" }}>

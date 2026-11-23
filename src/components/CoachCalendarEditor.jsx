@@ -1567,9 +1567,11 @@ export default function CoachCalendarEditor({ team, sessions, onSessionsChange, 
 
       {/* Panel batería desde planificación */}
       {showBattery && (
-        <DockPanel id="battery-view" title="🏋️ Batería" order={2} width={440} pct={0.42} minWidth={320} zIndex={50}>
-          <ExerciseBatteryPanel coachUsername={coachUsernameProp || team.coachUsername || ""} onClose={() => setShowBattery(false)} />
-        </DockPanel>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", zIndex: 60 }} onClick={(e) => { if (e.target === e.currentTarget) setShowBattery(false); }}>
+          <div style={{ background: COLORS.panel, border: `1px solid ${COLORS.line}`, borderRadius: 16, width: "100%", maxWidth: 900, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <ExerciseBatteryPanel coachUsername={coachUsernameProp || team.coachUsername || ""} onClose={() => setShowBattery(false)} />
+          </div>
+        </div>
       )}
 
       {editDate && (
