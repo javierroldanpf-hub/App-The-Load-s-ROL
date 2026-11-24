@@ -1,8 +1,8 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { COLORS } from "@/lib/constants";
 import { pitchProfile, SPORT_EMOJIS } from "@/lib/pitchPositions";
-import { savePlayerProfile } from "@/lib/db";
+import { savePlayerProfile, loadPlayerWellness, loadPlayerRpe } from "@/lib/db";
 import Avatar from "./Avatar";
 
 const T = COLORS.text;
@@ -45,43 +45,154 @@ function FieldCard({ player, size = 42, status, onClick }) {
   );
 }
 
+// ─── Barra de puntuación (1-5) ────────────────────────────────────────────────
+function ScoreBar({ value, max = 5 }) {
+  const pct = Math.round((value / max) * 100);
+  const color = value <= 2 ? "#f87171" : value >= 4 ? "#4ade80" : "#fbbf24";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+      <div style={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: color, transition: "width 0.3s" }} />
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 700, color, minWidth: 14, textAlign: "right" }}>{value}</span>
+    </div>
+  );
+}
+
 // ─── Modal detalle jugador ────────────────────────────────────────────────────
-function PlayerModal({ player, status, onClose }) {
+function PlayerModal({ player, status, teamId, onClose }) {
+  const [wellnessData, setWellnessData] = useState(null);
+  const [rpeData, setRpeData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!player || !teamId) return;
+    setLoading(true);
+    Promise.all([
+      loadPlayerWellness(teamId, player.username),
+      loadPlayerRpe(teamId, player.username),
+    ]).then(([w, r]) => {
+      setWellnessData(w.slice(0, 14));
+      setRpeData(r.slice(0, 14));
+      setLoading(false);
+    });
+  }, [player, teamId]);
+
   if (!player) return null;
   const initials = (player.displayName || player.username || "?").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const latestW = wellnessData?.[0];
+  const wAvg = latestW ? ((latestW.sueno + latestW.fatiga + latestW.estres + latestW.dolor + latestW.animo) / 5) : null;
+  const latestRpe = rpeData?.[0];
+  const load7 = rpeData?.slice(0, 7).reduce((s, r) => s + (r.rpe || 0) * (r.duration || 0), 0) || 0;
+
+  const W_DIMS = [
+    { key: "sueno",  label: "Sueño" },
+    { key: "fatiga", label: "Fatiga" },
+    { key: "estres", label: "Estrés" },
+    { key: "dolor",  label: "Dolor" },
+    { key: "animo",  label: "Ánimo" },
+  ];
+
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: COLORS.panel, borderRadius: 18, padding: 24, maxWidth: 320, width: "100%", border: `1px solid ${COLORS.line}` }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: COLORS.panel, borderRadius: 18, padding: 20, maxWidth: 360, width: "100%", border: `1px solid ${COLORS.line}`, maxHeight: "90vh", overflowY: "auto" }}>
+
+        {/* Cabecera */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
           <div style={{ fontFamily: "'Oswald', sans-serif", fontWeight: 700, fontSize: 18, color: T }}>{player.displayName || player.username}</div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: T, fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}>✕</button>
         </div>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 16 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 12, overflow: "hidden", border: `2px solid ${status.injured ? "#ef4444" : "#4ade80"}`, flexShrink: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+
+        {/* Foto + estado */}
+        <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 16 }}>
+          <div style={{ width: 68, height: 68, borderRadius: 12, overflow: "hidden", border: `2px solid ${status.injured ? "#ef4444" : "#4ade80"}`, flexShrink: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {player.photoUrl
               ? <img src={player.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : <span style={{ fontSize: 24, fontWeight: 700, color: T }}>{initials}</span>}
+              : <span style={{ fontSize: 22, fontWeight: 700, color: T }}>{initials}</span>}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {player.position && <div style={{ fontSize: 12, color: T, opacity: 0.7 }}>{player.position}</div>}
-            {player.number && <div style={{ fontSize: 13, fontWeight: 700, color: T }}>#{player.number}</div>}
+            {player.number && <div style={{ fontSize: 12, fontWeight: 700, color: T }}>#{player.number}</div>}
             {status.available && !status.injured && <div style={{ fontSize: 12, color: "#4ade80" }}>● Disponible</div>}
             {status.injured && <div style={{ fontSize: 12, color: "#ef4444" }}>🩹 Lesionado</div>}
-            {status.lowWellness && <div style={{ fontSize: 12, color: "#fbbf24" }}>⚠️ Wellness bajo hoy</div>}
+            {status.lowWellness && <div style={{ fontSize: 12, color: "#fbbf24" }}>⚠️ Wellness bajo</div>}
             {status.hasUnread && <div style={{ fontSize: 12, color: "#93c5fd" }}>💬 Aviso sin leer</div>}
           </div>
         </div>
-        {typeof player.wellnessToday === "number" && (
-          <div style={{ background: COLORS.panelRaised, borderRadius: 10, padding: "10px 14px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: T, opacity: 0.7 }}>Wellness hoy</span>
-            <span style={{ fontSize: 20, fontWeight: 700, color: player.wellnessToday <= 2 ? "#fbbf24" : player.wellnessToday >= 4 ? "#4ade80" : T }}>{player.wellnessToday}/5</span>
-          </div>
-        )}
-        {typeof player.rpeToday === "number" && (
-          <div style={{ background: COLORS.panelRaised, borderRadius: 10, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: T, opacity: 0.7 }}>RPE hoy</span>
-            <span style={{ fontSize: 20, fontWeight: 700, color: T }}>{player.rpeToday}/10</span>
-          </div>
+
+        {loading ? (
+          <div style={{ textAlign: "center", color: T, opacity: 0.4, fontSize: 12, padding: "16px 0" }}>Cargando datos…</div>
+        ) : (
+          <>
+            {/* Wellness último registro */}
+            {latestW && (
+              <div style={{ background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px", marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T }}>Wellness · {latestW.date}</div>
+                  {wAvg !== null && (
+                    <div style={{ fontSize: 16, fontWeight: 700, color: wAvg <= 2 ? "#f87171" : wAvg >= 4 ? "#4ade80" : "#fbbf24" }}>{wAvg.toFixed(1)}/5</div>
+                  )}
+                </div>
+                {W_DIMS.map(({ key, label }) => (
+                  latestW[key] != null && (
+                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                      <span style={{ fontSize: 11, color: T, opacity: 0.6, width: 42, flexShrink: 0 }}>{label}</span>
+                      <ScoreBar value={latestW[key]} max={5} />
+                    </div>
+                  )
+                ))}
+                {latestW.comment && (
+                  <div style={{ marginTop: 8, fontSize: 11, color: T, opacity: 0.7, fontStyle: "italic", background: "rgba(255,255,255,0.05)", borderRadius: 7, padding: "6px 10px" }}>
+                    💬 {latestW.comment}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Último RPE + carga semanal */}
+            {(latestRpe || load7 > 0) && (
+              <div style={{ background: COLORS.panelRaised, borderRadius: 12, padding: "12px 14px", marginBottom: 10 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T, marginBottom: 8 }}>Carga</div>
+                {latestRpe && (
+                  <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px", minWidth: 70, textAlign: "center" }}>
+                      <div style={{ fontSize: 10, color: T, opacity: 0.5, marginBottom: 2 }}>RPE ({latestRpe.date})</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: T }}>{latestRpe.rpe}</div>
+                    </div>
+                    {latestRpe.duration && (
+                      <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px", minWidth: 70, textAlign: "center" }}>
+                        <div style={{ fontSize: 10, color: T, opacity: 0.5, marginBottom: 2 }}>Minutos</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: T }}>{latestRpe.duration}</div>
+                      </div>
+                    )}
+                    {latestRpe.duration && latestRpe.rpe && (
+                      <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px", minWidth: 70, textAlign: "center" }}>
+                        <div style={{ fontSize: 10, color: T, opacity: 0.5, marginBottom: 2 }}>UA sesión</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: COLORS.lime }}>{latestRpe.rpe * latestRpe.duration}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {load7 > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: T, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px" }}>
+                    <span style={{ opacity: 0.6 }}>Carga total últimos 7 días</span>
+                    <span style={{ fontWeight: 700, color: COLORS.lime }}>{load7} UA</span>
+                  </div>
+                )}
+                {latestRpe?.comment && (
+                  <div style={{ marginTop: 8, fontSize: 11, color: T, opacity: 0.7, fontStyle: "italic", background: "rgba(255,255,255,0.05)", borderRadius: 7, padding: "6px 10px" }}>
+                    💬 {latestRpe.comment}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sin datos */}
+            {!latestW && !latestRpe && (
+              <div style={{ textAlign: "center", color: T, opacity: 0.4, fontSize: 12, padding: "8px 0" }}>Sin datos de carga registrados</div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -409,7 +520,7 @@ export default function SquadTab({ team, teamId, players, onPlayersUpdate, readO
     return (
       <>
         <ListaView players={players} team={team} onPlayerClick={openModal} />
-        {modalPlayer && <PlayerModal player={modalPlayer} status={modalStatus} onClose={closeModal} />}
+        {modalPlayer && <PlayerModal player={modalPlayer} status={modalStatus} teamId={teamId} onClose={closeModal} />}
       </>
     );
   }
@@ -453,7 +564,7 @@ export default function SquadTab({ team, teamId, players, onPlayersUpdate, readO
       {viewMode === "lista" && <ListaView players={players} team={team} onPlayerClick={openModal} />}
 
       {/* Modal detalle */}
-      {modalPlayer && <PlayerModal player={modalPlayer} status={modalStatus} onClose={closeModal} />}
+      {modalPlayer && <PlayerModal player={modalPlayer} status={modalStatus} teamId={teamId} onClose={closeModal} />}
     </div>
   );
 }
